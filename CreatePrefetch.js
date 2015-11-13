@@ -1,0 +1,2 @@
+"prefetch filename.ext sha1:" + 
+$('div#file-details.extra-info').children('div').children('div:has(> span:contains("SHA1") )').contents().filter(function() { return this.nodeType == 3; }).text().trim();
