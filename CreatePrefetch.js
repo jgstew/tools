@@ -1,4 +1,6 @@
-"// comments <br/> \nprefetch " +
+"// TrID: " +
+$('div#file-details.extra-info > div > div > table > tbody').children('tr:has(> td.field-key:contains("TrID") )').children('td.field-value').text().trim() +
+"<br/> \nprefetch " +
 $('#basic-info > div > div > table > tbody > tr:has(> td:contains("File name:") ) > td:nth-child(2)').text().trim() +
 " sha1:" + 
 $('div#file-details.extra-info').children('div').children('div:has(> span:contains("SHA1") )').contents().filter(function() { return this.nodeType == 3; }).text().trim() +
