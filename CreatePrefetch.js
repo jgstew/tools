@@ -1,6 +1,6 @@
 " <br/> \n// Flagged as a potential virus " +
 $('#basic-info > div > div > table > tbody > tr:has(> td:contains("Detection ratio:") ) > td:nth-child(2)').text().trim().split(' / ')[0] +
-"times <br/> \n// TrID: " +
+" times <br/> \n// TrID: " +
 $('div#file-details.extra-info > div > div > table > tbody').children('tr:has(> td.field-key:contains("TrID") )').children('td.field-value').text().trim() +
 " <br/> \n// Comments: " +
 $('#file-details > div > div:has( > span:contains("Comments") )').contents().filter(function() { return this.nodeType == 3; }).text().trim() +
