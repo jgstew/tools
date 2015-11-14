@@ -7,6 +7,7 @@ $('#file-details > div > div:has( > span:contains("Comments") )').contents().fil
 " <br/> \n// ProductName: " +
 $('#file-details > div > div:has(> span:contains("Product"))').contents().filter(function() { return this.nodeType == 3; }).text().trim() +
 " <br/> \n// ProductVersion: " +
+$('#file-details > div > div:has( > div:contains("ProductVersionNumber") )').children('div.floated-field-value').text().trim() +
 " <br/> \nprefetch " +
 $('#basic-info > div > div > table > tbody > tr:has(> td:contains("File name:") ) > td:nth-child(2)').text().trim() +
 " sha1:" + 
