@@ -5,6 +5,7 @@ $('div#file-details.extra-info > div > div > table > tbody').children('tr:has(> 
 " <br/> \n// Comments: " +
 $('#file-details > div > div:has( > span:contains("Comments") )').contents().filter(function() { return this.nodeType == 3; }).text().trim() +
 " <br/> \n// ProductName: " +
+$('#file-details > div > div:has(> span:contains("Product"))').contents().filter(function() { return this.nodeType == 3; }).text().trim() +
 " <br/> \n// ProductVersion: " +
 " <br/> \nprefetch " +
 $('#basic-info > div > div > table > tbody > tr:has(> td:contains("File name:") ) > td:nth-child(2)').text().trim() +
