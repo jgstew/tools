@@ -8,7 +8,7 @@ strOldText = Wscript.Arguments(1)
 strNewText = Wscript.Arguments(2)
 
 Set objFSO = CreateObject("Scripting.FileSystemObject")
-Set objFile = objFSO.OpenTextFile(strFileName, ForReading)
+Set objFile = objFSO.OpenTextFile(strFileName, ForReading, FALSE, TristateTrue)
 
 strText = objFile.ReadAll
 
