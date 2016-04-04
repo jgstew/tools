@@ -1,6 +1,8 @@
 Const ForReading = 1
 Const ForWriting = 2
 
+Const TristateTrue = -1  'Opens the file as Unicode.
+
 strFileName = Wscript.Arguments(0)
 strOldText = Wscript.Arguments(1)
 strNewText = Wscript.Arguments(2)
