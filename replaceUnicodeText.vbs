@@ -16,6 +16,6 @@ objFile.Close
 
 strNewText = Replace(strText, strOldText, strNewText)
 
-Set objFile = objFSO.OpenTextFile(strFileName, ForWriting)
+Set objFile = objFSO.OpenTextFile(strFileName, ForWriting, FALSE, TristateTrue)
 objFile.WriteLine strNewText
 objFile.Close
