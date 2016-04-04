@@ -1,6 +1,7 @@
 Const ForReading = 1
 Const ForWriting = 2
 
+' https://msdn.microsoft.com/en-us/library/314cz14s(VS.85).aspx
 Const TristateTrue = -1  'Opens the file as Unicode.
 
 strFileName = Wscript.Arguments(0)
