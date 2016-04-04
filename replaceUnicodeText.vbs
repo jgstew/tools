@@ -1,6 +1,7 @@
 ' adapted from https://blogs.technet.microsoft.com/heyscriptingguy/2005/02/08/how-can-i-find-and-replace-text-in-a-text-file/
 Const ForReading = 1
 Const ForWriting = 2
+Const ForAppending = 8
 
 ' https://msdn.microsoft.com/en-us/library/314cz14s(VS.85).aspx
 Const TristateTrue = -1  'Opens the file as Unicode.
