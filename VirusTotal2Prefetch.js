@@ -1,3 +1,4 @@
+void function(){
 " <br/> \n// Flagged as a potential virus " +
 $('#basic-info > div > div > table > tbody > tr:has(> td:contains("Detection ratio:") ) > td:nth-child(2)').text().trim().split(' / ')[0] +
 " times <br/> \n// TrID: " +
@@ -16,3 +17,4 @@ $('div#file-details.extra-info').children('div').children('div:has(> span:contai
 $('div#file-details.extra-info').children('div').children('div:has(> span:contains("File size") )').contents().filter(function() { return this.nodeType == 3; }).text().split(' ( ')[1].split(' bytes ')[0] +
 " http://PUT_URL_TO_FILE_HERE sha256:" +
 $('div#file-details.extra-info').children('div').children('div:has(> span:contains("SHA256") )').contents().filter(function() { return this.nodeType == 3; }).text().trim();
+}();
