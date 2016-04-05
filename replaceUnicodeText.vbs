@@ -1,4 +1,5 @@
 ' adapted from https://blogs.technet.microsoft.com/heyscriptingguy/2005/02/08/how-can-i-find-and-replace-text-in-a-text-file/
+' original source: https://gist.github.com/jgstew/504e2d85b2a6f87ab8af727e161f2b70
 Const ForReading = 1
 Const ForWriting = 2
 Const ForAppending = 8
