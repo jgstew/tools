@@ -6,7 +6,7 @@ Raw data to find version info within: `$('#file-details > div > div > div.floate
 - I'd like to look at all version number info on the page and parse them all out, then get the one with the highest number of occurrences.
 
 ### Example VirusTotal analyses:
-- https://www.virustotal.com/en/file/ab341c65e85ab066ab84126fa6572bcb7efe85539ba76a18e7dad77a0fd9ddb7/analysis/
+- https://www.virustotal.com/en/file/ab341c65e85ab066ab84126fa6572bcb7efe85539ba76a18e7dad77a0fd9ddb7/analysis
 
 ### Link to newest version:
 - https://gist.githubusercontent.com/jgstew/ef36d020de4614673ba8/raw/VirusTotal2Prefetch.js
