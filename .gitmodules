@@ -1,0 +1,3 @@
+[submodule "replaceUnicodeText"]
+	path = VBS/replaceUnicodeText
+	url = https://gist.github.com/504e2d85b2a6f87ab8af727e161f2b70.git
