@@ -9,3 +9,6 @@
 - http://www.tablesgenerator.com/markdown_tables
 - https://bigfix.me/relevance/details/3015916
 - https://bigfix.me/relevance/details/3015915
+- https://bigfix.me/relevance/details/3015917
+- http://www.asciitable.com/
+- https://get.slack.help/hc/en-us/articles/202026038-Slackbot-your-assistant-notepad-programmable-bot
