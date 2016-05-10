@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # kickstart bigfix install
 # current target - ubuntu
 # 
@@ -33,3 +33,6 @@ dpkg -i BESAgent.deb
 
 # start the BigFix client
 /etc/init.d/besclient start
+
+### Referenes:
+# - http://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
