@@ -12,7 +12,6 @@
 # NOTE: AMD64 compatible OS architecture is assumed (x86, Itanium, and Power are not common, but could be added)
 
 # TODO: if Mac OS X then get clientsettings.cfg from CWD or create a default one
-# TODO: add commands to open up firewall to incoming UDP 52311 on Linux
 
 # TODO: use the masthead file in current directory if present
 
@@ -27,7 +26,7 @@ if [ ! -z "$1" ]; then
 fi
 
 ############################################################
-# TODO: these vars need to change based upon OS dist
+# TODO: add more linux cases, not all are handled
 
 if [[ $OSTYPE == darwin* ]]; then
   # Mac OS X
