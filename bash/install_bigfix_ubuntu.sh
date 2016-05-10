@@ -14,9 +14,13 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+# use this to check if Mac (darwin)
+echo $OSTYPE
+
 INSTALLDIR="/etc/opt/BESClient"
 MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
 INSTALLER="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+
 
 if [ ! -d "$INSTALLDIR" ]; then
   # Control will enter here if $DIRECTORY doesn't exist.
@@ -36,3 +40,4 @@ dpkg -i BESAgent.deb
 
 ### Referenes:
 # - http://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
+# - http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
