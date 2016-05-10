@@ -2,6 +2,10 @@
 # kickstart bigfix install
 # current target - ubuntu
 # 
+# Usage:
+#   wget install_bigfix_ubuntu.sh
+#   chmod u+x install_bigfix_ubuntu.sh
+#   ./install_bigfix_ubuntu.sh
 
 if [ "$(id -u)" != "0" ]; then
 	echo "Sorry, you are not root."
