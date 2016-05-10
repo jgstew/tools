@@ -16,6 +16,7 @@
 
 # TODO: use the masthead file in current directory if present
 
+# http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 command_exists () {
   type "$1" &> /dev/null ;
 }
@@ -99,3 +100,4 @@ fi
 # - http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
 # - http://wiki.bash-hackers.org/scripting/posparams
 # - http://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
+# - http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
