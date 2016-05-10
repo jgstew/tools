@@ -35,8 +35,10 @@ curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
 # install BigFix client
 dpkg -i $INSTALLER
 
-# start the BigFix client
-/etc/init.d/besclient start
+if [ -f /etc/init.d/besclient ]; then
+  # start the BigFix client
+  /etc/init.d/besclient start
+fi
 
 ### Referenes:
 # - http://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
