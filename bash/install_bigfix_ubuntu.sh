@@ -59,6 +59,13 @@ else
     fi
   fi # END_IF Debian (dpkg)
 
+  # if rpm exists
+  if command_exists rpm ; then
+    # rpm - Currently assuming RedHat based
+    INSTALLER="BESAgent.rpm"
+    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-rhe5.x86_64.rpm"
+  fi
+  
 fi # END_IF darwin
 ############################################################
 
