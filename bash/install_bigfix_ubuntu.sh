@@ -43,7 +43,8 @@ if [ ! -d "$INSTALLDIR" ]; then
   mkdir $INSTALLDIR
 fi
 
-# Download the BigFix agent (using cURL because it is on Linux & OS X by default)
+# Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
+# TODO: if curl not present, use wget instead
 curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
 # TODO: get masthead from CWD instead if present
