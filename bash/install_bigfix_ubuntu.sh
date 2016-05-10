@@ -23,7 +23,7 @@ command_exists () {
 
 if [ ! -z "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
-  echo MASTHEAD=$MASTHEADURL
+  echo MASTHEADURL=$MASTHEADURL
 fi
 
 ############################################################
