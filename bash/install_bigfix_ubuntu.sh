@@ -50,7 +50,7 @@ else
   INSTALLER="BESAgent.deb"
 
   # Debian
-  INSTALLERURL=""
+  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-debian6.amd64.deb"
   # Ubuntu
   INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
 
