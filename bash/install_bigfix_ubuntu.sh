@@ -47,13 +47,17 @@ else
   # For most Linux:
   INSTALLDIR="/etc/opt/BESClient"
 
-  # if Debian based
-  INSTALLER="BESAgent.deb"
-
-  # Debian
-  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-debian6.amd64.deb"
-  # Ubuntu
-  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+  # if dpkg exists (Debian)
+  if command_exists dpkg ; then
+    # Debian based
+    INSTALLER="BESAgent.deb"
+    
+    # Debian
+    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-debian6.amd64.deb"
+    # Ubuntu
+    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+    
+  fi # END_IF Debian (dpkg)
 
 fi # END_IF darwin
 ############################################################
