@@ -52,8 +52,8 @@ if [[ $INSTALLER == *.rpm ]]; then
   rpm -ivh $INSTALLER
 fi
 
+# start the BigFix client
 if [ -f /etc/init.d/besclient ]; then
-  # start the BigFix client
   /etc/init.d/besclient start
 fi
 
