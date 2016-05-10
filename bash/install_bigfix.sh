@@ -99,6 +99,15 @@ curl -o $INSTALLER $INSTALLERURL
 curl -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
 
 
+# open up linux firewall to accept UDP 52311 - iptables
+if command_exists iptables ; then
+  iptables -A INPUT -p udp --dport 52311 -j ACCEPT
+fi
+# open up linux firewall to accept UDP 52311 - firewall-cmd
+if command_exists firewall-cmd ; then
+  firewall-cmd --zone=public --add-port=52311/udp --permanent
+fi
+
 # install BigFix client
 if [[ $INSTALLER == *.deb ]]; then
   #  debian (DEB)
