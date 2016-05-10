@@ -46,9 +46,10 @@ else
     # Debian based
     INSTALLER="BESAgent.deb"
     
+    # check distribution
     DEBDIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
     
-    if [ $DEBDIST == "Ubuntu"]; then
+    if [[ $DEBDIST == Ubuntu* ]]; then
       # Ubuntu
       INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
       echo Ubuntu
