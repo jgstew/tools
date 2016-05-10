@@ -67,8 +67,8 @@ else
     if [ ! -f /etc/redhat-release ] ; then
       echo Only RHEL, CentOS, or Fedora currently supported for RPM installs
       exit 1
-    fi
-  fi
+    fi # END_IF not-RHEL-family
+  fi # END_IF exists rpm
   
 fi # END_IF darwin
 ############################################################
