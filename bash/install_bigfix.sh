@@ -63,6 +63,7 @@ else
     INSTALLER="BESAgent.rpm"
     INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-rhe5.x86_64.rpm"
     
+    # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
       echo Only RHEL, CentOS, or Fedora currently supported for RPM installs
       exit 1
