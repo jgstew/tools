@@ -19,8 +19,8 @@ echo $OSTYPE
 
 INSTALLDIR="/etc/opt/BESClient"
 MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
-INSTALLER="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
-
+INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+INSTALLER="BESAgent.deb"
 
 if [ ! -d "$INSTALLDIR" ]; then
   # Control will enter here if $DIRECTORY doesn't exist.
@@ -28,7 +28,7 @@ if [ ! -d "$INSTALLDIR" ]; then
 fi
 
 # Download the BigFix agent
-curl -o BESAgent.deb $INSTALLER
+curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
 curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
 
