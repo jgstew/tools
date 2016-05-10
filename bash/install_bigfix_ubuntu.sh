@@ -15,11 +15,10 @@
 # TODO: add commands to open up firewall to incoming UDP 52311 on Linux
 
 # TODO: use the masthead file in current directory if present
-# TODO: allow masthead URL to be specified as argument
 
 if [ ! -z "$1" ]; then
-  MASTHEAD="http://$1:52311/masthead/masthead.afxm"
-  echo MASTHEAD=$MASTHEAD
+  MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
+  echo MASTHEAD=$MASTHEADURL
 fi
 
 # MUST HAVE ROOT PRIV
@@ -60,7 +59,7 @@ fi
 curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
 # TODO: get masthead from CWD instead if present
-curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
+curl -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
 
 
 # install BigFix client
