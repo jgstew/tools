@@ -74,6 +74,7 @@ fi # END_IF darwin
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
   echo "Sorry, you are not root."
+  echo ( set -o posix ; set )
   exit 1
 fi
 
