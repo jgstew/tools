@@ -9,6 +9,9 @@
 #   chmod u+x install_bigfix_ubuntu.sh
 #   ./install_bigfix_ubuntu.sh
 
+
+# TODO: check for the masthead file in current directory
+# TODO: allow masthead URL to be specified as argument
 MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
 
 if [ "$(id -u)" != "0" ]; then
@@ -34,10 +37,20 @@ curl -o $INSTALLER $INSTALLERURL
 curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
 
 # install BigFix client
-dpkg -i $INSTALLER  #  debian (DEB)
-# installer -pkg $INSTALLER -target /  #  Mac OS X (PKG)
-# rpm -ivh $INSTALLER  #  linux (RPM)
-# pkgadd -d $INSTALLER  #  Solaris (PKG)
+if [[ $INSTALLER == *.deb ]]; then
+  #  debian (DEB)
+  dpkg -i $INSTALLER
+fi
+if [[ $INSTALLER == *.pkg ]]; then
+  #  Mac OS X (PKG)
+  installer -pkg $INSTALLER -target /
+  # TODO: add case for Solaris
+  # pkgadd -d $INSTALLER  #  Solaris (PKG)
+fi
+if [[ $INSTALLER == *.rpm ]]; then
+  #  linux (RPM)
+  rpm -ivh $INSTALLER
+fi
 
 if [ -f /etc/init.d/besclient ]; then
   # start the BigFix client
