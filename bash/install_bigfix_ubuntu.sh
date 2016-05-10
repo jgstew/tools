@@ -23,7 +23,7 @@ INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu
 INSTALLER="BESAgent.deb"
 
 if [ ! -d "$INSTALLDIR" ]; then
-  # Control will enter here if $DIRECTORY doesn't exist.
+  # Control will enter here if $INSTALLDIR doesn't exist.
   mkdir $INSTALLDIR
 fi
 
