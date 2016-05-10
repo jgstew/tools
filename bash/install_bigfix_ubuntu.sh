@@ -73,8 +73,10 @@ fi # END_IF darwin
 
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
-  echo "Sorry, you are not root."
-  echo ( set -o posix ; set )
+  echo $INSTALLDIR
+  echo $INSTALLER
+  echo $INSTALLERURL
+  echo "Sorry, you are not root. Exiting."
   exit 1
 fi
 
