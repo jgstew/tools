@@ -33,21 +33,24 @@ echo $OSTYPE
 ############################################################
 # TODO: these vars need to change based upon OS dist
 
-# Mac OS X
-INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
-INSTALLDIR="/tmp"
-INSTALLER="/tmp/BESAgent.pkg"
+if [[ $OSTYPE == darwin* ]]; then
+  # Mac OS X
+  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
+  INSTALLDIR="/tmp"
+  INSTALLER="/tmp/BESAgent.pkg"
+else
+  # For most Linux:
+  INSTALLDIR="/etc/opt/BESClient"
 
-# For most Linux:
-INSTALLDIR="/etc/opt/BESClient"
+  # if Debian based
+  INSTALLER="BESAgent.deb"
 
-# Debian based
-INSTALLER="BESAgent.deb"
+  # Debian
+  INSTALLERURL=""
+  # Ubuntu
+  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
 
-# Ubuntu
-INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
-
-
+fi # END_IF darwin
 ############################################################
 
 
