@@ -9,6 +9,8 @@
 #   chmod u+x install_bigfix_ubuntu.sh
 #   ./install_bigfix_ubuntu.sh
 
+# NOTE: AMD64 compatible OS architecture is assumed (x86, Itanium, and Power are not common, but could be added)
+
 # TODO: if Mac OS X then get clientsettings.cfg from CWD or create a default one
 # TODO: add commands to open up firewall to incoming UDP 52311 on Linux
 
