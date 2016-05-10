@@ -33,7 +33,7 @@ curl -o $INSTALLER $INSTALLERURL
 curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
 
 # install BigFix client
-dpkg -i BESAgent.deb
+dpkg -i $INSTALLER
 
 # start the BigFix client
 /etc/init.d/besclient start
