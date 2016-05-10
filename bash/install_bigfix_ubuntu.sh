@@ -18,8 +18,8 @@
 # TODO: allow masthead URL to be specified as argument
 
 if [ ! -z "$1" ]; then
-  MASTHEAD="http://{$1}:52311/masthead/masthead.afxm"
-  echo $MASTHEAD
+  MASTHEAD="http://$1:52311/masthead/masthead.afxm"
+  echo MASTHEAD=$MASTHEAD
 fi
 
 # MUST HAVE ROOT PRIV
