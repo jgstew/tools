@@ -62,6 +62,11 @@ else
     # rpm - Currently assuming RedHat based
     INSTALLER="BESAgent.rpm"
     INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-rhe5.x86_64.rpm"
+    
+    if [ ! -f /etc/redhat-release ] ; then
+      echo Only RHEL, CentOS, or Fedora currently supported for RPM installs
+      exit 1
+    fi
   fi
   
 fi # END_IF darwin
