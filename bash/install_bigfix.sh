@@ -6,7 +6,7 @@
 #
 # Usage:
 #   curl -o install_bigfix.sh https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
-#   chmod u+x install_bigfix_ubuntu.sh
+#   chmod u+x install_bigfix.sh
 #   ./install_bigfix_ubuntu.sh __ROOT_OR_RELAY_FQDN__
 
 # NOTE: AMD64 compatible OS architecture is assumed (x86, Itanium, and Power are not common, but could be added)
