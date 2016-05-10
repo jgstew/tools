@@ -89,3 +89,4 @@ fi
 # - http://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
 # - http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
 # - http://wiki.bash-hackers.org/scripting/posparams
+# - http://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
