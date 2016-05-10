@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # kickstart bigfix install
-# current target - ubuntu/debian
+# current target - Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora
 # 
 # Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
 #
