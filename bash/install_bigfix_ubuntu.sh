@@ -25,8 +25,15 @@ fi
 echo $OSTYPE
 
 # TODO: these vars need to change based upon OS dist
-INSTALLDIR="/etc/opt/BESClient"
+
+# Mac OS X
+INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
+INSTALLDIR="/tmp"
+INSTALLER="/tmp/BESAgent.pkg"
+
+# Debian
 INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+INSTALLDIR="/etc/opt/BESClient"
 INSTALLER="BESAgent.deb"
 
 if [ ! -d "$INSTALLDIR" ]; then
