@@ -10,6 +10,7 @@
 #   ./install_bigfix_ubuntu.sh
 
 # TODO: if Mac OS X then get clientsettings.cfg from CWD or create a default one
+# TODO: add commands to open up firewall to incoming UDP 52311 on Linux
 
 # TODO: use the masthead file in current directory if present
 # TODO: allow masthead URL to be specified as argument
