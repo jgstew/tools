@@ -15,6 +15,8 @@
 # TODO: allow masthead URL to be specified as argument
 MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
 
+echo $MASTHEAD
+
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
   echo "Sorry, you are not root."
