@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # kickstart bigfix install
-# current target - ubuntu
+# current target - ubuntu/debian
 # 
 # Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
 #
@@ -28,13 +28,16 @@ if [ ! -d "$INSTALLDIR" ]; then
   mkdir $INSTALLDIR
 fi
 
-# Download the BigFix agent
+# Download the BigFix agent (using cURL because it is on Linux & OS X by default)
 curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
 curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
 
 # install BigFix client
-dpkg -i $INSTALLER
+dpkg -i $INSTALLER  #  debian (DEB)
+# installer -pkg $INSTALLER -target /  #  Mac OS X (PKG)
+# rpm -ivh $INSTALLER  #  linux (RPM)
+# pkgadd -d $INSTALLER  #  Solaris (PKG)
 
 if [ -f /etc/init.d/besclient ]; then
   # start the BigFix client
