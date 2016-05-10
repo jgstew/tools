@@ -41,9 +41,12 @@ INSTALLER="/tmp/BESAgent.pkg"
 # For most Linux:
 INSTALLDIR="/etc/opt/BESClient"
 
-# Debian
-INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+# Debian based
 INSTALLER="BESAgent.deb"
+
+# Ubuntu
+INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+
 
 ############################################################
 
