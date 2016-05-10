@@ -16,9 +16,11 @@
 
 # TODO: use the masthead file in current directory if present
 # TODO: allow masthead URL to be specified as argument
-MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
 
-echo $MASTHEAD
+if [ ! -z "$1" ]; then
+  MASTHEAD="http://{$1}:52311/masthead/masthead.afxm"
+  echo $MASTHEAD
+fi
 
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
