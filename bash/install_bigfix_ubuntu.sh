@@ -2,6 +2,8 @@
 # kickstart bigfix install
 # current target - ubuntu
 # 
+# Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
+#
 # Usage:
 #   wget install_bigfix_ubuntu.sh
 #   chmod u+x install_bigfix_ubuntu.sh
