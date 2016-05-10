@@ -26,12 +26,6 @@ if [ ! -z "$1" ]; then
   echo MASTHEAD=$MASTHEADURL
 fi
 
-# MUST HAVE ROOT PRIV
-if [ "$(id -u)" != "0" ]; then
-  echo "Sorry, you are not root."
-  exit 1
-fi
-
 # use this to check if Mac (darwin)
 echo $OSTYPE
 
@@ -52,15 +46,28 @@ else
     # Debian based
     INSTALLER="BESAgent.deb"
     
-    # Debian
-    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-debian6.amd64.deb"
-    # Ubuntu
-    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+    DEBDIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
     
+    if [ $DEBDIST = "Ubuntu"]; then
+      # Ubuntu
+      INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
+      echo Ubuntu
+    else
+      # Debian
+      INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-debian6.amd64.deb"
+      echo Debian
+    fi
   fi # END_IF Debian (dpkg)
 
 fi # END_IF darwin
 ############################################################
+
+
+# MUST HAVE ROOT PRIV
+if [ "$(id -u)" != "0" ]; then
+  echo "Sorry, you are not root."
+  exit 1
+fi
 
 
 # Create $INSTALLDIR folder if missing
