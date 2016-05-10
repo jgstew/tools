@@ -26,9 +26,6 @@ if [ ! -z "$1" ]; then
   echo MASTHEAD=$MASTHEADURL
 fi
 
-# use this to check if Mac (darwin)
-echo $OSTYPE
-
 ############################################################
 # TODO: these vars need to change based upon OS dist
 
@@ -73,6 +70,7 @@ fi # END_IF darwin
 
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
+  echo $OSTYPE
   echo $INSTALLDIR
   echo $INSTALLER
   echo $INSTALLERURL
