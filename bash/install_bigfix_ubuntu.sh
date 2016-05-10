@@ -26,6 +26,7 @@ fi
 # use this to check if Mac (darwin)
 echo $OSTYPE
 
+############################################################
 # TODO: these vars need to change based upon OS dist
 
 # Mac OS X
@@ -40,6 +41,10 @@ INSTALLDIR="/etc/opt/BESClient"
 INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
 INSTALLER="BESAgent.deb"
 
+############################################################
+
+
+# Create $INSTALLDIR folder if missing
 if [ ! -d "$INSTALLDIR" ]; then
   # Control will enter here if $INSTALLDIR doesn't exist.
   mkdir $INSTALLDIR
@@ -51,6 +56,7 @@ curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
 # TODO: get masthead from CWD instead if present
 curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
+
 
 # install BigFix client
 if [[ $INSTALLER == *.deb ]]; then
