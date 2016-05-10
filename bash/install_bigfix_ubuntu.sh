@@ -9,11 +9,13 @@
 #   chmod u+x install_bigfix_ubuntu.sh
 #   ./install_bigfix_ubuntu.sh
 
+# TODO: if Mac OS X then get clientsettings.cfg from CWD or create a default one
 
-# TODO: check for the masthead file in current directory
+# TODO: use the masthead file in current directory if present
 # TODO: allow masthead URL to be specified as argument
 MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
 
+# MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
   echo "Sorry, you are not root."
   exit 1
@@ -22,6 +24,7 @@ fi
 # use this to check if Mac (darwin)
 echo $OSTYPE
 
+# TODO: these vars need to change based upon OS dist
 INSTALLDIR="/etc/opt/BESClient"
 INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
 INSTALLER="BESAgent.deb"
@@ -34,6 +37,7 @@ fi
 # Download the BigFix agent (using cURL because it is on Linux & OS X by default)
 curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
+# TODO: get masthead from CWD instead if present
 curl -o $INSTALLDIR/actionsite.afxm $MASTHEAD
 
 # install BigFix client
