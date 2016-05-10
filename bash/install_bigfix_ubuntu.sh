@@ -9,6 +9,8 @@
 #   chmod u+x install_bigfix_ubuntu.sh
 #   ./install_bigfix_ubuntu.sh
 
+MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
+
 if [ "$(id -u)" != "0" ]; then
   echo "Sorry, you are not root."
   exit 1
@@ -18,7 +20,6 @@ fi
 echo $OSTYPE
 
 INSTALLDIR="/etc/opt/BESClient"
-MASTHEAD="http://_ROOT_OR_RELAY_SERVER_FQDN_:52311/masthead/masthead.afxm"
 INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
 INSTALLER="BESAgent.deb"
 
