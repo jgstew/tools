@@ -27,6 +27,7 @@ if [ ! -z "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
 fi
 
+# check for x32bit or x64bit OS
 MACHINE_TYPE=`uname -m`
 
 ############################################################
