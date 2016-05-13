@@ -91,11 +91,11 @@ if [ "$(id -u)" != "0" ]; then
   # dump out data for debugging
   echo
   echo OSTYPE=$OSTYPE
+  echo MACHINE_TYPE=$MACHINE_TYPE
   echo OS_BIT=$OS_BIT
   echo INSTALLDIR=$INSTALLDIR
   echo INSTALLER=$INSTALLER
   echo INSTALLERURL=$INSTALLERURL
-  echo MACHINE_TYPE=$MACHINE_TYPE
   echo MASTHEADURL=$MASTHEADURL
   echo DEBDIST=$DEBDIST
   echo
