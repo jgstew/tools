@@ -52,11 +52,9 @@ else
     if [[ $DEBDIST == Ubuntu* ]]; then
       # Ubuntu
       INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.amd64.deb"
-      echo Ubuntu
     else
       # Debian
       INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-debian6.amd64.deb"
-      echo Debian
     fi
   fi # END_IF Debian (dpkg)
 
@@ -80,6 +78,7 @@ fi # END_IF darwin
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
   # dump out data for debugging
+  echo
   echo OSTYPE=$OSTYPE
   echo INSTALLDIR=$INSTALLDIR
   echo INSTALLER=$INSTALLER
@@ -87,7 +86,9 @@ if [ "$(id -u)" != "0" ]; then
   echo MACHINE_TYPE=$MACHINE_TYPE
   echo MASTHEADURL=$MASTHEADURL
   echo DEBDIST=$DEBDIST
+  echo
   echo "Sorry, you are not root. Exiting."
+  echo
   exit 1
 fi
 
