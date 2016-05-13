@@ -90,6 +90,7 @@ if [ "$(id -u)" != "0" ]; then
   # dump out data for debugging
   echo
   echo OSTYPE=$OSTYPE
+  echo OS_BIT=$OS_BIT
   echo INSTALLDIR=$INSTALLDIR
   echo INSTALLER=$INSTALLER
   echo INSTALLERURL=$INSTALLERURL
