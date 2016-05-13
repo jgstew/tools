@@ -3,7 +3,7 @@
 ECHO
 ECHO I am %COMSPEC%
 ECHO put CMD/BAT lines in here.
-ECHO
+ECHO $1
 PAUSE
 EXIT
 ::CMDLITERAL
