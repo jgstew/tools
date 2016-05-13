@@ -25,7 +25,6 @@ command_exists () {
 
 if [ ! -z "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
-  echo MASTHEADURL=$MASTHEADURL
 fi
 
 MACHINE_TYPE=`uname -m`
@@ -81,10 +80,12 @@ fi # END_IF darwin
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
   # dump out data for debugging
-  echo $OSTYPE
-  echo $INSTALLDIR
-  echo $INSTALLER
-  echo $INSTALLERURL
+  echo OSTYPE=$OSTYPE
+  echo INSTALLDIR=$INSTALLDIR
+  echo INSTALLER=$INSTALLER
+  echo INSTALLERURL=$INSTALLERURL
+  echo MACHINE_TYPE=$MACHINE_TYPE
+  echo MASTHEADURL=$MASTHEADURL
   echo "Sorry, you are not root. Exiting."
   exit 1
 fi
