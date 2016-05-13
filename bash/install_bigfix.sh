@@ -79,7 +79,14 @@ else
   if command_exists rpm ; then
     # rpm - Currently assuming RedHat based
     INSTALLER="BESAgent.rpm"
-    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-rhe5.x86_64.rpm"
+    
+    if [[ $OSBIT == x64 ]]; then
+      URLBITS=x86_64
+    else
+      URLBITS=i686
+    fi
+    
+    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-rhe5.$URLBITS.rpm"
     
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
@@ -102,6 +109,7 @@ if [ "$(id -u)" != "0" ]; then
   echo INSTALLDIR=$INSTALLDIR
   echo INSTALLER=$INSTALLER
   echo INSTALLERURL=$INSTALLERURL
+  echo URLBITS=$URLBITS
   echo MASTHEADURL=$MASTHEADURL
   echo DEBDIST=$DEBDIST
   echo
