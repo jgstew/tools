@@ -28,6 +28,8 @@ if [ ! -z "$1" ]; then
   echo MASTHEADURL=$MASTHEADURL
 fi
 
+MACHINE_TYPE=`uname -m`
+
 ############################################################
 # TODO: add more linux cases, not all are handled
 
