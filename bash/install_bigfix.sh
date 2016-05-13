@@ -29,6 +29,11 @@ fi
 
 # check for x32bit or x64bit OS
 MACHINE_TYPE=`uname -m`
+if [[ $MACHINE_TYPE == *64 ]]; then
+  OS_BIT = x64
+else
+  OS_BIT = x32
+fi
 
 ############################################################
 # TODO: add more linux cases, not all are handled
