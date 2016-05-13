@@ -30,14 +30,14 @@ if [ ! -z "$1" ]; then
 fi
 
 # check for x32bit or x64bit OS
-MACHINE_TYPE=`uname -m`
+MACHINETYPE=`uname -m`
 
 # set OS_BIT variable based upon MACHINE_TYPE (this currently assumes either Intel 32bit or AMD 64bit)
 # if machine_type does not contain 64 then 32bit else 64bit (assume 64 unless otherwise noted)
-if [[ $MACHINE_TYPE != *"64"* ]]; then
-  OS_BIT = x32
+if [[ $MACHINETYPE != *"64"* ]]; then
+  OSBIT=x32
 else
-  OS_BIT = x64
+  OSBIT=x64
 fi
 
 ############################################################
@@ -91,8 +91,8 @@ if [ "$(id -u)" != "0" ]; then
   # dump out data for debugging
   echo
   echo OSTYPE=$OSTYPE
-  echo MACHINE_TYPE=$MACHINE_TYPE
-  echo OS_BIT=$OS_BIT
+  echo MACHINETYPE=$MACHINETYPE
+  echo OSBIT=$OSBIT
   echo INSTALLDIR=$INSTALLDIR
   echo INSTALLER=$INSTALLER
   echo INSTALLERURL=$INSTALLERURL
