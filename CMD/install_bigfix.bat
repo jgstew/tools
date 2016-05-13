@@ -1,0 +1,12 @@
+:<<"::CMDLITERAL"
+@ECHO OFF
+SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
+ECHO
+ECHO I am %COMSPEC%
+ECHO put CMD/BAT lines in here.
+ECHO %0
+ECHO %1
+ECHO %MASTHEADURL%
+PAUSE
+EXIT
+::CMDLITERAL
