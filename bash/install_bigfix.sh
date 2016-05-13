@@ -34,7 +34,7 @@ MACHINE_TYPE=`uname -m`
 
 # set OS_BIT variable based upon MACHINE_TYPE (this currently assumes either Intel 32bit or AMD 64bit)
 # if machine_type does not contain 64 then 32bit else 64bit (assume 64 unless otherwise noted)
-if [[ $MACHINE_TYPE != *"64" ]]; then
+if [[ $MACHINE_TYPE != *"64"* ]]; then
   OS_BIT = x32
 else
   OS_BIT = x64
