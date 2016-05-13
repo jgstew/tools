@@ -19,10 +19,12 @@
 # TODO: use the masthead file in current directory if present
 
 # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
+# FUNCTION: check if command exists
 command_exists () {
   type "$1" &> /dev/null ;
 }
 
+# if $1 exists, then set MASTHEADURL
 if [ ! -z "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
 fi
