@@ -78,6 +78,7 @@ fi # END_IF darwin
 
 # MUST HAVE ROOT PRIV
 if [ "$(id -u)" != "0" ]; then
+  # dump out data for debugging
   echo $OSTYPE
   echo $INSTALLDIR
   echo $INSTALLER
