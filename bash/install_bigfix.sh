@@ -1,3 +1,13 @@
+:<<"::CMDLITERAL"
+@ECHO OFF
+ECHO
+ECHO I am %COMSPEC%
+ECHO put CMD/BAT lines in here.
+ECHO
+PAUSE
+EXIT
+::CMDLITERAL
+
 #!/usr/bin/env bash
 # kickstart bigfix install
 # current target - Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora
