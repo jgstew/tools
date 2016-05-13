@@ -160,3 +160,4 @@ fi
 # - http://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
 # - http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 # - https://forum.bigfix.com/t/script-to-kickstart-the-installation-of-bigfix-on-os-x-debian-family-rhel-family/17023
+# - http://stackoverflow.com/questions/30557508/bash-checking-if-string-does-not-contain-other-string
