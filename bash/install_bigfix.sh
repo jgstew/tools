@@ -86,6 +86,7 @@ if [ "$(id -u)" != "0" ]; then
   echo INSTALLERURL=$INSTALLERURL
   echo MACHINE_TYPE=$MACHINE_TYPE
   echo MASTHEADURL=$MASTHEADURL
+  echo DEBDIST=$DEBDIST
   echo "Sorry, you are not root. Exiting."
   exit 1
 fi
