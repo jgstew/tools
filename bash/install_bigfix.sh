@@ -38,6 +38,7 @@ if [[ $MACHINETYPE != *"64"* ]]; then
   OSBIT=x32
 else
   OSBIT=x64
+  # KNOWN ISSUE: this will incorrectly assume AMD64 compatible processor in the case of PowerPC64
 fi
 
 ############################################################
