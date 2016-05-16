@@ -1,5 +1,5 @@
 :<<"::CMDLITERAL"
-
+@ECHO OFF
 IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
@@ -9,8 +9,10 @@ REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already
 REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exists-in-the-path-from-a-windows-batch-file
 where /q powershell || ECHO Cound not find powershell. && EXIT /B
 
+@ECHO ON
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.1.9.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%', '%BASEFOLDER%\actionsite.afxm') }" -ExecutionPolicy Bypass
+@ECHO OFF
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
 REM https://gist.github.com/jgstew/51a99ab4b5997efa0318
