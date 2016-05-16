@@ -1,8 +1,6 @@
 :<<"::CMDLITERAL"
-@ECHO OFF
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
-ECHO
 
 REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exists-in-the-path-from-a-windows-batch-file
 where /q powershell || ECHO Cound not find powershell. && EXIT /B
@@ -26,12 +24,9 @@ ECHO _BESClient_Download_UtilitiesCacheLimitMB=500 >> %BASEFOLDER%\clientsetting
 ECHO _BESClient_Download_DownloadsCacheLimitMB=5000 >> %BASEFOLDER%\clientsettings.cfg
 ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >> %BASEFOLDER%\clientsettings.cfg
 
-ECHO I am %COMSPEC%
-ECHO put CMD/BAT lines in here.
 ECHO %0
 ECHO %1
 ECHO %MASTHEADURL%
 
-PAUSE
 EXIT
 ::CMDLITERAL
