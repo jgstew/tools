@@ -173,7 +173,13 @@ if [[ $INSTALLER == *.pkg ]]; then
 fi
 if [[ $INSTALLER == *.rpm ]]; then
   #  linux (RPM)
-  rpm -ivh $INSTALLER
+  # if file `/etc/init.d/besclient` exists then do upgrade
+  if [ -f /etc/init.d/besclient ]; then
+    /etc/init.d/besclient stop
+    rpm -U $INSTALLER
+  else
+    rpm -ivh $INSTALLER
+  fi
 fi
 
 ### start the BigFix client (required for most linux dist)
