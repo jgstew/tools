@@ -1,5 +1,6 @@
 :<<"::CMDLITERAL"
 @ECHO OFF
+REM http://stackoverflow.com/questions/2541767/what-is-the-proper-way-to-test-if-variable-is-empty-in-a-batch-file-if-not-1
 IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
