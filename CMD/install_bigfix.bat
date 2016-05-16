@@ -35,5 +35,5 @@ ECHO %MASTHEADURL%
 
 %BASEFOLDER%\BESClient.exe /s /v"/l*voicewarmup %BASEFOLDER%\install.log /qn"
 
-EXIT
+EXIT /B
 ::CMDLITERAL
