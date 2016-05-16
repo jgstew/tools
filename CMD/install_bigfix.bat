@@ -39,6 +39,7 @@ ECHO _BESClient_Download_UtilitiesCacheLimitMB=500 >> %BASEFOLDER%\clientsetting
 ECHO _BESClient_Download_DownloadsCacheLimitMB=5000 >> %BASEFOLDER%\clientsettings.cfg
 ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >> %BASEFOLDER%\clientsettings.cfg
 
+ECHO
 ECHO %0
 ECHO %1
 ECHO %MASTHEADURL%
