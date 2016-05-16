@@ -2,6 +2,8 @@
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
 
+REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already in the CWD
+
 REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exists-in-the-path-from-a-windows-batch-file
 where /q powershell || ECHO Cound not find powershell. && EXIT /B
 
@@ -12,6 +14,7 @@ REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivol
 REM https://gist.github.com/jgstew/51a99ab4b5997efa0318
 REM http://stackoverflow.com/questions/1702762/how-to-create-an-empty-file-at-the-command-line-in-windows
 type NUL > %BASEFOLDER%\clientsettings.cfg
+REM  TODO: only do the following line if variable is set
 ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:52311/bfmirror/downloads/ >> %BASEFOLDER%\clientsettings.cfg
 ECHO _BESClient_Resource_StartupNormalSpeed=1 >> %BASEFOLDER%\clientsettings.cfg
 ECHO _BESClient_Download_RetryMinutes=1 >> %BASEFOLDER%\clientsettings.cfg
