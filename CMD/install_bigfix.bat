@@ -1,5 +1,8 @@
 :<<"::CMDLITERAL"
 @ECHO OFF
+REM    Source: https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
+REM   Related: https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
+
 REM http://stackoverflow.com/questions/2541767/what-is-the-proper-way-to-test-if-variable-is-empty-in-a-batch-file-if-not-1
 IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
