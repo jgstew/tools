@@ -11,19 +11,19 @@ powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%'
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
 REM https://gist.github.com/jgstew/51a99ab4b5997efa0318
-ECHO "" > C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_RelaySelect_FailoverRelay=http://%1:port/bfmirror/downloads/" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Resource_StartupNormalSpeed=1" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Download_RetryMinutes=1" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Resource_WorkIdle=20" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Resource_SleepIdle=500" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Comm_CommandPollEnable=1" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Comm_CommandPollIntervalSeconds=10800" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Log_Days=30" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Download_UtilitiesCacheLimitMB=500" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Download_DownloadsCacheLimitMB=5000" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "_BESClient_Download_MinimumDiskFreeMB=2000" >> C:\Windows\Temp\clientsettings.cfg
-ECHO "" >> C:\Windows\Temp\clientsettings.cfg
+ECHO > C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:port/bfmirror/downloads/>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Resource_StartupNormalSpeed=1>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Download_RetryMinutes=1>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Resource_WorkIdle=20>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Resource_SleepIdle=500>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Comm_CommandPollEnable=1>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Comm_CommandPollIntervalSeconds=10800>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Log_Days=30>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Download_UtilitiesCacheLimitMB=500>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Download_DownloadsCacheLimitMB=5000>> C:\Windows\Temp\clientsettings.cfg
+ECHO _BESClient_Download_MinimumDiskFreeMB=2000>> C:\Windows\Temp\clientsettings.cfg
+ECHO >> C:\Windows\Temp\clientsettings.cfg
 
 ECHO I am %COMSPEC%
 ECHO put CMD/BAT lines in here.
