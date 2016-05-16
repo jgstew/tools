@@ -3,9 +3,8 @@
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 ECHO
 
-bitsadmin /transfer bigfixdl%random% /download /priority HIGH http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.1.9.exe C:\Windows\Temp\bigfixclient.exe
-SET MASTHEADJOB=bigfixmhdl%random%
-bitsadmin /transfer %MASTHEADJOB% /SetSecurityFlags %MASTHEADJOB% 8 /download /priority HIGH %MASTHEADURL% C:\Windows\Temp\masthead.afxm
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.1.9.exe', 'c:\Windows\Temp\BESClient.exe') }" -ExecutionPolicy Bypass
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%', 'c:\Windows\Temp\masthead.afxm') }" -ExecutionPolicy Bypass
 
 ECHO I am %COMSPEC%
 ECHO put CMD/BAT lines in here.
