@@ -49,6 +49,20 @@ if [[ $OSTYPE == darwin* ]]; then
   INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
   INSTALLDIR="/tmp"
   INSTALLER="/tmp/BESAgent.pkg"
+  
+  # create clientsettings.cfg file
+  echo -n > $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_RelaySelect_FailoverRelay=http://$1:52311/bfmirror/downloads/ >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Resource_StartupNormalSpeed=1 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Download_RetryMinutes=1 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Resource_WorkIdle=20 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Resource_SleepIdle=500 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Comm_CommandPollEnable=1 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Comm_CommandPollIntervalSeconds=10800 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Log_Days=30 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Download_UtilitiesCacheLimitMB=500 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Download_DownloadsCacheLimitMB=5000 >> $INSTALLDIR/clientsettings.cfg
+  echo _BESClient_Download_MinimumDiskFreeMB=2000 >> $INSTALLDIR/clientsettings.cfg
 else
   # For most Linux:
   INSTALLDIR="/etc/opt/BESClient"
