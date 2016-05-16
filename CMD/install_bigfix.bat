@@ -1,6 +1,7 @@
 :<<"::CMDLITERAL"
 @ECHO OFF
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
+SET BASEFOLDER=C:\Windows\Temp
 ECHO
 
 REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exists-in-the-path-from-a-windows-batch-file
@@ -11,7 +12,7 @@ powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%'
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
 REM https://gist.github.com/jgstew/51a99ab4b5997efa0318
-ECHO > C:\Windows\Temp\clientsettings.cfg
+ECHO > %BASEFOLDER%\clientsettings.cfg
 ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:port/bfmirror/downloads/>> C:\Windows\Temp\clientsettings.cfg
 ECHO _BESClient_Resource_StartupNormalSpeed=1>> C:\Windows\Temp\clientsettings.cfg
 ECHO _BESClient_Download_RetryMinutes=1>> C:\Windows\Temp\clientsettings.cfg
