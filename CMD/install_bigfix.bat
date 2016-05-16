@@ -14,6 +14,7 @@ SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
 
 REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already in the CWD
+REM  TODO: check for admin rights http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
 
 REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exists-in-the-path-from-a-windows-batch-file
 where /q powershell || ECHO Cound not find powershell. && EXIT /B
