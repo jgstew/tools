@@ -9,6 +9,7 @@ REM   Related: https://github.com/jgstew/tools/blob/master/bash/install_bigfix.s
 
 REM http://stackoverflow.com/questions/2541767/what-is-the-proper-way-to-test-if-variable-is-empty-in-a-batch-file-if-not-1
 IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
+REM KNOWN ISSUE: if enhanced security is enabled on root/relay, then must use HTTPS for masthead download. This will mean that the download part will have to ignore SSL errors
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
 
@@ -18,6 +19,7 @@ REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exis
 where /q powershell || ECHO Cound not find powershell. && EXIT /B
 
 @ECHO ON
+REM this following line will need to ignore SSL errors if HTTPS is used instead of HTTP
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%', '%BASEFOLDER%\actionsite.afxm') }" -ExecutionPolicy Bypass
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.1.9.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
 @ECHO OFF
