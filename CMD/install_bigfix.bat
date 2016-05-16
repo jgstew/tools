@@ -23,6 +23,7 @@ ECHO "_BESClient_Log_Days=30" >> C:\Windows\Temp\clientsettings.cfg
 ECHO "_BESClient_Download_UtilitiesCacheLimitMB=500" >> C:\Windows\Temp\clientsettings.cfg
 ECHO "_BESClient_Download_DownloadsCacheLimitMB=5000" >> C:\Windows\Temp\clientsettings.cfg
 ECHO "_BESClient_Download_MinimumDiskFreeMB=2000" >> C:\Windows\Temp\clientsettings.cfg
+ECHO "" >> C:\Windows\Temp\clientsettings.cfg
 
 ECHO I am %COMSPEC%
 ECHO put CMD/BAT lines in here.
