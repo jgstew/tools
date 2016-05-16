@@ -42,7 +42,8 @@ ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >> %BASEFOLDER%\clientsettings.c
 ECHO %0
 ECHO %1
 ECHO %MASTHEADURL%
-
+ECHO
+ECHO Installing BigFix now.
 %BASEFOLDER%\BESClient.exe /s /v"/l*voicewarmup %BASEFOLDER%\install.log /qn"
 
 EXIT /B
