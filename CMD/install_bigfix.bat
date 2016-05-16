@@ -10,8 +10,8 @@ REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exis
 where /q powershell || ECHO Cound not find powershell. && EXIT /B
 
 @ECHO ON
-powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.1.9.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%', '%BASEFOLDER%\actionsite.afxm') }" -ExecutionPolicy Bypass
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.1.9.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
 @ECHO OFF
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
