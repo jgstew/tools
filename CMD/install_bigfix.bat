@@ -27,7 +27,7 @@ REM https://gist.github.com/jgstew/51a99ab4b5997efa0318
 REM http://stackoverflow.com/questions/1702762/how-to-create-an-empty-file-at-the-command-line-in-windows
 REM http://stackoverflow.com/questions/7225630/how-to-echo-2-no-quotes-to-a-file-from-a-batch-script
 type NUL > %BASEFOLDER%\clientsettings.cfg
-REM  TODO: only do the following line if variable is set
+REM  TODO: only do the following line if FQDN_variable is set
 >>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:52311/bfmirror/downloads/
 >>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Resource_StartupNormalSpeed=1
 >>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Download_RetryMinutes=1
