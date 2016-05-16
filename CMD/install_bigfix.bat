@@ -1,4 +1,6 @@
 :<<"::CMDLITERAL"
+
+IF [%1] == [] ECHO no args && EXIT /B
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
 
