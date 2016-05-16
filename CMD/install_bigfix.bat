@@ -25,19 +25,20 @@ powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://softwar
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
 REM https://gist.github.com/jgstew/51a99ab4b5997efa0318
 REM http://stackoverflow.com/questions/1702762/how-to-create-an-empty-file-at-the-command-line-in-windows
+REM http://stackoverflow.com/questions/7225630/how-to-echo-2-no-quotes-to-a-file-from-a-batch-script
 type NUL > %BASEFOLDER%\clientsettings.cfg
 REM  TODO: only do the following line if variable is set
-ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:52311/bfmirror/downloads/ >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Resource_StartupNormalSpeed=1 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Download_RetryMinutes=1 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Resource_WorkIdle=20 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Resource_SleepIdle=500 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Comm_CommandPollEnable=1 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Comm_CommandPollIntervalSeconds=10800 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Log_Days=30 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Download_UtilitiesCacheLimitMB=500 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Download_DownloadsCacheLimitMB=5000 >> %BASEFOLDER%\clientsettings.cfg
-ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >> %BASEFOLDER%\clientsettings.cfg
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:52311/bfmirror/downloads/
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Resource_StartupNormalSpeed=1
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Download_RetryMinutes=1
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Resource_WorkIdle=20
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Resource_SleepIdle=500
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Comm_CommandPollEnable=1
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Comm_CommandPollIntervalSeconds=10800
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Log_Days=30
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Download_UtilitiesCacheLimitMB=500
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Download_DownloadsCacheLimitMB=5000
+>>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Download_MinimumDiskFreeMB=2000
 
 ECHO
 ECHO %0
