@@ -12,7 +12,8 @@ powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%'
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
 REM https://gist.github.com/jgstew/51a99ab4b5997efa0318
-ECHO NUL > C:\Windows\Temp\clientsettings.cfg
+REM http://stackoverflow.com/questions/1702762/how-to-create-an-empty-file-at-the-command-line-in-windows
+type NUL > C:\Windows\Temp\clientsettings.cfg
 ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:port/bfmirror/downloads/ >> C:\Windows\Temp\clientsettings.cfg
 ECHO _BESClient_Resource_StartupNormalSpeed=1 >> C:\Windows\Temp\clientsettings.cfg
 ECHO _BESClient_Download_RetryMinutes=1 >> C:\Windows\Temp\clientsettings.cfg
