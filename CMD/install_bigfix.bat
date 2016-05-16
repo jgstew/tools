@@ -1,6 +1,6 @@
 :<<"::CMDLITERAL"
 
-IF [%1] == [] ECHO no args && EXIT /B
+IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET BASEFOLDER=C:\Windows\Temp
 
