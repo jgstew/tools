@@ -25,7 +25,7 @@ command_exists () {
 }
 
 # if $1 exists, then set MASTHEADURL
-if [ ! -z "$1" ]; then
+if [ -n "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
 fi
 
