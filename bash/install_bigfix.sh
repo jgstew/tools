@@ -149,6 +149,8 @@ fi
 curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
 # TODO: get masthead from CWD instead if present
+# http://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
+#  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
 curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
 
 
