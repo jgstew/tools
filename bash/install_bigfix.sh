@@ -149,7 +149,7 @@ fi
 curl -o $INSTALLER $INSTALLERURL
 # Download the masthead, renamed, into the correct location
 # TODO: get masthead from CWD instead if present
-curl -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
+curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
 
 
 # open up linux firewall to accept UDP 52311 - iptables
