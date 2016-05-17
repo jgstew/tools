@@ -25,6 +25,7 @@ command_exists () {
 }
 
 # if $1 exists, then set MASTHEADURL
+# http://www.tldp.org/LDP/abs/html/comparison-ops.html
 if [ -n "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
 fi
