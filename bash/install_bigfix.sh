@@ -149,19 +149,20 @@ fi
 
 if command_exists curl ; then
   # Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
-  # TODO: if curl not present, use wget instead
   curl -o $INSTALLER $INSTALLERURL
   # Download the masthead, renamed, into the correct location
   # TODO: get masthead from CWD instead if present
   # http://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
   #  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
   curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
+  # TODO: add error checking to ensure masthead was downloaded
 else
   if command_exists wget ; then
     # this is run if curl doesn't exist, but wget does
     # download using wget
     # http://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
     wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
+    # TODO: add error checking to ensure masthead was downloaded
     wget $INSTALLERURL -O $INSTALLER
   else
     echo neither wget nor curl is installed.
