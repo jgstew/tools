@@ -161,7 +161,7 @@ else
     # this is run if curl doesn't exist, but wget does
     # download using wget
     # http://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
-    wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm
+    wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
     wget $INSTALLERURL -O $INSTALLER
   else
     echo neither wget nor curl is installed.
