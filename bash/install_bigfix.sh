@@ -161,6 +161,7 @@ else
     # this is run if curl doesn't exist, but wget does
     # download using wget
     # http://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
+    # https://www.gnu.org/software/wget/manual/html_node/HTTPS-_0028SSL_002fTLS_0029-Options.html
     wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
     # TODO: add error checking to ensure masthead was downloaded
     wget $INSTALLERURL -O $INSTALLER
