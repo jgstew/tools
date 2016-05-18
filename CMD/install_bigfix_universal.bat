@@ -53,6 +53,7 @@ ECHO Installing BigFix now.
 
 EXIT /B
 ::CMDLITERAL
+
 #!/usr/bin/env bash
 # kickstart bigfix install
 # current target - Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora
