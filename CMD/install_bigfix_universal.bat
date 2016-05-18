@@ -200,15 +200,34 @@ if [ ! -d "$INSTALLDIR" ]; then
   mkdir $INSTALLDIR
 fi
 
-# Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
-# TODO: if curl not present, use wget instead
-curl -o $INSTALLER $INSTALLERURL
-# Download the masthead, renamed, into the correct location
-# TODO: get masthead from CWD instead if present
-# http://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
-#  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
-curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
 
+#### Downloads #############################################
+
+if command_exists curl ; then
+  # Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
+  curl -o $INSTALLER $INSTALLERURL
+  # Download the masthead, renamed, into the correct location
+  # TODO: get masthead from CWD instead if present
+  # http://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
+  #  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
+  curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
+  # TODO: add error checking to ensure masthead was downloaded
+else
+  if command_exists wget ; then
+    # this is run if curl doesn't exist, but wget does
+    # download using wget
+    # http://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
+    # https://www.gnu.org/software/wget/manual/html_node/HTTPS-_0028SSL_002fTLS_0029-Options.html
+    wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
+    # TODO: add error checking to ensure masthead was downloaded
+    wget $INSTALLERURL -O $INSTALLER
+  else
+    echo neither wget nor curl is installed.
+    echo not able to download required files.
+    echo exiting...
+    exit 2
+  fi
+fi
 
 # open up linux firewall to accept UDP 52311 - iptables
 if command_exists iptables ; then
