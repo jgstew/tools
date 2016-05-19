@@ -19,5 +19,6 @@ if command_exists awk && command_exists sed; then
   echo AWK and SED present
 else
   echo AWK and/or SED missing
+  echo can not continue, exiting.
   exit 1
 fi
