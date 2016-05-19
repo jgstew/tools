@@ -49,6 +49,11 @@ fi
 #   This will also be used to create the default clientsettings.cfg file
 INSTALLDIR="/tmp"
 
+# if clientsettings.cfg exists in CWD copy it
+if [ -f clientsettings.cfg ] && [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
+  cp clientsettings.cfg $INSTALLDIR/clientsettings.cfg
+fi
+
 if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   # create clientsettings.cfg file
   echo -n > $INSTALLDIR/clientsettings.cfg
