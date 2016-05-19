@@ -45,12 +45,11 @@ fi
 ############################################################
 # TODO: add more linux cases, not all are handled
 
-if [[ $OSTYPE == darwin* ]]; then
-  # Mac OS X
-  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
-  INSTALLDIR="/tmp"
-  INSTALLER="/tmp/BESAgent.pkg"
-  
+# set INSTALLDIR for OS X - other OS options will change this variable
+#   This will also be used to create the default clientsettings.cfg file
+INSTALLDIR="/tmp"
+
+if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   # create clientsettings.cfg file
   echo -n > $INSTALLDIR/clientsettings.cfg
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=http://$1:52311/bfmirror/downloads/
@@ -64,6 +63,12 @@ if [[ $OSTYPE == darwin* ]]; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
+fi
+
+if [[ $OSTYPE == darwin* ]]; then
+  # Mac OS X
+  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
+  INSTALLER="/tmp/BESAgent.pkg"
 else
   # For most Linux:
   INSTALLDIR="/etc/opt/BESClient"
