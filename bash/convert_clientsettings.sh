@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# see related script: https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
+# see the issue this solves:  https://github.com/jgstew/tools/issues/4
+# see related script:  https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
 
 # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 # FUNCTION: check if command exists
