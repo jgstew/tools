@@ -217,6 +217,12 @@ fi
 ### start the BigFix client (required for most linux dist)
 # if file `/etc/init.d/besclient` exists
 if [ -f /etc/init.d/besclient ]; then
+
+  if [ ! -f /var/opt/BESClient/besclient.config ]; then
+    cat /tmp/clientsettings.cfg | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
+    chmod 600 /var/opt/BESClient/besclient.config
+  fi
+
   /etc/init.d/besclient start
 fi
 
