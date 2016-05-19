@@ -15,7 +15,7 @@ else
 fi
 
 # check that AWK & SED are present
-if command_exists awk & command_exists sed; then
+if command_exists awk && command_exists sed; then
   echo AWK and SED present
 else
   echo AWK and/or SED missing!
