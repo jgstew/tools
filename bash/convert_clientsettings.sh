@@ -21,13 +21,13 @@ else
   OUTPUTFILE=besclient.config
 fi
 
-# check that AWK & SED are present
-if command_exists awk && command_exists sed; then
+# check that AWK is present
+if command_exists awk ; then
   if [ -f $CLIENTSETTINGSFILE ] ; then
-    cat $CLIENTSETTINGSFILE | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\neffective date = \nvalue = " $2;}' | sed "s/effective\ date\ =\ /effective\ date\ =\ $(date +'%a, %d %b %Y %T %z')/"
+    cat $CLIENTSETTINGSFILE | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}'
   fi
 else
-  echo AWK and/or SED missing!
-  echo cant continue, exiting.
+  echo AWK is missing!
+  echo can not continue, exiting.
   exit 1
 fi
