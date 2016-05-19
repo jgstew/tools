@@ -14,6 +14,13 @@ else
   CLIENTSETTINGSFILE=clientsettings.cfg
 fi
 
+# either take file location as argument, or assume current folder
+if [ -n "$2" ]; then
+  OUTPUTFILE=$2
+else
+  OUTPUTFILE=besclient.config
+fi
+
 # check that AWK & SED are present
 if command_exists awk && command_exists sed; then
   if [ -f $CLIENTSETTINGSFILE ] ; then
