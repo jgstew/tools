@@ -49,7 +49,7 @@ ECHO %1
 ECHO %MASTHEADURL%
 ECHO
 ECHO Installing BigFix now.
-%BASEFOLDER%\BESClient.exe /s /v"/l*voicewarmup %BASEFOLDER%\install.log /qn"
+%BASEFOLDER%\BESClient.exe /s /v"/l*voicewarmup %BASEFOLDER%\install_bigfix.log /qn"
 
 EXIT /B
 ::CMDLITERAL
