@@ -33,6 +33,9 @@ else
   exit 1
 fi
 
+# these variables are used to determine which version of the BigFix agent should be downloaded
+# these variables are typically set to the latest version of the BigFix agent
+# URLMAJORMINOR is the first two integers of URLVERSION
 URLVERSION=9.5.2.56
 URLMAJORMINOR=95
 
