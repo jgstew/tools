@@ -84,6 +84,7 @@ command_exists () {
 # http://www.tldp.org/LDP/abs/html/comparison-ops.html
 if [ -n "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
+  RELAYFQDN=$1
 fi
 
 # check for x32bit or x64bit OS
@@ -101,15 +102,19 @@ fi
 ############################################################
 # TODO: add more linux cases, not all are handled
 
-if [[ $OSTYPE == darwin* ]]; then
-  # Mac OS X
-  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
-  INSTALLDIR="/tmp"
-  INSTALLER="/tmp/BESAgent.pkg"
-  
+# set INSTALLDIR for OS X - other OS options will change this variable
+#   This will also be used to create the default clientsettings.cfg file
+INSTALLDIR="/tmp"
+
+# if clientsettings.cfg exists in CWD copy it
+if [ -f clientsettings.cfg ] && [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
+  cp clientsettings.cfg $INSTALLDIR/clientsettings.cfg
+fi
+
+if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   # create clientsettings.cfg file
   echo -n > $INSTALLDIR/clientsettings.cfg
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=http://$1:52311/bfmirror/downloads/
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=http://$RELAYFQDN:52311/bfmirror/downloads/
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
@@ -120,6 +125,12 @@ if [[ $OSTYPE == darwin* ]]; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
+fi
+
+if [[ $OSTYPE == darwin* ]]; then
+  # Mac OS X
+  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
+  INSTALLER="/tmp/BESAgent.pkg"
 else
   # For most Linux:
   INSTALLDIR="/etc/opt/BESClient"
@@ -263,6 +274,12 @@ fi
 ### start the BigFix client (required for most linux dist)
 # if file `/etc/init.d/besclient` exists
 if [ -f /etc/init.d/besclient ]; then
+  # if missing, create besclient.config file based upon /tmp/clientsettings.cfg
+  if [ ! -f /var/opt/BESClient/besclient.config ]; then
+    cat /tmp/clientsettings.cfg | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
+    chmod 600 /var/opt/BESClient/besclient.config
+  fi
+
   /etc/init.d/besclient start
 fi
 
