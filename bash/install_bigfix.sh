@@ -33,6 +33,9 @@ else
   exit 1
 fi
 
+URLVERSION=9.5.2.56
+URLMAJORMINOR=95
+
 # check for x32bit or x64bit OS
 MACHINETYPE=`uname -m`
 
@@ -139,6 +142,8 @@ if [ "$(id -u)" != "0" ]; then
   echo INSTALLER=$INSTALLER
   echo INSTALLERURL=$INSTALLERURL
   echo URLBITS=$URLBITS
+  echo URLVERSION=$URLVERSION
+  echo URLMAJORMINOR=$URLMAJORMINOR
   echo MASTHEADURL=$MASTHEADURL
   echo DEBDIST=$DEBDIST
   echo
