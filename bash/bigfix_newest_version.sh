@@ -16,10 +16,10 @@ fi
 
 # https://www.mattcutts.com/blog/how-to-fetch-a-url-with-curl-or-wget-silently/
 if command_exists curl ; then
-  curl -silent -O $HTMLURL 2>&1 >/dev/null
+  curl -silent -O $HTMLURL
 else
   if command_exists wget ; then
-    wget -quiet $HTMLURL 2>&1 >/dev/null
+    wget -quiet $HTMLURL
   else
     echo neither wget nor curl is installed.
     echo not able to download required files.
