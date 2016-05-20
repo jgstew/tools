@@ -8,7 +8,11 @@ command_exists () {
   type "$1" &> /dev/null ;
 }
 
-HTMLURL=http://support.bigfix.com/bes/release/index.html
+if [ -n "$1" ]; then
+  HTMLURL=$1
+else
+  HTMLURL=http://support.bigfix.com/bes/release/index.html
+fi
 
 if command_exists curl ; then
   curl -O $HTMLURL
