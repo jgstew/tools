@@ -14,8 +14,6 @@
 
 # NOTE: AMD64 compatible OS architecture is assumed (x86, Itanium, and Power are not common, but could be added)
 
-# TODO: if Mac OS X then get clientsettings.cfg from CWD (currently creating a default one)
-
 # TODO: use the masthead file in current directory if present
 
 # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
