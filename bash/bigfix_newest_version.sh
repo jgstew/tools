@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # https://github.com/jgstew/tools/issues/9
 
+HTMLTMPFILE=index.html
 
 # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 # FUNCTION: check if command exists
@@ -26,8 +27,8 @@ download_file () {
 
 if [ -n "$1" ]; then
   download_file $1
-  echo `cat index.html | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | grep -m 1 '.'`
+  echo `cat $HTMLTMPFILE | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | grep -m 1 '.'`
 else
   download_file http://support.bigfix.com/bes/release/index.html
-  echo `cat index.html | grep -m 16 -i -o -P -e '<td align="left">\d+\.\d+\.\d+\.\d+<\/td>' | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | uniq -c | grep -m 1 -i "4 " | grep -o -P -e '\d+\.\d+\.\d+\.\d+'`
+  echo `cat $HTMLTMPFILE | grep -m 16 -i -o -P -e '<td align="left">\d+\.\d+\.\d+\.\d+<\/td>' | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | uniq -c | grep -m 1 -i "4 " | grep -o -P -e '\d+\.\d+\.\d+\.\d+'`
 fi
