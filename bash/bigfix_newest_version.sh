@@ -25,9 +25,9 @@ download_file () {
 }
 
 if [ -n "$1" ]; then
-  HTMLURL=$1
+  download_file $1
 else
-  HTMLURL=http://support.bigfix.com/bes/release/index.html
+  download_file http://support.bigfix.com/bes/release/index.html
 fi
 
 echo `cat index.html | grep -m 16 -i -o -P -e '<td align="left">\d+\.\d+\.\d+\.\d+<\/td>' | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | uniq -c | grep -m 1 -i "4 " | grep -o -P -e '\d+\.\d+\.\d+\.\d+'`
