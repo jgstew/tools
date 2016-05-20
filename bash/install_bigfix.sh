@@ -29,6 +29,10 @@ command_exists () {
 if [ -n "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
   RELAYFQDN=$1
+else
+  # TODO: allow a masthead to be provided in the CWD instead.
+  echo Must provide FQDN of Root or Relay
+  exit 1
 fi
 
 # check for x32bit or x64bit OS
