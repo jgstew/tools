@@ -15,7 +15,7 @@ else
 fi
 
 if command_exists curl ; then
-  curl -O $HTMLURL 2>&1 >/dev/null
+  curl -s -O $HTMLURL 2>&1 >/dev/null
 else
   if command_exists wget ; then
     wget $HTMLURL 2>&1 >/dev/null
