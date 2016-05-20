@@ -13,6 +13,7 @@ HTMLURL=http://support.bigfix.com/bes/release/index.html
 if command_exists curl ; then
   curl -O $HTMLURL
 else
+  if command_exists wget ; then
     wget $HTMLURL
   else
     echo neither wget nor curl is installed.
