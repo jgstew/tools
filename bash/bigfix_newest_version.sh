@@ -15,10 +15,10 @@ else
 fi
 
 if command_exists curl ; then
-  curl -O $HTMLURL
+  curl -O $HTMLURL 2>&1 >/dev/null
 else
   if command_exists wget ; then
-    wget $HTMLURL
+    wget $HTMLURL 2>&1 >/dev/null
   else
     echo neither wget nor curl is installed.
     echo not able to download required files.
