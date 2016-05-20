@@ -28,6 +28,7 @@ command_exists () {
 # http://www.tldp.org/LDP/abs/html/comparison-ops.html
 if [ -n "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
+  RELAYFQDN=$1
 fi
 
 # check for x32bit or x64bit OS
@@ -57,7 +58,7 @@ fi
 if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   # create clientsettings.cfg file
   echo -n > $INSTALLDIR/clientsettings.cfg
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=http://$1:52311/bfmirror/downloads/
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=http://$RELAYFQDN:52311/bfmirror/downloads/
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
