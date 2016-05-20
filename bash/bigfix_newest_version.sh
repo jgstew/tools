@@ -12,10 +12,10 @@ command_exists () {
 download_file () {
   # https://www.mattcutts.com/blog/how-to-fetch-a-url-with-curl-or-wget-silently/
   if command_exists curl ; then
-    curl -silent -O "$1"
+    curl -silent -o $HTMLTMPFILE "$1"
   else
     if command_exists wget ; then
-      wget -quiet "$1"
+      wget "$1" -quiet -O $HTMLTMPFILE
     else
       echo neither wget nor curl is installed.
       echo not able to download required files.
