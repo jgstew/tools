@@ -27,7 +27,7 @@ download_file () {
 
 if [ -n "$1" ]; then
   download_file $1
-  echo `cat $HTMLTMPFILE | grep -o -P -e '\d{1,2}\.\d{1,2}}\.?\d*\.?\d*' | sort -r -V | grep -m 1 '.'`
+  echo `cat $HTMLTMPFILE | grep -o -P -e '\d{1,2}\.\d{1,2}\.?\d*\.?\d*' | sort -r -V | grep -m 1 '.'`
 else
   download_file http://support.bigfix.com/bes/release/index.html
   echo `cat $HTMLTMPFILE | grep -m 16 -i -o -P -e '<td align="left">\d+\.\d+\.\d+\.\d+<\/td>' | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | uniq -c | grep -m 1 -i "4 " | grep -o -P -e '\d+\.\d+\.\d+\.\d+'`
