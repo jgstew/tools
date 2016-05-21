@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # https://github.com/jgstew/tools/issues/9
 
+# also works with:  https://www.mozilla.org/en-US/firefox/releases/
+
 HTMLTMPFILE=newest_version_tmp.html
 
 # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
