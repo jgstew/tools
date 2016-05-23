@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#### Usage: ./download_file.sh URL OutputFileName(optional)
+
 # https://github.com/jgstew/tools/issues/10
 # https://github.com/jgstew/tools/issues/7
 
