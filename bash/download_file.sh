@@ -39,6 +39,7 @@ EXITCODE=$?
 # http://www.tldp.org/LDP/abs/html/comparison-ops.html
 # if the exit code is not 0, error
 if [ $EXITCODE -ne 0 ]; then
-  echo Failed. ExitCode=$EXITCODE
+  # http://stackoverflow.com/questions/2990414/echo-that-outputs-to-stderr
+  (>&2 echo Failed. ExitCode=$EXITCODE)
   exit $EXITCODE
 fi
