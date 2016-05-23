@@ -17,6 +17,7 @@
 # TODO: use the masthead file in current directory if present
 
 # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
+# http://www.tldp.org/LDP/abs/html/functions.html
 # FUNCTION: check if command exists
 command_exists () {
   type "$1" &> /dev/null ;
