@@ -2,6 +2,12 @@
 # https://github.com/jgstew/tools/issues/10
 # https://github.com/jgstew/tools/issues/7
 
+# http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
+# FUNCTION: check if command exists
+command_exists () {
+  type "$1" &> /dev/null ;
+}
+
   # https://www.mattcutts.com/blog/how-to-fetch-a-url-with-curl-or-wget-silently/
   if command_exists curl ; then
     curl -silent -o $2 "$1"
