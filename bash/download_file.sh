@@ -35,7 +35,7 @@ command_exists () {
   # http://stackoverflow.com/questions/1378274/in-a-bash-script-how-can-i-exit-the-entire-script-if-a-certain-condition-occurs
 
 # if the exit code is not 0, error
-if [ $? -ne 0 ]
+if [ $? -ne 0 ]; then
   ERROR=$?
   echo Failed. ExitCode=$ERROR
   exit $ERROR
