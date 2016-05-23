@@ -34,7 +34,9 @@ command_exists () {
   # https://www.gnu.org/software/wget/manual/html_node/Exit-Status.html
   # http://stackoverflow.com/questions/1378274/in-a-bash-script-how-can-i-exit-the-entire-script-if-a-certain-condition-occurs
 
+# http://stackoverflow.com/questions/90418/exit-shell-script-based-on-process-exit-code
 EXITCODE=$?
+# http://www.tldp.org/LDP/abs/html/comparison-ops.html
 # if the exit code is not 0, error
 if [ $EXITCODE -ne 0 ]; then
   echo Failed. ExitCode=$EXITCODE
