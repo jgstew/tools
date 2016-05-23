@@ -17,4 +17,5 @@
   fi
   # TODO: handle error conditions
   # https://www.gnu.org/software/wget/manual/html_node/Exit-Status.html
-
+  # http://stackoverflow.com/questions/1378274/in-a-bash-script-how-can-i-exit-the-entire-script-if-a-certain-condition-occurs
+exit $?
