@@ -9,18 +9,18 @@ command_exists () {
 }
 
   # https://www.mattcutts.com/blog/how-to-fetch-a-url-with-curl-or-wget-silently/
-  if command_exists curl ; then
+  if command_exists wget ; then
     if [ -n "$2" ]; then
-      curl --silent --output "$2" "$1"
+      wget "$1" -quiet -O "$2"
     else
-      curl --silent --remote-name --remote-header-name --location "$1"
+      wget "$1" -quiet
     fi
   else
-    if command_exists wget ; then
+    if command_exists curl ; then
       if [ -n "$2" ]; then
-        wget "$1" -quiet -O "$2"
+        curl --silent --output "$2" "$1"
       else
-        wget "$1" -quiet
+        curl --silent --remote-name --remote-header-name --location "$1"
       fi
     else
       echo neither wget nor curl is installed.
