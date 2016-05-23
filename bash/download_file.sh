@@ -13,7 +13,7 @@ command_exists () {
     if [ -n "$2" ]; then
       curl --silent -o "$2" "$1"
     else
-      curl --silent --remote-name "$1"
+      curl --silent --remote-name --remote-header-name "$1"
     fi
   else
     if command_exists wget ; then
