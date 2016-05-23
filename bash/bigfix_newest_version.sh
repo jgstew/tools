@@ -25,6 +25,8 @@ download_file () {
       exit 2
     fi
   fi
+  # TODO: handle error conditions
+  # https://www.gnu.org/software/wget/manual/html_node/Exit-Status.html
 }
 
 if [ -n "$1" ]; then
