@@ -20,6 +20,7 @@ command_exists () {
       if [ -n "$2" ]; then
         curl --silent --output "$2" "$1"
       else
+        # this option is trying to make curl behave more like wget when a location to save the file is not provided.
         curl --silent --remote-name --remote-header-name --location "$1"
       fi
     else
