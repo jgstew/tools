@@ -13,7 +13,7 @@ command_exists () {
     if [ -n "$2" ]; then
       curl -silent -o "$2" "$1"
     else
-      curl -silent "$1"
+      curl -silent -O "$1"
     fi
   else
     if command_exists wget ; then
