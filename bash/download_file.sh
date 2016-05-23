@@ -11,9 +11,9 @@ command_exists () {
   # https://www.mattcutts.com/blog/how-to-fetch-a-url-with-curl-or-wget-silently/
   if command_exists wget ; then
     if [ -n "$2" ]; then
-      wget "$1" -quiet -O "$2"
+      wget "$1" --quiet -O "$2"
     else
-      wget "$1" -quiet
+      wget "$1" --quiet
     fi
   else
     if command_exists curl ; then
