@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <FixletDebuggerFile>
 	<QnAView>
-Q: (node values of selects "/BESAPI/Query/Result/Answer/text()" of xml documents of files "DellCommandUpdateResults_Applications.xml" of it) of folders "__Download" of folders of data folders of client
-A: release=54W6D, name=Dell Command | Configure, version=A00 (3.1.0.250), ( date=July 16, 2015 ), urgency=Recommended, type=Application, category=OpenManage Systems Management, file=downloads.dell.com/FOLDER03164404M/1/Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE, bytes=35118328
-A: release=C8JN9, name=Dell Digital Delivery Application, version=A10 (3.1.1002.0), ( date=May 28, 2015 ), urgency=Recommended, type=Application, category=Applications, file=downloads.dell.com/FOLDER03053102M/1/Application_C8JN9_WN32_3.1.1002.0_A00.EXE, bytes=14714176
-A: release=K0K0P, name=Dell Command | Monitor, version=A00 (9.1.0.98), ( date=July 16, 2015 ), urgency=Recommended, type=Application, category=OpenManage Systems Management, file=downloads.dell.com/FOLDER03162872M/1/Systems-Management_Application_K0K0P_WN32_9.1.0.98_A00.EXE, bytes=31024096
-T: 5.319 ms
-I: plural string
+Q: it /* filter down to only files named in results */ whose(item 1 of item 1 of it contains name of item 0 of it) of (files of it, (tuple string items whose(it contains "bytes=") of it, tuple string items whose(it contains "file=") of it) of node values of selects "/BESAPI/Query/Result/Answer/text()" of xml documents of files "DellCommandUpdateResults_Applications.xml" of it) of folders "__Download" of folders of data folders of client
+A: ( "Application_C8JN9_WN32_3.1.1002.0_A00.EXE" "3.0.0.0" "Dell Update Package: Digital Delivery Application, 3.1.1002.0, A00" "003.000.000.000" "Dell Inc." ), ( bytes=14714176, file=downloads.dell.com/FOLDER03053102M/1/Application_C8JN9_WN32_3.1.1002.0_A00.EXE )
+A: ( "Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE" "3.0.0.0" "Dell Update Package: Command | Configure, 3.1.0.250, A00" "003.000.000.000" "Dell Inc." ), ( bytes=35118328, file=downloads.dell.com/FOLDER03164404M/1/Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE )
+A: "Systems-Management_Application_K0K0P_WN32_9.1.0.98_A00.EXE" "" "" "" "", ( bytes=31024096, file=downloads.dell.com/FOLDER03162872M/1/Systems-Management_Application_K0K0P_WN32_9.1.0.98_A00.EXE )
+T: 8.100 ms
+I: plural ( file, ( string, string ) )
 </QnAView>
 </FixletDebuggerFile>
