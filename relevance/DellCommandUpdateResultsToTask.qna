@@ -1,14 +1,20 @@
 <?xml version="1.0"?>
 <FixletDebuggerFile>
 	<QnAView>
-Q: items 0 of ( concatenations "%0d%0a" of ("prefetch " &amp; name of item 0 of it &amp; " sha1:" &amp; sha1 of item 0 of it &amp; " size:" &amp; (it as string) of size of item 0 of it &amp; " http://" &amp; (it as trimmed string) of following text of first "file=" of unique value of tuple string items whose(it contains "file=") of item 1 of it &amp; " sha256:" &amp; sha256 of item 0 of it ; "// INSTALL: " &amp; following text of first "name=" of tuple string items whose(it contains "name=") of item 1 of it ; "waithidden __Download\" &amp; name of item 0 of it &amp; " /s"), it) of it /* filter down to only files with matching size */ whose(unique value of tuple string items whose(it contains "bytes=") of item 1 of it contains (it as string) of size of item 0 of it) of it /* filter down to only files named in results */ whose(unique value of tuple string items whose(it contains "file=") of item 1 of it contains name of item 0 of it) of (files of it, node values of selects "/BESAPI/Query/Result/Answer/text()" of xml documents of files "DellCommandUpdateResults_Applications.xml" of it) of folders "__Download" whose(exists files "DellCommandUpdateResults_Applications.xml" of it /* should only include those made recently */ ) of folders of data folders of client
-A: prefetch Application_C8JN9_WN32_3.1.1002.0_A00.EXE sha1:54db753c8797f7f9da6f0e69f2b483f68c6a915c size:14714176 http://downloads.dell.com/FOLDER03053102M/1/Application_C8JN9_WN32_3.1.1002.0_A00.EXE sha256:a504f7a7c45db796778ab0d2990c925bbe6e9c5041ef5a4054d001bbc5e08982
+Q: items 0 of ( concatenations "%0d%0a" of ("";"prefetch " &amp; name of item 0 of it &amp; " sha1:" &amp; sha1 of item 0 of it &amp; " size:" &amp; (it as string) of size of item 0 of it &amp; " http://" &amp; (it as trimmed string) of following text of first "file=" of unique value of tuple string items whose(it contains "file=") of item 1 of it &amp; " sha256:" &amp; sha256 of item 0 of it ;""; "// INSTALL: " &amp; following text of first "name=" of tuple string items whose(it contains "name=") of item 1 of it ; "waithidden __Download\" &amp; name of item 0 of it &amp; " /s";""), it) of it /* filter down to only files with matching size */ whose(unique value of tuple string items whose(it contains "bytes=") of item 1 of it contains (it as string) of size of item 0 of it) of it /* filter down to only files named in results */ whose(unique value of tuple string items whose(it contains "file=") of item 1 of it contains name of item 0 of it) of (files of it, node values of selects "/BESAPI/Query/Result/Answer/text()" of xml documents of files "DellCommandUpdateResults_Applications.xml" of it) of folders "__Download" whose(exists files "DellCommandUpdateResults_Applications.xml" of it /* should only include those made recently */ ) of folders of data folders of client
+A: 
+prefetch Application_C8JN9_WN32_3.1.1002.0_A00.EXE sha1:54db753c8797f7f9da6f0e69f2b483f68c6a915c size:14714176 http://downloads.dell.com/FOLDER03053102M/1/Application_C8JN9_WN32_3.1.1002.0_A00.EXE sha256:a504f7a7c45db796778ab0d2990c925bbe6e9c5041ef5a4054d001bbc5e08982
+
 // INSTALL: Dell Digital Delivery Application
 waithidden __Download\Application_C8JN9_WN32_3.1.1002.0_A00.EXE /s
-A: prefetch Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE sha1:392b926c67713d2b13bebfce72ffeec2ae26ec9c size:35118328 http://downloads.dell.com/FOLDER03164404M/1/Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE sha256:55000663debe1c97cecfbe26e253e5501996391515750d1c96cb9ed99e32f4bf
+
+A: 
+prefetch Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE sha1:392b926c67713d2b13bebfce72ffeec2ae26ec9c size:35118328 http://downloads.dell.com/FOLDER03164404M/1/Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE sha256:55000663debe1c97cecfbe26e253e5501996391515750d1c96cb9ed99e32f4bf
+
 // INSTALL: Dell Command | Configure
 waithidden __Download\Systems-Management_Application_54W6D_WN32_3.1.0.250_A00.EXE /s
-T: 366.001 ms
+
+T: 368.298 ms
 I: plural string
 </QnAView>
 </FixletDebuggerFile>
