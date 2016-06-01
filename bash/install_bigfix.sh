@@ -204,6 +204,11 @@ fi
 if command_exists firewall-cmd ; then
   firewall-cmd --zone=public --add-port=52311/udp --permanent
 fi
+# open up linux firewall to accept UDP 52311 - firewall-offline-cmd
+if command_exists firewall-offline-cmd ; then
+  # this applies in anaconda at install time in particular
+  firewall-offline-cmd --add-port=52311/udp
+fi
 
 # install BigFix client
 if [[ $INSTALLER == *.deb ]]; then
