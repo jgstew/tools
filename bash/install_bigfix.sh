@@ -127,8 +127,10 @@ else
     
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
-      echo Only RHEL, CentOS, or Fedora currently supported for RPM installs
-      exit 1
+      # Assume SUSE
+      #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
+      INSTALLERURL=http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle11.$URLBITS.rpm
+      # TODO: could add support for SUSE 10, but 11+ should work with the above.
     fi # END_IF not-RHEL-family
   fi # END_IF exists rpm
   
