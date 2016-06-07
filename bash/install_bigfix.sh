@@ -3,6 +3,7 @@
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
 # Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
+#          (Itanium, Power, and others are not common, but could be added)
 #
 # Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
 #
@@ -13,8 +14,6 @@
 #
 # Single Line:
 #  curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh ; chmod u+x install_bigfix.sh ; ./install_bigfix.sh __ROOT_OR_RELAY_FQDN__
-
-# NOTE: AMD64 compatible OS architecture is assumed (x86, Itanium, and Power are not common, but could be added)
 
 # TODO: use the masthead file in current directory if present
 
