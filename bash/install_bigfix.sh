@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # kickstart bigfix install
-# current target - Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora
+# tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
+# Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
+#
 # Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
 #
 # Usage:
