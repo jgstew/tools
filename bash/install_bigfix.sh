@@ -220,11 +220,18 @@ if [[ $INSTALLER == *.deb ]]; then
   dpkg -i $INSTALLER
 fi
 if [[ $INSTALLER == *.pkg ]]; then
-  #  Mac OS X (PKG)
-  installer -pkg $INSTALLER -target /
-  # TODO: add case for Solaris
-  # pkgadd -d $INSTALLER  #  Solaris (PKG)
-fi
+  # PKG type
+  #   Could be Mac OS X, Solaris, or AIX
+  if command_exists installer ; then
+    #  Mac OS X
+    installer -pkg $INSTALLER -target /
+  else
+    if command_exists pkgadd ; then
+        # TODO: test case for Solaris
+        pkgadd -d $INSTALLER
+    fi # pkgadd
+  fi # installer
+fi # *.pkg install file
 if [[ $INSTALLER == *.rpm ]]; then
   #  linux (RPM)
   # if file `/etc/init.d/besclient` exists then do upgrade
