@@ -4,4 +4,4 @@
 sudo apt-get update
 # http://askubuntu.com/questions/448358/automating-apt-get-install-with-assume-yes
 sudo apt-get install kvm --assume-yes
-
+sudo apt-get upgrade --assume-yes
