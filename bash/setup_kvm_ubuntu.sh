@@ -7,3 +7,6 @@ sudo apt-get update
 sudo apt-get install kvm qemu-kvm libvirt-bin --assume-yes
 sudo apt-get upgrade --assume-yes
 # sudo virsh --connect qemu:///system
+
+
+# http://raspberrypi.stackexchange.com/questions/4296/can-i-emulate-x86-cpu-to-run-teamspeak-3-server
