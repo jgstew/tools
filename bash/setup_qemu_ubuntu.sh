@@ -1,5 +1,5 @@
 
-# just a record of the commands i'm using to setup kvm on ubuntu to have many small linux vms
+# just a record of the commands i'm using to setup QEMU on a raspberrypi to run x86 linux
 # https://help.ubuntu.com/community/KVM/CreateGuests
 # http://xmodulo.com/use-kvm-command-line-debian-ubuntu.html
 sudo apt-get update
