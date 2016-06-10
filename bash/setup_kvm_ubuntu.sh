@@ -10,3 +10,4 @@ sudo apt-get upgrade --assume-yes
 
 
 # http://raspberrypi.stackexchange.com/questions/4296/can-i-emulate-x86-cpu-to-run-teamspeak-3-server
+# http://bochs.sourceforge.net/
