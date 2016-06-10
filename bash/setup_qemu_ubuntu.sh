@@ -7,8 +7,10 @@ sudo apt-get update
 sudo apt-get install kvm qemu-kvm libvirt-bin qemu --assume-yes
 sudo apt-get upgrade --assume-yes
 
+qemu-img create -f qcow2 debian.img 1500M
+# https://en.wikibooks.org/wiki/QEMU/Networking
+qemu-system-i386 -cdrom debian-live.iso -m 400 -smp 1 -redir udp:52311::52311 debian.img
+
+#  REFERENCES:
 # http://raspberrypi.stackexchange.com/questions/4296/can-i-emulate-x86-cpu-to-run-teamspeak-3-server
 # http://bochs.sourceforge.net/
-
-qemu-img create -f qcow2 debian.img 1500M
-qemu-system-i386 -cdrom debian-live.iso -m 400 -smp 1 -redir udp:52311::52311 debian.img
