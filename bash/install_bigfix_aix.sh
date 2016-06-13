@@ -16,3 +16,5 @@ command_exists () {
   type "$1" &> /dev/null ;
 }
 
+# References:
+#   http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
