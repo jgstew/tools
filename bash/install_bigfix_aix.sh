@@ -6,7 +6,7 @@
 # wget is preinstalled, curl is not (normal)
 # having trouble downloading the script with wget :(
 #  whenever downloading over https, wget gives the error messagine `- : Unsupported scheme.`
-#    this is probably an HTTPS issue
+#    this is probably an HTTPS issue, need to try `--no-check-certificate`
 
 # `uname` = AIX
 # `uname -p` = powerpc
