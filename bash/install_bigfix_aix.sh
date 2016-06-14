@@ -12,6 +12,8 @@
 #  http://www.bullfreeware.com/affichage.php?id=2401
 #  http://www.bullfreeware.com/download/bin/2401/wget-1.17.1-1.aix6.1.ppc.rpm
 
+# python -c "import urllib; print urllib.urlopen('https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix_aix.sh').read()" > install_bigfix_aix.sh
+
 # `uname` = AIX
 # `uname -p` = powerpc
 # OSTYPE & HOSTTYPE don't work in SH on AIX
