@@ -22,7 +22,7 @@ command_exists () {
   type "$1" &> /dev/null ;
 }
 
-OSAIX = `uname`
+OSAIX=`uname`
 echo $OSAIX
 
 # References:
