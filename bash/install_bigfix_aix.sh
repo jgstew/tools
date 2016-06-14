@@ -16,5 +16,8 @@ command_exists () {
   type "$1" &> /dev/null ;
 }
 
+OSAIX = `uname`
+echo $OSAIX
+
 # References:
 #   http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
