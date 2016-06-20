@@ -14,5 +14,7 @@ $('#basic-info > div > div > table > tbody > tr:has(> td:contains("File name:") 
 $('div#file-details.extra-info').children('div').children('div:has(> span:contains("SHA1") )').contents().filter(function() { return this.nodeType == 3; }).text().trim() +
 " size:" +
 $('div#file-details.extra-info').children('div').children('div:has(> span:contains("File size") )').contents().filter(function() { return this.nodeType == 3; }).text().split(' ( ')[1].split(' bytes ')[0] +
-" http://PUT_URL_TO_FILE_HERE sha256:" +
+" " + 
+( ($('div.comment-text > table > tbody > tr > td:contains("http")').first().text().trim().length)? $('div.comment-text > table > tbody > tr > td:contains("http")').first().text().trim() : "http://PUT_URL_TO_FILE_HERE" ) +
+" sha256:" +
 $('div#file-details.extra-info').children('div').children('div:has(> span:contains("SHA256") )').contents().filter(function() { return this.nodeType == 3; }).text().trim();
