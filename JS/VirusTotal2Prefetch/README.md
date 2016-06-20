@@ -15,6 +15,7 @@ This should grab comment text: `$('div.comment-text > table > tbody > tr > td:nt
 
 ### Resources:
 - http://stackoverflow.com/questions/360491/how-do-i-strip-white-space-when-grabbing-text-with-jquery
+- https://api.jquery.com/has-selector/
 - http://stackoverflow.com/questions/6925088/get-the-text-after-span-element-using-jquery
 - http://api.jquery.com/category/selectors/
 - http://stackoverflow.com/questions/9364450/jquery-how-to-get-the-text-from-a-page
