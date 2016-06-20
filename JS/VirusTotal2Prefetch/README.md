@@ -7,6 +7,8 @@ Raw data to find version info within: `$('#file-details > div > div > div.floate
 
 This should grab comment text: `$('div.comment-text > table > tbody > tr > td:nth-child(2)').text().trim()`
 
+This should grab the first comment containing 'http': `$('div.comment-text > table > tbody > tr > td:contains("http")').first().text().trim()`
+
 ### Example VirusTotal analyses:
 - https://www.virustotal.com/en/file/ab341c65e85ab066ab84126fa6572bcb7efe85539ba76a18e7dad77a0fd9ddb7/analysis
 
