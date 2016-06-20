@@ -25,3 +25,5 @@ This should grab the first comment containing 'http': `$('div.comment-text > tab
 - http://stackoverflow.com/questions/7269150/get-text-from-character-and-after-using-jquery
 - http://chriszarate.github.io/bookmarkleter/
 - http://stackoverflow.com/questions/16589511/how-do-i-get-the-raw-version-of-a-gist-from-github
+- http://stackoverflow.com/questions/299802/how-do-you-check-if-a-selector-matches-something-in-jquery
+- https://api.jquery.com/first/
