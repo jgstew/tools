@@ -4,6 +4,12 @@ This site has a bunch of ads all over it, but you can find this here: http://mar
 
 ------
 
+#### Screenshots of results of VirusTotal2PrefetchTable.js
+
+
+
+------
+
 Would be interesting to turn this into a Chrome Extension. 
 - https://developer.chrome.com/extensions/getstarted
 - https://developer.chrome.com/extensions/overview
