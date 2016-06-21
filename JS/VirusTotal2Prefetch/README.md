@@ -15,7 +15,7 @@ This should get the table at the top: `$('#basic-info > div.row > div.span8.colu
 
 This should be the format of the tr: `<tr><td>BigFix Prefetch:</td><td>PREFETCH GOES HERE</td></tr>`
 
-This will put the prefetch first: `$('#basic-info > div.row > div.span8.columns > table > tbody > tr:first').before('<tr><td>BigFix Prefetch:</td><td>PREFETCH GOES HERE</td></tr>')`
+This will put the prefetch first: `$('#basic-info > div.row > div.span8.columns > table > tbody > tr:first').before('<tr><td><strong>BigFix Prefetch:</strong></td><td>PREFETCH GOES HERE</td></tr>')`
 
 - http://stackoverflow.com/questions/171027/add-table-row-in-jquery
 
