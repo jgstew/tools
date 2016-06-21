@@ -4,9 +4,12 @@ This site has a bunch of ads all over it, but you can find this here: http://mar
 
 ------
 
-#### Screenshots of results of VirusTotal2PrefetchTable.js
+### Screenshots of results of VirusTotal2PrefetchTable.js
 
-
+#### Before:
+![Screenshot BEFORE](VirusTotal_BleachBit_Before.PNG)
+#### After:
+![Screenshot AFTER](VirusTotal_BleachBit_After.PNG)
 
 ------
 
