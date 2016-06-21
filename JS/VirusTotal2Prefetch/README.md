@@ -9,6 +9,14 @@ This should grab comment text: `$('div.comment-text > table > tbody > tr > td:nt
 
 This should grab the first comment containing 'http': `$('div.comment-text > table > tbody > tr > td:contains("http")').first().text().trim()`
 
+### Add prefetch to table
+
+This should get the table at the top: `$('#basic-info > div.row > div.span8.columns > table > tbody:last-child')`
+
+This should be the format of the tr: `<tr><td>BigFix Prefetch:</td><td>PREFETCH GOES HERE</td></tr>`
+
+--- 
+
 ### Example VirusTotal analyses:
 - https://www.virustotal.com/en/file/ab341c65e85ab066ab84126fa6572bcb7efe85539ba76a18e7dad77a0fd9ddb7/analysis
 
