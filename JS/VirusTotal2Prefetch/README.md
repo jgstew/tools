@@ -2,6 +2,15 @@ JavaScript required to create a prefetch from a virustotal analysis, meant to be
 
 This site has a bunch of ads all over it, but you can find this here: http://marklets.com/VirusTotal%20to%20Prefetch.aspx
 
+------
+
+Would be interesting to turn this into a Chrome Extension. 
+- https://developer.chrome.com/extensions/getstarted
+- https://developer.chrome.com/extensions/overview
+- https://developer.chrome.com/extensions/content_scripts
+
+------
+
 Raw data to find version info within: `$('#file-details > div > div > div.floated-field-value')`
 - I'd like to look at all version number info on the page and parse them all out, then get the one with the highest number of occurrences.
 
