@@ -42,3 +42,4 @@ This will put the prefetch last: `$('#basic-info > div.row > div.span8.columns >
 - http://stackoverflow.com/questions/299802/how-do-you-check-if-a-selector-matches-something-in-jquery
 - https://api.jquery.com/first/
 - http://css-plus.com/2011/07/jquery-if-else-statements/
+- http://stackoverflow.com/questions/8146648/jquery-find-text-and-replace
