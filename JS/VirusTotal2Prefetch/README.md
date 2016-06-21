@@ -15,7 +15,9 @@ This should get the table at the top: `$('#basic-info > div.row > div.span8.colu
 
 This should be the format of the tr: `<tr><td>BigFix Prefetch:</td><td>PREFETCH GOES HERE</td></tr>`
 
---- 
+- http://stackoverflow.com/questions/171027/add-table-row-in-jquery
+
+------
 
 ### Example VirusTotal analyses:
 - https://www.virustotal.com/en/file/ab341c65e85ab066ab84126fa6572bcb7efe85539ba76a18e7dad77a0fd9ddb7/analysis
