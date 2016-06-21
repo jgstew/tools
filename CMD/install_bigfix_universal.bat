@@ -56,8 +56,11 @@ EXIT /B
 
 #!/usr/bin/env bash
 # kickstart bigfix install
-# current target - Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora
+# tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
+# Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
+#          (Itanium, Power, and others are not common, but could be added)
+#
 # Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
 #
 # Usage:
@@ -68,13 +71,10 @@ EXIT /B
 # Single Line:
 #  curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh ; chmod u+x install_bigfix.sh ; ./install_bigfix.sh __ROOT_OR_RELAY_FQDN__
 
-# NOTE: AMD64 compatible OS architecture is assumed (x86, Itanium, and Power are not common, but could be added)
-
-# TODO: if Mac OS X then get clientsettings.cfg from CWD (currently creating a default one)
-
 # TODO: use the masthead file in current directory if present
 
 # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
+# http://www.tldp.org/LDP/abs/html/functions.html
 # FUNCTION: check if command exists
 command_exists () {
   type "$1" &> /dev/null ;
@@ -85,7 +85,18 @@ command_exists () {
 if [ -n "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
   RELAYFQDN=$1
+else
+  # TODO: allow a masthead to be provided in the CWD instead.
+  echo Must provide FQDN of Root or Relay
+  exit 1
 fi
+
+# these variables are used to determine which version of the BigFix agent should be downloaded
+# these variables are typically set to the latest version of the BigFix agent
+# URLMAJORMINOR is the first two integers of URLVERSION
+#  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
+URLVERSION=9.5.2.56
+URLMAJORMINOR=`echo $URLVERSION | awk '/./ {gsub(/\./, " "); print $1 $2}'`
 
 # check for x32bit or x64bit OS
 MACHINETYPE=`uname -m`
@@ -129,7 +140,7 @@ fi
 
 if [[ $OSTYPE == darwin* ]]; then
   # Mac OS X
-  INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-BigFix_MacOSX10.7.pkg"
+  INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOSX10.7.pkg"
   INSTALLER="/tmp/BESAgent.pkg"
 else
   # For most Linux:
@@ -151,10 +162,10 @@ else
 
     if [[ $DEBDIST == Ubuntu* ]]; then
       # Ubuntu
-      INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-ubuntu10.$URLBITS.deb"
+      INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu10.$URLBITS.deb"
     else
       # Debian
-      INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-debian6.$URLBITS.deb"
+      INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-debian6.$URLBITS.deb"
     fi
   fi # END_IF Debian (dpkg)
 
@@ -169,12 +180,14 @@ else
       URLBITS=i686
     fi
     
-    INSTALLERURL="http://software.bigfix.com/download/bes/95/BESAgent-9.5.1.9-rhe5.$URLBITS.rpm"
+    INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe5.$URLBITS.rpm"
     
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
-      echo Only RHEL, CentOS, or Fedora currently supported for RPM installs
-      exit 1
+      # Assume SUSE
+      #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
+      INSTALLERURL=http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle11.$URLBITS.rpm
+      # TODO: could add support for SUSE 10, but 11+ should work with the above.
     fi # END_IF not-RHEL-family
   fi # END_IF exists rpm
   
@@ -193,6 +206,8 @@ if [ "$(id -u)" != "0" ]; then
   echo INSTALLER=$INSTALLER
   echo INSTALLERURL=$INSTALLERURL
   echo URLBITS=$URLBITS
+  echo URLVERSION=$URLVERSION
+  echo URLMAJORMINOR=$URLMAJORMINOR
   echo MASTHEADURL=$MASTHEADURL
   echo DEBDIST=$DEBDIST
   echo
@@ -248,6 +263,11 @@ fi
 if command_exists firewall-cmd ; then
   firewall-cmd --zone=public --add-port=52311/udp --permanent
 fi
+# open up linux firewall to accept UDP 52311 - firewall-offline-cmd
+if command_exists firewall-offline-cmd ; then
+  # this applies in anaconda at install time in particular
+  firewall-offline-cmd --add-port=52311/udp
+fi
 
 # install BigFix client
 if [[ $INSTALLER == *.deb ]]; then
@@ -255,11 +275,18 @@ if [[ $INSTALLER == *.deb ]]; then
   dpkg -i $INSTALLER
 fi
 if [[ $INSTALLER == *.pkg ]]; then
-  #  Mac OS X (PKG)
-  installer -pkg $INSTALLER -target /
-  # TODO: add case for Solaris
-  # pkgadd -d $INSTALLER  #  Solaris (PKG)
-fi
+  # PKG type
+  #   Could be Mac OS X, Solaris, or AIX
+  if command_exists installer ; then
+    #  Mac OS X
+    installer -pkg $INSTALLER -target /
+  else
+    if command_exists pkgadd ; then
+        # TODO: test case for Solaris
+        pkgadd -d $INSTALLER
+    fi # pkgadd
+  fi # installer
+fi # *.pkg install file
 if [[ $INSTALLER == *.rpm ]]; then
   #  linux (RPM)
   # if file `/etc/init.d/besclient` exists then do upgrade
