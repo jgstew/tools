@@ -25,7 +25,7 @@ This will put the prefetch first: `$('#basic-info > div.row > div.span8.columns 
 - https://www.virustotal.com/en/file/ab341c65e85ab066ab84126fa6572bcb7efe85539ba76a18e7dad77a0fd9ddb7/analysis
 
 ### Link to newest version:
-- https://gist.githubusercontent.com/jgstew/ef36d020de4614673ba8/raw/VirusTotal2Prefetch.js
+- https://github.com/jgstew/tools/blob/master/JS/VirusTotal2Prefetch/VirusTotal2Prefetch.js
 
 ### Resources:
 - http://stackoverflow.com/questions/360491/how-do-i-strip-white-space-when-grabbing-text-with-jquery
