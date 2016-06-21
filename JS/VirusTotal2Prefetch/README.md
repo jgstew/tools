@@ -39,3 +39,4 @@ This will put the prefetch first: `$('#basic-info > div.row > div.span8.columns 
 - http://stackoverflow.com/questions/16589511/how-do-i-get-the-raw-version-of-a-gist-from-github
 - http://stackoverflow.com/questions/299802/how-do-you-check-if-a-selector-matches-something-in-jquery
 - https://api.jquery.com/first/
+- http://css-plus.com/2011/07/jquery-if-else-statements/
