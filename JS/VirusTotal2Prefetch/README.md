@@ -62,3 +62,4 @@ This will put the prefetch last: `$('#basic-info > div.row > div.span8.columns >
 - http://css-plus.com/2011/07/jquery-if-else-statements/
 - http://stackoverflow.com/questions/8146648/jquery-find-text-and-replace
 - http://stackoverflow.com/questions/14494747/add-images-to-readme-md-on-github
+- http://stackoverflow.com/questions/13463557/best-way-to-make-table-cell-wider
