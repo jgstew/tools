@@ -63,3 +63,4 @@ This will put the prefetch last: `$('#basic-info > div.row > div.span8.columns >
 - http://stackoverflow.com/questions/8146648/jquery-find-text-and-replace
 - http://stackoverflow.com/questions/14494747/add-images-to-readme-md-on-github
 - http://stackoverflow.com/questions/13463557/best-way-to-make-table-cell-wider
+- http://stackoverflow.com/questions/7717382/executing-a-javascript-file-directly-from-the-browser
