@@ -23,7 +23,7 @@
    )
    & "</Value></MIMEField><Domain>BESC</Domain><DefaultAction ID=%22Action1%22><Description><PreLink>Click </PreLink><Link>here</Link><PostLink> to delete the shortcut</PostLink></Description><ActionScript MIMEType=%22application"&"/x-Fixlet-Windows-Shell%22>"& "delete %22{ pathname of files %22"& it &"%22 of (folders it) of unique values of (it as string as trimmed string) of values %22Common Desktop%22 of keys %22HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders%22 of (x64 registries; x32 registries) }%22" &"</ActionScript><SuccessCriteria Option=%22OriginalRelevance%22></SuccessCriteria></DefaultAction></Task>"
  )
- of unique values of values of results of bes properties 
+ of items 0 of (it, concatenations "," of (preceding texts of firsts "%22" of following texts of firsts "%22" of names whose(it starts with "Delete %22" AND it contains "%22 desktop shortcut - Windows") of bes fixlets)) whose( item 1 of it does not contain (preceding text of last ".lnk" of item 0 of it) ) of unique values of values of results of bes properties 
  whose
  (
    name of it contains "Shortcuts on Public Desktop"
