@@ -75,7 +75,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_SleepIdle=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollEnable=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=10800
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=3600
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_Days=30
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
