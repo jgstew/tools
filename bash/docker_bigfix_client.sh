@@ -9,3 +9,7 @@ sudo docker run -d centos bash -c "curl -O https://raw.githubusercontent.com/jgs
 
 # http://stackoverflow.com/questions/30209776/docker-container-will-automatically-stop-after-docker-run-d
 # http://stackoverflow.com/a/33497697/861745
+
+# http://serverfault.com/questions/442088/how-do-you-answer-yes-for-yum-install-automatically
+# https://github.com/docker-library/official-images/issues/339
+# https://forum.bigfix.com/t/problem-install-besclient-on-centos7-docker-image-initscripts/18128
