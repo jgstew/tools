@@ -5,7 +5,8 @@
 # Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
 #          (Itanium, Power, and others are not common, but could be added)
 #
-# Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
+#    Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
+#      Related: https://github.com/bigfix/bfdocker/tree/master/besclient
 #
 # Usage:
 #   curl -o install_bigfix.sh https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
