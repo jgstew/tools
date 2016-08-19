@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script, when run on a host with Docker installed, will run an ubuntu/centos container and install the BigFix client
+# This script, when run on a host with Docker installed, will run many different linux containers and install the BigFix client
 #      Related: https://github.com/bigfix/bfdocker/tree/master/besclient
 #
 # replace `alpha.bigfix.com` with your own BigFix root server or relay
