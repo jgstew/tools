@@ -10,6 +10,8 @@ sudo docker run -d debian bash -c "apt-get update;apt-get install wget -y;wget h
 sudo docker run -d centos bash -c "yum install initscripts -y;cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
 sudo docker run -d fedora bash -c "yum install initscripts -y;cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
 
+sudo docker run -d oraclelinux bash -c "cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
+
 # http://stackoverflow.com/questions/30209776/docker-container-will-automatically-stop-after-docker-run-d
 # http://stackoverflow.com/a/33497697/861745
 
