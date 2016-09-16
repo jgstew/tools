@@ -2,18 +2,27 @@
 #
 # This script, when run on a host with Docker installed, will run many different linux containers and install the BigFix client
 #      Related: https://github.com/bigfix/bfdocker/tree/master/besclient
-#
-# replace `alpha.bigfix.com` with your own BigFix root server or relay
-sudo docker run -d ubuntu bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
-sudo docker run -d debian bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
+
+
+# if $1 exists, then set RELAYFQDN
+# http://www.tldp.org/LDP/abs/html/comparison-ops.html
+if [ -n "$1" ]; then
+  RELAYFQDN=$1
+else
+  # You can replace `alpha.bigfix.com` with your own BigFix root server or relay
+  RELAYFQDN=alpha.bigfix.com
+fi
+
+sudo docker run -d ubuntu bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
+sudo docker run -d debian bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
 
 # can't seem to get opensuse to work with the default docker image. missing some dependancies.
 # sudo docker run -d opensuse bash -c "zypper --non-interactive install wget;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
 
-sudo docker run -d centos bash -c "yum install initscripts -y;cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
-sudo docker run -d fedora bash -c "yum install initscripts -y;cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
+sudo docker run -d centos bash -c "yum install initscripts -y;cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
+sudo docker run -d fedora bash -c "yum install initscripts -y;cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
 
-sudo docker run -d oraclelinux bash -c "cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh alpha.bigfix.com;tail -f /dev/null"
+sudo docker run -d oraclelinux bash -c "cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
 
 # http://stackoverflow.com/questions/30209776/docker-container-will-automatically-stop-after-docker-run-d
 # http://stackoverflow.com/a/33497697/861745
