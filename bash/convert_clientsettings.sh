@@ -28,7 +28,7 @@ if command_exists awk ; then
     cat $CLIENTSETTINGSFILE | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}'
   fi
 else
-  echo AWK is missing!
-  echo can not continue, exiting.
+  (>&2 echo "AWK is missing!")
+  (>&2 echo "can not continue, exiting.")
   exit 1
 fi
