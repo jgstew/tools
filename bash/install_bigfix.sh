@@ -81,6 +81,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=$SUDO_USER
 fi
 
 if [[ $OSTYPE == darwin* ]]; then
