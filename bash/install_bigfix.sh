@@ -186,7 +186,6 @@ if command_exists curl ; then
   #  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
   curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
   DLEXITCODE=$(( DLEXITCODE + $? ))
-  # TODO: add error checking to ensure masthead was downloaded
 else
   if command_exists wget ; then
     # this is run if curl doesn't exist, but wget does
