@@ -82,7 +82,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
   # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=$SUDO_USER
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=`echo $SUDO_USER`
 fi
 
 if [[ $OSTYPE == darwin* ]]; then
