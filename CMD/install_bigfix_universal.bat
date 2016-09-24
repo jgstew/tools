@@ -62,7 +62,8 @@ EXIT /B
 # Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
 #          (Itanium, Power, and others are not common, but could be added)
 #
-# Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
+#    Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
+#      Related: https://github.com/bigfix/bfdocker/tree/master/besclient
 #
 # Usage:
 #   curl -o install_bigfix.sh https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
@@ -132,11 +133,13 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_SleepIdle=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollEnable=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=10800
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=3600
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_Days=30
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
+  # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=`echo $SUDO_USER`
 fi
 
 if [[ $OSTYPE == darwin* ]]; then
@@ -229,16 +232,18 @@ fi
 
 
 #### Downloads #############################################
-
+DLEXITCODE=0
 if command_exists curl ; then
   # Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
   curl -o $INSTALLER $INSTALLERURL
+  # http://stackoverflow.com/questions/6348902/how-can-i-add-numbers-in-a-bash-script
+  DLEXITCODE=$(( DLEXITCODE + $? ))
   # Download the masthead, renamed, into the correct location
   # TODO: get masthead from CWD instead if present
   # http://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
   #  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
   curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
-  # TODO: add error checking to ensure masthead was downloaded
+  DLEXITCODE=$(( DLEXITCODE + $? ))
 else
   if command_exists wget ; then
     # this is run if curl doesn't exist, but wget does
@@ -246,14 +251,23 @@ else
     # http://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
     # https://www.gnu.org/software/wget/manual/html_node/HTTPS-_0028SSL_002fTLS_0029-Options.html
     wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
-    # TODO: add error checking to ensure masthead was downloaded
+    DLEXITCODE=$(( DLEXITCODE + $? ))
+    
     wget $INSTALLERURL -O $INSTALLER
+    DLEXITCODE=$(( DLEXITCODE + $? ))
   else
     echo neither wget nor curl is installed.
     echo not able to download required files.
     echo exiting...
     exit 2
   fi
+fi
+
+# Exit if download failed
+if [ $DLEXITCODE -ne 0 ]; then
+  # http://stackoverflow.com/questions/2990414/echo-that-outputs-to-stderr
+  (>&2 echo Download Failed. ExitCode=$DLEXITCODE)
+  exit $DLEXITCODE
 fi
 
 # open up linux firewall to accept UDP 52311 - iptables
