@@ -11,6 +11,7 @@ REM http://stackoverflow.com/questions/2541767/what-is-the-proper-way-to-test-if
 IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
 REM KNOWN ISSUE: if enhanced security is enabled on root/relay, then must use HTTPS for masthead download. This will mean that the download part will have to ignore SSL errors
 SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
+SET RELAYFQDN=%1
 SET BASEFOLDER=C:\Windows\Temp
 
 REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already in the CWD
