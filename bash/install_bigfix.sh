@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Short link: http://bit.ly/installbigfix
+#
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
