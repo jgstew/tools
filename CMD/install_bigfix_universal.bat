@@ -1,5 +1,6 @@
 :<<"::CMDLITERAL"
 @ECHO OFF
+REM Short link: http://bit.ly/installbigfix
 REM  Usage: 
 REM powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/CMD/install_bigfix.bat', 'install_bigfix.bat') }" -ExecutionPolicy Bypass
 REM install_bigfix.bat __FQDN_OF_ROOT_OR_RELAY__
