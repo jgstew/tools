@@ -5,4 +5,9 @@ Otherwise, it seems like AppleScript files should have a `.scpt` extention by de
 
 - http://fileinfo.com/extension/scpt
 
-Example: To execute a `.scpt` file on the command line: `osascript openQnA.scpt`
+### Example: 
+
+- To execute a `.scpt` file on the command line: 
+ - `osascript openQnA.scpt`
+- To execute an AppleScript command without a file:
+ - `osascript -e 'tell application "Terminal" to set shell to do script "clear" in window 1'`
