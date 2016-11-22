@@ -1,3 +1,6 @@
+-- http://www-01.ibm.com/support/docview.wss?uid=swg21506026
+-- https://github.com/jgstew/tools/blob/master/bash/openQnA.sh
+-- http://alvinalexander.com/blog/post/mac-os-x/applescript-use-comments
 tell application "Terminal"
 	if not (exists window 1) then reopen
 	activate
