@@ -1,1 +1,2 @@
 CMD/install_bigfix_universal.bat linguist-vendored
+*.xml linguist-documentation=false
