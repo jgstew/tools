@@ -130,6 +130,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   # create clientsettings.cfg file
   echo -n > $INSTALLDIR/clientsettings.cfg
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=http://$RELAYFQDN:52311/bfmirror/downloads/
+  >> $INSTALLDIR/clientsettings.cfg echo __RelaySelect_Automatic=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
