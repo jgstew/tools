@@ -34,6 +34,7 @@ REM http://stackoverflow.com/questions/7225630/how-to-echo-2-no-quotes-to-a-file
 type NUL > %BASEFOLDER%\clientsettings.cfg
 REM  TODO: only do the following line if FQDN_variable is set
 >>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_RelaySelect_FailoverRelay=http://%1:52311/bfmirror/downloads/
+>>%BASEFOLDER%\clientsettings.cfg ECHO __RelaySelect_Automatic=1
 >>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Resource_StartupNormalSpeed=1
 >>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Download_RetryMinutes=1
 >>%BASEFOLDER%\clientsettings.cfg ECHO _BESClient_Resource_WorkIdle=20
