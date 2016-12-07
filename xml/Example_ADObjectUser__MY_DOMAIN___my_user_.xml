@@ -1,0 +1,25 @@
+<User>
+	<Version>1.0</Version>
+	<CacheState>2</CacheState>
+	<Name>_my_user_</Name>
+	<DistinguishedName>CN=User - Client Administrator Account,OU=Client-Administrators,OU=_OU1_,OU=_OU3_,OU=_OU2_,OU=_OU1_,DC=_mydomain_,DC=_rootdomainname_,DC=_tld_</DistinguishedName>
+	<ErrorMessage>Failed to get attribute "distinguishedName" : Windows Error 8007054b: The specified domain either does not exist or could not be contacted.: Domain: _MY_DOMAIN_</ErrorMessage>
+	<ErrorCount>2</ErrorCount>
+	<SampleTime>Tue, 30 Jun 2015 14:49:10 -0700</SampleTime>
+	<GroupsErrorMessage>No DN available to fetch groups</GroupsErrorMessage>
+	<Domain>_MY_DOMAIN_</Domain>
+	<Groups>
+		<Group>
+			<Name>_Group1_</Name>
+			<DistinguishedName>CN=_Group1_,OU=_OU4_,OU=_OU1_,OU=_OU3_,OU=Groups,OU=_OU1_,DC=_mydomain_,DC=_rootdomainname_,DC=_tld_</DistinguishedName>
+			<SampleTime>Tue, 30 Jun 2015 08:56:30 -0700</SampleTime>
+			<Sid>_SID1_</Sid>
+		</Group>
+		<Group>
+			<Name>_Group2_</Name>
+			<DistinguishedName>CN=_Group2_,OU=_OU42_,OU=_OU1_,OU=_OU3_,OU=Groups,OU=_OU1_,DC=_mydomain_,DC=_rootdomainname_,DC=_tld_</DistinguishedName>
+			<SampleTime>Tue, 30 Jun 2015 08:56:30 -0700</SampleTime>
+			<Sid>_SID2_</Sid>
+		</Group>
+	</Groups>
+</User>
