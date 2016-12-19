@@ -1,5 +1,6 @@
 
 # http://stackoverflow.com/questions/11637467/modify-ini-file-with-python/11637494#11637494
+# https://bigfix.me/relevance/details/3019050#comments
 
 import ConfigParser
 config=ConfigParser.RawConfigParser()
