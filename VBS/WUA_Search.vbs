@@ -18,7 +18,6 @@ numHidden = 0
 For I = 0 To searchResult.Updates.Count-1
 ' IUpdate interface: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386099(v=vs.85).aspx
     Set update = searchResult.Updates.Item(I)
-    
     WScript.Echo update.Type & I + 1 & "= " & update.Title
 
 	If update.IsHidden Then
