@@ -19,6 +19,7 @@ For I = 0 To searchResult.Updates.Count-1
 ' IUpdate interface: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386099(v=vs.85).aspx
     Set update = searchResult.Updates.Item(I)
     
+    ' https://msdn.microsoft.com/en-us/library/windows/desktop/aa387284(v=vs.85).aspx
     updateTypeStr = "Unknown"
     If 1=update.Type Then
         updateTypeStr = "Software"
