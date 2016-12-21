@@ -2,6 +2,7 @@
 ' This script determines what updates are applicable on a Windows machine using the WUA api.
 ' Usage: cscript WUA_Search.vbs //Nologo //B > WindowsUpdates.ini
 ' Source: https://msdn.microsoft.com/en-us/library/windows/desktop/aa387102(v=vs.85).aspx
+' Modifications by @jgstew in 2016 - Public Domain
 
 Set updateSession = CreateObject("Microsoft.Update.Session")
 updateSession.ClientApplicationID = "Check for Windows Updates"
