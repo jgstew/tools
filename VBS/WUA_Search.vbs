@@ -48,3 +48,4 @@ WScript.Echo "Driver= " & numDriver
 ' Related:
 '     - https://thwack.solarwinds.com/community/application-and-server_tht/patchzone/blog/2012/10/05/how-the-windows-update-agent-determines-the-status-of-an-update
 '     - https://bigfix.me/fixlet/details/23096
+'     - https://github.com/jgstew/bigfix-content/blob/master/fixlet/Output%20Windows%20Update%20Results%20-%20Windows.bes
