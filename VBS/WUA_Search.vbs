@@ -25,8 +25,10 @@ For I = 0 To searchResult.Updates.Count-1
     updateTypeStr = "Unknown"
     If 1=update.Type Then
         updateTypeStr = "Software"
+        numSoftware = numSoftware + 1
     ElseIf 2=update.Type Then
         updateTypeStr = "Driver"
+        numDriver = numDriver + 1
     End If
     
     WScript.Echo updateTypeStr & I + 1 & "= " & update.Title
