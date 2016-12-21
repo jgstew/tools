@@ -4,6 +4,8 @@
 ' Source: https://msdn.microsoft.com/en-us/library/windows/desktop/aa387102(v=vs.85).aspx
 ' Modifications by @jgstew in 2016 - Public Domain
 
+' It is possible to do this "offline": https://msdn.microsoft.com/en-us/library/windows/desktop/aa387290(v=vs.85).aspx
+
 Set updateSession = CreateObject("Microsoft.Update.Session")
 updateSession.ClientApplicationID = "Check for Windows Updates"
 
