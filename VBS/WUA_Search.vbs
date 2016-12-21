@@ -20,7 +20,7 @@ For I = 0 To searchResult.Updates.Count-1
     Set update = searchResult.Updates.Item(I)
     updateTypeStr = "Other"
     WScript.Echo update.Type & I + 1 & "= " & update.Title
-
+    
     If update.IsHidden Then
         numHidden = numHidden + 1
     End If
