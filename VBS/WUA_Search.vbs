@@ -16,8 +16,9 @@ WScript.Echo "[Windows Updates]" & vbCRLF & "Number= " & searchResult.Updates.Co
 Set numHidden = 0
 
 For I = 0 To searchResult.Updates.Count-1
+' IUpdate interface: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386099(v=vs.85).aspx
     Set update = searchResult.Updates.Item(I)
-    ' IUpdate interface: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386099(v=vs.85).aspx
+    
     WScript.Echo "Title" & I + 1 & "= " & update.Title
 Next
 
