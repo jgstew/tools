@@ -26,7 +26,7 @@ For I = 0 To searchResult.Updates.Count-1
         updateTypeStr = "Software"
     End If
     
-    WScript.Echo update.Type & I + 1 & "= " & update.Title
+    WScript.Echo updateTypeStr & I + 1 & "= " & update.Title
     
     If update.IsHidden Then
         numHidden = numHidden + 1
