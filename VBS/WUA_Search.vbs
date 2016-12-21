@@ -10,18 +10,13 @@ Set updateSearcher = updateSession.CreateUpdateSearcher()
 WScript.Echo "Searching for updates..." & vbCRLF
 
 Set searchResult = _
-updateSearcher.Search("IsInstalled=0 and Type='Software' and IsHidden=0")
+updateSearcher.Search("IsInstalled=0")
 
-WScript.Echo "List of applicable items on the machine:"
-
+WScript.Echo "[Updates]" & vbCRLF & "Number=" & searchResult.Updates.Count
+            
 For I = 0 To searchResult.Updates.Count-1
     Set update = searchResult.Updates.Item(I)
-    WScript.Echo I + 1 & "> " & update.Title
+                WScript.Echo "Title" & I + 1 & "= " & update.Title
 Next
-
-If searchResult.Updates.Count = 0 Then
-    WScript.Echo "There are no applicable updates."
-    WScript.Quit
-End If
 
 ' Related: https://thwack.solarwinds.com/community/application-and-server_tht/patchzone/blog/2012/10/05/how-the-windows-update-agent-determines-the-status-of-an-update
