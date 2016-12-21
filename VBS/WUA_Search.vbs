@@ -19,11 +19,11 @@ For I = 0 To searchResult.Updates.Count-1
 ' IUpdate interface: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386099(v=vs.85).aspx
     Set update = searchResult.Updates.Item(I)
     
-    updateTypeStr = "Other"
+    updateTypeStr = "Unknown"
     If 1=update.Type Then
         updateTypeStr = "Software"
     ElseIf 2=update.Type Then
-        updateTypeStr = "Software"
+        updateTypeStr = "Driver"
     End If
     
     WScript.Echo updateTypeStr & I + 1 & "= " & update.Title
