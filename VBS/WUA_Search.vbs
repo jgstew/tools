@@ -7,12 +7,11 @@ updateSession.ClientApplicationID = "MSDN Sample Script"
 
 Set updateSearcher = updateSession.CreateUpdateSearcher()
 
-WScript.Echo "Searching for updates..." & vbCRLF
-
+' Method: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386526(v=vs.85).aspx
 Set searchResult = _
 updateSearcher.Search("IsInstalled=0")
 
-WScript.Echo "[Updates]" & vbCRLF & "Number=" & searchResult.Updates.Count
+WScript.Echo "[Updates]" & vbCRLF & "Number= " & searchResult.Updates.Count
             
 For I = 0 To searchResult.Updates.Count-1
     Set update = searchResult.Updates.Item(I)
