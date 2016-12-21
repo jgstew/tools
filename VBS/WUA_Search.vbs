@@ -12,7 +12,9 @@ Set updateSearcher = updateSession.CreateUpdateSearcher()
 Set searchResult = updateSearcher.Search("IsInstalled=0")
 
 WScript.Echo "[Windows Updates]" & vbCRLF & "Number= " & searchResult.Updates.Count
-            
+
+Set numHidden = 0
+
 For I = 0 To searchResult.Updates.Count-1
     Set update = searchResult.Updates.Item(I)
     ' IUpdate interface: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386099(v=vs.85).aspx
