@@ -39,4 +39,6 @@ For I = 0 To searchResult.Updates.Count-1
 Next
 
 WScript.Echo "Hidden= " & numHidden
+WScript.Echo "Software= " & numSoftware
+WScript.Echo "Driver= " & numDriver
 ' Related: https://thwack.solarwinds.com/community/application-and-server_tht/patchzone/blog/2012/10/05/how-the-windows-update-agent-determines-the-status-of-an-update
