@@ -13,9 +13,9 @@ Set searchResult = updateSearcher.Search("IsInstalled=0")
 
 WScript.Echo "[Windows Updates]" & vbCRLF & "Number= " & searchResult.Updates.Count
 
-numHidden = 0
+numHidden   = 0
 numSoftware = 0
-numDriver = 0
+numDriver   = 0
 
 For I = 0 To searchResult.Updates.Count-1
 ' IUpdate interface: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386099(v=vs.85).aspx
@@ -25,10 +25,10 @@ For I = 0 To searchResult.Updates.Count-1
     updateTypeStr = "Unknown"
     If 1=update.Type Then
         updateTypeStr = "Software"
-        numSoftware = numSoftware + 1
+        numSoftware   = numSoftware + 1
     ElseIf 2=update.Type Then
         updateTypeStr = "Driver"
-        numDriver = numDriver + 1
+        numDriver     = numDriver + 1
     End If
     
     WScript.Echo updateTypeStr & I + 1 & "= " & update.Title
