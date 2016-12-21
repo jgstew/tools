@@ -3,7 +3,7 @@
 ' Source: https://msdn.microsoft.com/en-us/library/windows/desktop/aa387102(v=vs.85).aspx
 
 Set updateSession = CreateObject("Microsoft.Update.Session")
-updateSession.ClientApplicationID = "MSDN Sample Script"
+updateSession.ClientApplicationID = "Check for Windows Updates"
 
 Set updateSearcher = updateSession.CreateUpdateSearcher()
 
@@ -11,7 +11,7 @@ Set updateSearcher = updateSession.CreateUpdateSearcher()
 Set searchResult = _
 updateSearcher.Search("IsInstalled=0")
 
-WScript.Echo "[Updates]" & vbCRLF & "Number= " & searchResult.Updates.Count
+WScript.Echo "[Windows Updates]" & vbCRLF & "Number= " & searchResult.Updates.Count
             
 For I = 0 To searchResult.Updates.Count-1
     Set update = searchResult.Updates.Item(I)
