@@ -22,7 +22,7 @@ For I = 0 To searchResult.Updates.Count-1
     updateTypeStr = "Other"
     If 1=update.Type Then
         updateTypeStr = "Software"
-    Else If 2=update.Type Then
+    ElseIf 2=update.Type Then
         updateTypeStr = "Software"
     End If
     
