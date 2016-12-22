@@ -13,6 +13,7 @@ Set updateSearcher = updateSession.CreateUpdateSearcher()
 
 ' Method: https://msdn.microsoft.com/en-us/library/windows/desktop/aa386526(v=vs.85).aspx
 Set searchResult = updateSearcher.Search("IsInstalled=0")
+' also works as a single line: Set searchResult = CreateObject("Microsoft.Update.Session").CreateUpdateSearcher().Search("IsInstalled=0")
 
 WScript.Echo "[Windows Updates]" & vbCRLF & "Number= " & searchResult.Updates.Count
 
