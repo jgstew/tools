@@ -1,0 +1,17 @@
+(
+  ("Wizard: " & it) of names of bes wizards;
+  ("Fixlet: " & it) of names of plain bes fixlets;
+  ("Action: " & it) of names of bes actions;
+  ("Roles: " & it) of names of bes roles;
+  ("Analysis: " & it) of names of bes analyses;
+  ("Baseline: " & it) of names of bes baselines;
+  ("Site: " & it) of names of bes sites;
+  ("Filter: " & it) of names of bes filters;
+  ("Property: " & it) of names of bes properties;
+  ("Task: " & it) of names of bes tasks;
+  ("ComputerGroup: " & it) of names of bes computer groups
+)
+whose
+(
+  it as lowercase contains "query"
+)
