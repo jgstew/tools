@@ -8,8 +8,10 @@
 // ~this[i].toString().indexOf("[native code]") this returns 0 (false) if `[native code]` is not within the declaration
 // if( !~this[i].toString().indexOf("[native code]") ) checks that `[native code]` is not within the declaration
 
+document.write('<h2>Javascript Functions:</h2><ul>');
 for(var i in this) {
     if( this[i] && "function"==(typeof this[i]).toString() && !~this[i].toString().indexOf("[native code]") ) {
         document.write('<li>'+ this[i].toString() +"</li>");
     }
 }
+document.write('</ul>');
