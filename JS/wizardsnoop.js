@@ -1,81 +1,81 @@
 function InsertUtilityDiv() {}
-function BESFixletID(sid, fid) {}
+function BESFixletID() {}
 function BESFixletIDToString() {}
-function MakeIDListFromArray(idArray) {}
-function ActivateAnalysis(analysisID) {}
-function ActivateAnalyses(analysisIDArray) {}
-function ReactivateAnalysis(analysisID) {}
-function ReactivateAnalyses(analysisIDArray) {}
-function DeactivateAnalysis(analysisID) {}
-function DeactivateAnalyses(analysisIDArray) {}
-function StopAction(actionID, options) {}
-function StopActions(actionIDArray, options) {}
-function ImportXML(xml, openDocuments, siteName, computerIDs) {}
-function ImportXMLToSite(xml, siteName, openDocuments) {}
-function EvaluateRelevance(expr) {}
-function Relevance(expr, callback) {}
-function RegisterRelevance(expr, callback, id) {}
-function BooleanToText(flag) {}
-function DoBrowseDialogWithFlags(extension, filters,}
-function BrowseForFile(extension, filters, initialPath) {}
-function BrowseForFolder(initialPath) {}
-function RegisterRefreshHandler(elementID, signalName) {}
-function LoadPresentation(path) {}
+function MakeIDListFromArray() {}
+function ActivateAnalysis() {}
+function ActivateAnalyses() {}
+function ReactivateAnalysis() {}
+function ReactivateAnalyses() {}
+function DeactivateAnalysis() {}
+function DeactivateAnalyses() {}
+function StopAction() {}
+function StopActions() {}
+function ImportXML() {}
+function ImportXMLToSite() {}
+function EvaluateRelevance() {}
+function Relevance() {}
+function RegisterRelevance() {}
+function BooleanToText() {}
+function DoBrowseDialogWithFlags() {}
+function BrowseForFile() {}
+function BrowseForFolder() {}
+function RegisterRefreshHandler() {}
+function LoadPresentation() {}
 function GetScratchRootPath() {}
-function MakeArchive(inputPath, scratchPath, recurseFlag) {}
-function CopyFile(inputPath, scratchPath, allowOverwriteFlag) {}
-function MoveFile(scratchPathSrc, scratchPathDest, allowOverwriteFlag) {}
-function DeleteFile(scratchPath) {}
-function DeleteAllFiles(scratchPath, recurseFlag) {}
-function DeleteFolder(scratchPath) {}
-function DeleteTree(scratchPath) {}
-function MakeFolder(scratchPath) {}
-function CopyFolder(inputPath, scratchPath, recurseFlag) {}
-function WriteFile(text, scratchPath, appendFlag) {}
-function UploadFile(inputPath, callback) {}
-function UploadFileWithName(inputPath, outputPath, callback) {}
-function ArchiveAndUploadFile(inputPath, outputPath, recurseFlag, callback) {}
-function ArchiveAndUploadFile2(inputPath, outputPath, recurseFlag, callback) {}
-function DownloadFile(url, outputPath, callback) {}
-function DownloadFileWithSHA1(url, outputPath) {}
-function GetFileSHA1(inputPath) {}
-function GetFileSize(inputPath) {}
+function MakeArchive() {}
+function CopyFile() {}
+function MoveFile() {}
+function DeleteFile() {}
+function DeleteAllFiles() {}
+function DeleteFolder() {}
+function DeleteTree() {}
+function MakeFolder() {}
+function CopyFolder() {}
+function WriteFile() {}
+function UploadFile() {}
+function UploadFileWithName() {}
+function ArchiveAndUploadFile() {}
+function ArchiveAndUploadFile2() {}
+function DownloadFile() {}
+function DownloadFileWithSHA1() {}
+function GetFileSHA1() {}
+function GetFileSize() {}
 function GetCurrentDSN() {}
 function GetCurrentUser() {}
-function ManualRefresh(sectionName) {}
+function ManualRefresh() {}
 function ManualRefreshAll() {}
-function OpenComputerGroup(cids, title) {}
-function SendWakeOnLANRequest(cids) {}
-function ColorizeRelevance(relevance, indent) {}
-function StoreVariable(dashboardID, name, value, isPrivate) {}
-function StorePrivateVariable(dashboardID, name, value) {}
-function StoreSharedVariable(dashboardID, name, value) {}
-function DeleteVariable(dashboardID, name, isPrivate) {}
-function DeletePrivateVariable(dashboardID, name) {}
-function DeleteSharedVariable(dashboardID, name) {}
-function EditFixlet(fixletID, xml) {}
-function DeleteFixlet(fixletID) {}
-function DeleteFixlets(fixletIDs) {}
-function DeleteProperty(propertyID) {}
-function DeleteProperties(propertyIDs) {}
-function TakeFixletAction(id, siteID, contentID, parameters, callback) {}
-function TakeSecureFixletAction(id, siteID, contentID, parameters, secureParameters, callback) {}
-function TakeFixletActionOnComputers(id, siteID, contentID, parameters, computerIDs, callback) {}
-function TakeSecureFixletActionOnComputers(id, siteID, contentID, parameters, secureParameters, computerIDs, callback) {}
-function OpenVisualization(xml) {}
-function AddGlobalFilter(filterID) {}
+function OpenComputerGroup() {}
+function SendWakeOnLANRequest() {}
+function ColorizeRelevance() {}
+function StoreVariable() {}
+function StorePrivateVariable() {}
+function StoreSharedVariable() {}
+function DeleteVariable() {}
+function DeletePrivateVariable() {}
+function DeleteSharedVariable() {}
+function EditFixlet() {}
+function DeleteFixlet() {}
+function DeleteFixlets() {}
+function DeleteProperty() {}
+function DeleteProperties() {}
+function TakeFixletAction() {}
+function TakeSecureFixletAction() {}
+function TakeFixletActionOnComputers() {}
+function TakeSecureFixletActionOnComputers() {}
+function OpenVisualization() {}
+function AddGlobalFilter() {}
 function ClearAllGlobalFilters() {}
-function ClearGlobalFilterOfType(filterType) {}
-function EnableWakeOnLAN(enable) {}
-function CreateCustomSite(siteName) {}
-function EnableExternalSite(siteURL) {}
-function AddFileToMailbox(computerID, filePath, fileName) {}
-function AddFileToSite(siteNameStr, filePath, clientFile) {}
-function DownloadFileEx(url, filePath, hashAlgorithm) {}
-function UploadFileEx(filePath, hashAlgorithm) {}
-function ArchiveAndUploadFileEx(filePath, archiveName, recurseFlag, hashAlgorithm) {}
-function CompleteHashSet(hashAlgorithm, hashValue, callback) {}
-function CalculateFileInfo(inputPath, callback) {}
+function ClearGlobalFilterOfType() {}
+function EnableWakeOnLAN() {}
+function CreateCustomSite() {}
+function EnableExternalSite() {}
+function AddFileToMailbox() {}
+function AddFileToSite() {}
+function DownloadFileEx() {}
+function UploadFileEx() {}
+function ArchiveAndUploadFileEx() {}
+function CompleteHashSet() {}
+function CalculateFileInfo() {}
 function SiteCertificateUpdateNeeded() {}
-function CreateFastQuestion(applicabilityRelevance, question ) {}
-function GetFastQuestionResults( questionID, outputFormat, startElement, numberOfElements,filter  ) {}
+function CreateFastQuestion() {}
+function GetFastQuestionResults() {}
