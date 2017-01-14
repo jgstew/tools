@@ -78,3 +78,10 @@ function CalculateFileInfo(inputPath, callback) { return ''; }
 function SiteCertificateUpdateNeeded() { return ''; }
 function CreateFastQuestion(applicabilityRelevance, question ) { return ''; }
 function GetFastQuestionResults( questionID, outputFormat, startElement, numberOfElements,filter  ) { return ''; }
+function DoBrowseDialogWithFlags(extension, filters,
+	forFolderFlag, initialPath,
+	fileMustExistFlag, pathMustExistFlag,
+	noValidateFlag, hideReadOnlyFlag,
+	overwritePromptFlag, createPromptFlag,
+	noReadOnlyReturnFlag, noTestFileCreateFlag,
+	allowMultiSelectFlag) { return ''; }
