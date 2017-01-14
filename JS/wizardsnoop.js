@@ -1,81 +1,81 @@
-function InsertUtilityDiv() {}
-function BESFixletID() {}
-function BESFixletIDToString() {}
-function MakeIDListFromArray() {}
-function ActivateAnalysis() {}
-function ActivateAnalyses() {}
-function ReactivateAnalysis() {}
-function ReactivateAnalyses() {}
-function DeactivateAnalysis() {}
-function DeactivateAnalyses() {}
-function StopAction() {}
-function StopActions() {}
-function ImportXML() {}
-function ImportXMLToSite() {}
-function EvaluateRelevance() {}
-function Relevance() {}
-function RegisterRelevance() {}
-function BooleanToText() {}
-function DoBrowseDialogWithFlags() {}
-function BrowseForFile() {}
-function BrowseForFolder() {}
-function RegisterRefreshHandler() {}
-function LoadPresentation() {}
-function GetScratchRootPath() {}
-function MakeArchive() {}
-function CopyFile() {}
-function MoveFile() {}
-function DeleteFile() {}
-function DeleteAllFiles() {}
-function DeleteFolder() {}
-function DeleteTree() {}
-function MakeFolder() {}
-function CopyFolder() {}
-function WriteFile() {}
-function UploadFile() {}
-function UploadFileWithName() {}
-function ArchiveAndUploadFile() {}
-function ArchiveAndUploadFile2() {}
-function DownloadFile() {}
-function DownloadFileWithSHA1() {}
-function GetFileSHA1() {}
-function GetFileSize() {}
-function GetCurrentDSN() {}
-function GetCurrentUser() {}
-function ManualRefresh() {}
-function ManualRefreshAll() {}
-function OpenComputerGroup() {}
-function SendWakeOnLANRequest() {}
-function ColorizeRelevance() {}
-function StoreVariable() {}
-function StorePrivateVariable() {}
-function StoreSharedVariable() {}
-function DeleteVariable() {}
-function DeletePrivateVariable() {}
-function DeleteSharedVariable() {}
-function EditFixlet() {}
-function DeleteFixlet() {}
-function DeleteFixlets() {}
-function DeleteProperty() {}
-function DeleteProperties() {}
-function TakeFixletAction() {}
-function TakeSecureFixletAction() {}
-function TakeFixletActionOnComputers() {}
-function TakeSecureFixletActionOnComputers() {}
-function OpenVisualization() {}
-function AddGlobalFilter() {}
-function ClearAllGlobalFilters() {}
-function ClearGlobalFilterOfType() {}
-function EnableWakeOnLAN() {}
-function CreateCustomSite() {}
-function EnableExternalSite() {}
-function AddFileToMailbox() {}
-function AddFileToSite() {}
-function DownloadFileEx() {}
-function UploadFileEx() {}
-function ArchiveAndUploadFileEx() {}
-function CompleteHashSet() {}
-function CalculateFileInfo() {}
-function SiteCertificateUpdateNeeded() {}
-function CreateFastQuestion() {}
-function GetFastQuestionResults() {}
+function InsertUtilityDiv() { return ''; }
+function BESFixletID() { return ''; }
+function BESFixletIDToString() { return ''; }
+function MakeIDListFromArray() { return ''; }
+function ActivateAnalysis() { return ''; }
+function ActivateAnalyses() { return ''; }
+function ReactivateAnalysis() { return ''; }
+function ReactivateAnalyses() { return ''; }
+function DeactivateAnalysis() { return ''; }
+function DeactivateAnalyses() { return ''; }
+function StopAction() { return ''; }
+function StopActions() { return ''; }
+function ImportXML() { return ''; }
+function ImportXMLToSite() { return ''; }
+function EvaluateRelevance() { return ''; }
+function Relevance() { return ''; }
+function RegisterRelevance() { return ''; }
+function BooleanToText() { return ''; }
+function DoBrowseDialogWithFlags() { return ''; }
+function BrowseForFile() { return ''; }
+function BrowseForFolder() { return ''; }
+function RegisterRefreshHandler() { return ''; }
+function LoadPresentation() { return ''; }
+function GetScratchRootPath() { return ''; }
+function MakeArchive() { return ''; }
+function CopyFile() { return ''; }
+function MoveFile() { return ''; }
+function DeleteFile() { return ''; }
+function DeleteAllFiles() { return ''; }
+function DeleteFolder() { return ''; }
+function DeleteTree() { return ''; }
+function MakeFolder() { return ''; }
+function CopyFolder() { return ''; }
+function WriteFile() { return ''; }
+function UploadFile() { return ''; }
+function UploadFileWithName() { return ''; }
+function ArchiveAndUploadFile() { return ''; }
+function ArchiveAndUploadFile2() { return ''; }
+function DownloadFile() { return ''; }
+function DownloadFileWithSHA1() { return ''; }
+function GetFileSHA1() { return ''; }
+function GetFileSize() { return ''; }
+function GetCurrentDSN() { return ''; }
+function GetCurrentUser() { return ''; }
+function ManualRefresh() { return ''; }
+function ManualRefreshAll() { return ''; }
+function OpenComputerGroup() { return ''; }
+function SendWakeOnLANRequest() { return ''; }
+function ColorizeRelevance() { return ''; }
+function StoreVariable() { return ''; }
+function StorePrivateVariable() { return ''; }
+function StoreSharedVariable() { return ''; }
+function DeleteVariable() { return ''; }
+function DeletePrivateVariable() { return ''; }
+function DeleteSharedVariable() { return ''; }
+function EditFixlet() { return ''; }
+function DeleteFixlet() { return ''; }
+function DeleteFixlets() { return ''; }
+function DeleteProperty() { return ''; }
+function DeleteProperties() { return ''; }
+function TakeFixletAction() { return ''; }
+function TakeSecureFixletAction() { return ''; }
+function TakeFixletActionOnComputers() { return ''; }
+function TakeSecureFixletActionOnComputers() { return ''; }
+function OpenVisualization() { return ''; }
+function AddGlobalFilter() { return ''; }
+function ClearAllGlobalFilters() { return ''; }
+function ClearGlobalFilterOfType() { return ''; }
+function EnableWakeOnLAN() { return ''; }
+function CreateCustomSite() { return ''; }
+function EnableExternalSite() { return ''; }
+function AddFileToMailbox() { return ''; }
+function AddFileToSite() { return ''; }
+function DownloadFileEx() { return ''; }
+function UploadFileEx() { return ''; }
+function ArchiveAndUploadFileEx() { return ''; }
+function CompleteHashSet() { return ''; }
+function CalculateFileInfo() { return ''; }
+function SiteCertificateUpdateNeeded() { return ''; }
+function CreateFastQuestion() { return ''; }
+function GetFastQuestionResults() { return ''; }
