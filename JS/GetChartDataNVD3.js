@@ -18,3 +18,4 @@ function getChartData(values, labels) {
 
 // http://stackoverflow.com/questions/8375625/how-to-select-a-table-column-with-jquery
 // http://stackoverflow.com/questions/1168807/how-can-i-add-a-key-value-pair-to-a-javascript-object
+// http://www.w3schools.com/jsref/jsref_number.asp
