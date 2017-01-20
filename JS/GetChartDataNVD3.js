@@ -10,7 +10,7 @@ function getChartData(values, labels) {
     for (i = 0; i < values.length; i++) { 
         arrKeyValuePairs[i] = {
             "label": labels[i].innerText,
-            "value": values[i].innerText
+            "value": Number( values[i].innerText )
         };
     }
     return arrKeyValuePairs;
