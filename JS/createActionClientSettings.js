@@ -54,7 +54,7 @@ setting "${ name }"="${ value }" on "{ parameter "action issue date" of action}"
 
 // if this file is run directly, do the following:
 if (require.main === module) {
-	console.log( fnCreateClientSettingsXML("blahSettingName", "blahSettingValue") );
+	console.log( fnCreateClientSettingsXML("testSettingName", "testSettingValue") );
 	// http://stackoverflow.com/a/16714931/861745
 	// https://github.com/jgstew/tools/blob/master/JS/YYYY-MM-DD.js
 }
