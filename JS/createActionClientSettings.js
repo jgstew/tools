@@ -24,6 +24,7 @@ function fnCreateClientSettingsXML(name, value, dateRelease, userName) {
 			}
 		}
 	}
+	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
 	<Task>
