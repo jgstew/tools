@@ -1,7 +1,27 @@
 
 // made for: https://github.com/jgstew/bigfix-content/blob/master/dashboards/ClientSettingsManager.ojo
 
-function fnCreateTaskClientSettingsXML(name, value, userName="") {
+function fnCreateClientSettingsXML(name, value, dateRelease, userName) {
+	// http://www.codereadability.com/javascript-default-parameters-with-or-operator/
+	if (dateRelease === undefined) {
+        dateRelease = new Date();
+    }
+	if (userName === undefined) {
+		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch
+		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError
+		try {
+			// https://developer.bigfix.com/relevance/reference/bes-user.html#current-console-user-bes-user
+			// https://developer.bigfix.com/relevance/reference/string.html#bes-current-wruser-string
+        	testGetUserName = bigfix.relevance.evaluate(' if (in web reports context AND exists properties "bes current wruser") then (bes current wruser) else (name of current console user | "") ');
+			userName=testGetUserName;
+		} catch (e) {
+			if (e instanceof ReferenceError && e.message == "bigfix is not defined"){
+				// pass
+			} else {
+				throw(e);
+			}
+		}
+    }
     return `<?xml version="1.0" encoding="UTF-8"?>
 <BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
 	<Task>
@@ -12,7 +32,7 @@ function fnCreateTaskClientSettingsXML(name, value, userName="") {
 		<DownloadSize>0</DownloadSize>
 		<Source>Custom Dashboard - Client Settings Manager</Source>
 		<SourceID>jgstew${ (userName) ? "; " + userName : "" }</SourceID>
-		<SourceReleaseDate>${ (new Date()).toISOString().slice(0,10) }</SourceReleaseDate>
+		<SourceReleaseDate>${ dateRelease.toISOString().slice(0,10) }</SourceReleaseDate>
 		<SourceSeverity></SourceSeverity>
 		<CVENames></CVENames>
 		<SANSID></SANSID>
@@ -34,7 +54,7 @@ setting "${ name }"="${ value }" on "{ parameter "action issue date" of action}"
 
 // if this file is run directly, do the following:
 if (require.main === module) {
-	console.log( fnCreateActionClientSettings("blahSettingName", "blahSettingValue") );
+	console.log( fnCreateClientSettingsXML("blahSettingName", "blahSettingValue") );
 	// http://stackoverflow.com/a/16714931/861745
 	// https://github.com/jgstew/tools/blob/master/JS/YYYY-MM-DD.js
 }
