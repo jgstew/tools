@@ -4,15 +4,15 @@
 function fnCreateClientSettingsXML(name, value, dateRelease, userName) {
 	// http://www.codereadability.com/javascript-default-parameters-with-or-operator/
 	if (dateRelease === undefined) {
-        dateRelease = new Date();
-    }
+		dateRelease = new Date();
+	}
 	if (userName === undefined) {
 		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch
 		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError
 		try {
 			// https://developer.bigfix.com/relevance/reference/bes-user.html#current-console-user-bes-user
 			// https://developer.bigfix.com/relevance/reference/string.html#bes-current-wruser-string
-        	testGetUserName = bigfix.relevance.evaluate(' if (in web reports context AND exists properties "bes current wruser") then (bes current wruser) else (name of current console user | "") ');
+			testGetUserName = bigfix.relevance.evaluate(' if (in web reports context AND exists properties "bes current wruser") then (bes current wruser) else (name of current console user | "") ');
 			userName=testGetUserName;
 		} catch (e) {
 			if (e instanceof ReferenceError && e.message == "bigfix is not defined"){
@@ -21,8 +21,8 @@ function fnCreateClientSettingsXML(name, value, dateRelease, userName) {
 				throw(e);
 			}
 		}
-    }
-    return `<?xml version="1.0" encoding="UTF-8"?>
+	}
+	return `<?xml version="1.0" encoding="UTF-8"?>
 <BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
 	<Task>
 		<Title>Set "${ name }" to "${ value }" - Universal</Title>
