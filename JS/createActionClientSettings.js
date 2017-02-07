@@ -1,6 +1,7 @@
 
 // made for: https://github.com/jgstew/bigfix-content/blob/master/dashboards/ClientSettingsManager.ojo
 // tested in nodejs v7.5.0
+// target: IE11  (secondarily nodejs and all other recent browsers)
 
 function fnCreateClientSettingsXML(name, value, dateRelease, userName) {
 	// http://www.codereadability.com/javascript-default-parameters-with-or-operator/
