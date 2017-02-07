@@ -4,6 +4,7 @@
 // target: IE11  (secondarily nodejs and all other recent browsers)
 
 function fnCreateClientSettingsXML(name, value, dateRelease, userName) {
+	"use strict"; // http://www.w3schools.com/js/js_strict.asp
 	// http://www.codereadability.com/javascript-default-parameters-with-or-operator/
 	if (dateRelease === undefined) {
 		dateRelease = new Date();
