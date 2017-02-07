@@ -1,7 +1,7 @@
 
 // made for: https://github.com/jgstew/bigfix-content/blob/master/dashboards/ClientSettingsManager.ojo
 
-function fnCreateActionClientSettingsXML(name, value, userName="") {
+function fnCreateTaskClientSettingsXML(name, value, userName="") {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
 	<Task>
