@@ -15,12 +15,12 @@ function fnCreateClientSettingsXML(name, value, dateRelease, userName) {
 			// https://developer.bigfix.com/relevance/reference/bes-user.html#current-console-user-bes-user
 			// https://developer.bigfix.com/relevance/reference/string.html#bes-current-wruser-string
 			testGetUserName = bigfix.relevance.evaluate(' if (in web reports context AND exists properties "bes current wruser") then (bes current wruser) else (name of current console user | "") ');
-			userName=testGetUserName;
+			userName = testGetUserName;
 		} catch (e) {
-			if (e instanceof ReferenceError && e.message == "bigfix is not defined"){
+			if (e instanceof ReferenceError && e.message == "bigfix is not defined") {
 				// pass
 			} else {
-				throw(e);
+				throw e;
 			}
 		}
 	}
