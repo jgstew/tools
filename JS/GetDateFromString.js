@@ -9,6 +9,12 @@ function fnDateFromString(strDateTime) {
 	return objDate
 }
 
+// check if moment is defined
+if (typeof moment == "undefined") {
+  console.log( "moment undefined!" );
+  // TODO: load moment?
+}
+
 // if this file is run directly, do the following:
 if (typeof require == "undefined" || require.main === module) {
   // do the following only if file run directly with node or if it is run in the browser. 
