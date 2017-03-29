@@ -4,8 +4,8 @@ function fnDateFromString(strDateTime) {
 	if (strDateTime === undefined) {
 		objDate = moment();
 	} else {
-    objDate = moment(strDateTime);
-  }
+		objDate = moment(strDateTime);
+	}
 	return objDate
 }
 
