@@ -1,5 +1,5 @@
 
-# Check signatures of /Applications
+# Check signatures of /Applications on OS X
 # https://stackoverflow.com/a/20292636
 cd /Applications && find . -iname \*.app -maxdepth 3 -type d \( ! -name . \) -exec sh -c 'spctl --assess "{}"' \;
 
