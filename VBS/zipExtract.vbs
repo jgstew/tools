@@ -22,10 +22,13 @@ Set objCurrentFolder = objFSO.GetFolder( CreateObject("Wscript.Shell").CurrentDi
 If 1 = WScript.Arguments.Unnamed.Count Then
 	strZipFilePath = WScript.Arguments.Unnamed.Item(0)
 Else
-	' operating on an ZIP in the current folder ( if there are multiple, the last one will be used )
+	' operating on an ZIP in the current folder ( if there are multiple, the first one will be used )
 	For Each objFile in objCurrentFolder.Files
 		If UCase( objFSO.GetExtensionName(objFile.name)) = "ZIP" Then
 			strZipFilePath = objFile.Path
+			
+			' https://blogs.technet.microsoft.com/heyscriptingguy/2005/05/04/how-can-i-exit-a-for-each-loop/
+			Exit For
 		End If
 	Next
 	
@@ -49,6 +52,7 @@ Else
 End If
 
 ' TODO: Check to make sure output directory exists!
+' TODO: Check to make sure the ZIP file exists!  (particularly if specified as parameter)
 
 '  Extract the Files:
 ' https://asmand.wordpress.com/2015/06/15/unzip-with-vbscript/
