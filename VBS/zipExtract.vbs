@@ -2,12 +2,9 @@
 ' zipExtract.vbs
 ' Written by James Stewart ( @jgstew )
 ' Public Domain - use at your own risk
-Const NOCONFIRMATION = &H10&
-Const NOERRORUI = &H400&
-Const SIMPLEPROGRESS = &H100&
 
 ' https://msdn.microsoft.com/en-us/library/windows/desktop/bb787866(v=vs.85).aspx
-cFlags = NOCONFIRMATION + NOERRORUI + SIMPLEPROGRESS
+
 
 ' Dim to declare variables isn't required in VBScript except to make them available across all procedures within the script
 Dim strZipFilePath, objOutputFolder, objCurrentFolder, objFSO, objShell
@@ -58,4 +55,4 @@ End If
 '  Extract the Files:
 ' https://asmand.wordpress.com/2015/06/15/unzip-with-vbscript/
 ' https://www.symantec.com/connect/forums/vbscript-extract-zip
-objShell.NameSpace( objOutputFolder ).copyHere ( objShell.NameSpace( objFSO.GetAbsolutePathName( strZipFilePath ) ).Items() ), cFlags
+objShell.NameSpace( objOutputFolder ).copyHere ( objShell.NameSpace( objFSO.GetAbsolutePathName( strZipFilePath ) ).Items() ), 1044
