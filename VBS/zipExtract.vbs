@@ -8,7 +8,7 @@ Const SIMPLEPROGRESS = &H100&
  
 cFlags = NOCONFIRMATION + NOERRORUI + SIMPLEPROGRESS
 
-Dim strZipFilePath, objShell, objOutputFolder, objCurrentFolder
+Dim strZipFilePath, objOutputFolder, objCurrentFolder
 
 ' http://blogs.technet.com/b/heyscriptingguy/archive/2006/04/05/how-can-i-determine-the-path-to-the-folder-where-a-script-is-running.aspx
 ' http://stackoverflow.com/questions/4200028/vbscript-list-all-pdf-files-in-folder-and-subfolders
