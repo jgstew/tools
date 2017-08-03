@@ -5,7 +5,8 @@
 Const NOCONFIRMATION = &H10&
 Const NOERRORUI = &H400&
 Const SIMPLEPROGRESS = &H100&
- 
+
+' https://msdn.microsoft.com/en-us/library/windows/desktop/bb787866(v=vs.85).aspx
 cFlags = NOCONFIRMATION + NOERRORUI + SIMPLEPROGRESS
 
 ' Dim to declare variables isn't required in VBScript except to make them available across all procedures within the script
