@@ -44,6 +44,7 @@ Else
 	objOutputFolder = objCurrentFolder
 End If
 
+'  Extract the Files:
 ' https://asmand.wordpress.com/2015/06/15/unzip-with-vbscript/
 ' https://www.symantec.com/connect/forums/vbscript-extract-zip
 CreateObject("Shell.Application").NameSpace( objOutputFolder ).copyHere ( CreateObject( "Shell.Application" ).NameSpace( CreateObject("Scripting.FileSystemObject").GetAbsolutePathName( strZipFilePath ) ).Items() ), cFlags
