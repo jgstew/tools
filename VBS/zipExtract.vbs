@@ -3,9 +3,6 @@
 ' Written by James Stewart ( @jgstew )
 ' Public Domain - use at your own risk
 
-' https://msdn.microsoft.com/en-us/library/windows/desktop/bb787866(v=vs.85).aspx
-
-
 ' Dim to declare variables isn't required in VBScript except to make them available across all procedures within the script
 Dim strZipFilePath, objOutputFolder, objCurrentFolder, objFSO, objShell
 
@@ -56,3 +53,4 @@ End If
 ' https://asmand.wordpress.com/2015/06/15/unzip-with-vbscript/
 ' https://www.symantec.com/connect/forums/vbscript-extract-zip
 objShell.NameSpace( objOutputFolder ).copyHere ( objShell.NameSpace( objFSO.GetAbsolutePathName( strZipFilePath ) ).Items() ), 1044
+' https://msdn.microsoft.com/en-us/library/windows/desktop/bb787866(v=vs.85).aspx
