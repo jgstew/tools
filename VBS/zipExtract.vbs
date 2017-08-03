@@ -8,6 +8,7 @@ Const SIMPLEPROGRESS = &H100&
  
 cFlags = NOCONFIRMATION + NOERRORUI + SIMPLEPROGRESS
 
+' Dim to declare variables isn't required in VBScript except to make them available across all procedures within the script
 Dim strZipFilePath, objOutputFolder, objCurrentFolder, objFSO, objShell
 
 Set objFSO = CreateObject("Scripting.FileSystemObject")
