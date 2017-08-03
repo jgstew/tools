@@ -12,10 +12,13 @@ Set objCurrentFolder = CreateObject("Scripting.FileSystemObject").GetFolder( Cre
 If 1 = WScript.Arguments.Unnamed.Count Then
 	strZipFilePath = WScript.Arguments.Unnamed.Item(0)
 Else
-	' operating on an ZIP in the current folder ( if there are multiple, the last one will be used )
+	' operating on an ZIP in the current folder ( if there are multiple, the first one will be used )
 	For Each objFile in objCurrentFolder.Files
 		If UCase( CreateObject("Scripting.FileSystemObject").GetExtensionName(objFile.name)) = "ZIP" Then
 			strZipFilePath = objFile.Path
+			
+			' https://blogs.technet.microsoft.com/heyscriptingguy/2005/05/04/how-can-i-exit-a-for-each-loop/
+			Exit For
 		End If
 	Next
 	
