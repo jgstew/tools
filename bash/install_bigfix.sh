@@ -76,14 +76,24 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo __RelaySelect_Automatic=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_CheckAvailabilitySeconds=120
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_SleepIdle=500
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_SleepTime=500
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_WorkTime=250
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_NMOMaxQueryTime=30
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_AccelerateForPendingMessage=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollEnable=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=600
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_Days=30
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_MaxSize=1536000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PowerHistory_EnablePowerHistory=1
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryKeepDays=1825
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryDisplayDaysTech=90
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
   # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=`echo $SUDO_USER`
 fi
