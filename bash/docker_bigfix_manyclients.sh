@@ -15,9 +15,16 @@ else
 fi
 
 # https://stackoverflow.com/a/169602/861745
-# TODO make END settable as parameter
 typeset -i i END
-let END=10 i=1
+
+# set END of loop as parameter to script
+if [ -n "$2" ]; then
+  let END=$2
+else
+  let END=10
+fi
+
+let i=1
 while ((i<=END)); do
 
 sudo docker run -d centos bash -c "yum install initscripts -y;cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
