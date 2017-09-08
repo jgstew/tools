@@ -24,7 +24,7 @@ where /q powershell || ECHO Cound not find powershell. && EXIT /B
 @ECHO ON
 REM this following line will need to ignore SSL errors if HTTPS is used instead of HTTP
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%', '%BASEFOLDER%\actionsite.afxm') }" -ExecutionPolicy Bypass
-powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.1.9.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.6.63.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
 @ECHO OFF
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
@@ -58,6 +58,8 @@ EXIT /B
 ::CMDLITERAL
 
 #!/usr/bin/env bash
+# Short link: http://bit.ly/installbigfix
+#
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
@@ -99,7 +101,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=9.5.5.196
+URLVERSION=9.5.6.63
 URLMAJORMINOR=`echo $URLVERSION | awk '/./ {gsub(/\./, " "); print $1 $2}'`
 
 # check for x32bit or x64bit OS
@@ -133,14 +135,24 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo __RelaySelect_Automatic=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_CheckAvailabilitySeconds=120
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_SleepIdle=500
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_SleepTime=500
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_WorkTime=250
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_NMOMaxQueryTime=30
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_AccelerateForPendingMessage=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollEnable=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=3600
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=600
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_Days=30
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_MaxSize=1536000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PowerHistory_EnablePowerHistory=1
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryKeepDays=1825
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryDisplayDaysTech=90
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
   # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=`echo $SUDO_USER`
 fi
@@ -336,3 +348,4 @@ fi
 # - http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 # - https://forum.bigfix.com/t/script-to-kickstart-the-installation-of-bigfix-on-os-x-debian-family-rhel-family/17023
 # - http://stackoverflow.com/questions/30557508/bash-checking-if-string-does-not-contain-other-string
+
