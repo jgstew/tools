@@ -27,7 +27,7 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 RUN bash -c "echo 'slapd slapd/password2 password thisisabadpassword' | debconf-set-selections && echo 'slapd slapd/password1 password thisisabadpassword' | debconf-set-selections && apt-get install -qq slapd"
 RUN apt-get install -qq ldap-utils
 
-EXPOSE 22 389 636
+EXPOSE 22 80 443 389 636
 CMD ["/usr/sbin/sshd", "-D"]
 
 # https://docs.docker.com/engine/admin/multi-service_container/
