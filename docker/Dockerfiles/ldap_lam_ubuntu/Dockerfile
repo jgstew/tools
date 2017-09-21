@@ -23,6 +23,9 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
+# install ldap deamon
+RUN bash -c "echo 'slapd slapd/password2 password thisisabadpassword' | debconf-set-selections && echo 'slapd slapd/password1 password thisisabadpassword' | debconf-set-selections && apt-get install -qq slapd"
+RUN apt-get install -qq ldap-utils
 
 EXPOSE 22 389 636
 CMD ["/usr/sbin/sshd", "-D"]
