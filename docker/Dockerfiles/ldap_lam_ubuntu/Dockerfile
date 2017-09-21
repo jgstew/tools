@@ -9,6 +9,7 @@
 FROM ubuntu:latest
 
 RUN apt-get update
+RUN apt-get install wget -y
 RUN apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
 
