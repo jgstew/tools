@@ -278,7 +278,10 @@ if [ -f /etc/init.d/besclient ]; then
     chmod 600 /var/opt/BESClient/besclient.config
   fi
 
-  /etc/init.d/besclient start
+  # Do not start bigfix if: StartBigFix=false
+  if [[ "$StartBigFix" != "false" ]]; then
+    /etc/init.d/besclient start
+  fi
 fi
 
 ### Referenes:
