@@ -1,6 +1,7 @@
 
 ############################################################
-# WORK IN PROGRESS - UNTESTED!
+# WORK IN PROGRESS
+#  currently must replace _PUT.YOUR.RELAY.HERE.hostnameORfqdnORip_ below
 # Run the BigFix Client on Ubuntu
 #  - https://github.com/jgstew/tools/blob/master/bash/docker_bigfix_client.sh
 ############################################################
