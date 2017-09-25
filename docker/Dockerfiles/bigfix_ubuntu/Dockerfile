@@ -11,9 +11,7 @@ RUN apt-get update
 RUN apt-get install wget -y
 RUN wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
 
-ENV BigFixRelay mybigfixrelay.local
-
-RUN StartBigFix=false bash install_bigfix.sh $BigFixRelay
+RUN StartBigFix=false bash install_bigfix.sh _PUT.YOUR.RELAY.HERE.hostnameORfqdnORip_
 
 # incase SSH is installed later for debugging:
 EXPOSE 22
