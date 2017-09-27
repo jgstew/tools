@@ -13,7 +13,7 @@ echo $LogFolder
 ls $LogFolder
 echo "_____________________________________________________________________________________"
 # https://stackoverflow.com/questions/36989457/retrieve-last-100-lines-logs
-tail -n 50 "$LogFile"
+tail -n 25 "$LogFile"
 
 # /var/opt/BESClient/__BESData/__Global/Logs
 # /Library/Application Support/Bigfix/BES Agent/__BESData/__Global/Logs
