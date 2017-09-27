@@ -6,9 +6,11 @@ else
   LogFolder="/var/opt/BESClient/__BESData/__Global/Logs"
 fi
 
+LogFile="$LogFolder/`date +%Y%m%d`.log"
+
 ls $LogFolder
 
-cat "$LogFolder/`date +%Y%m%d`.log"
+cat "$LogFile"
 
 # /var/opt/BESClient/__BESData/__Global/Logs
 # /Library/Application Support/Bigfix/BES Agent/__BESData/__Global/Logs
