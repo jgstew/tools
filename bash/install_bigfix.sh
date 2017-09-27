@@ -284,6 +284,7 @@ if [ -f /etc/init.d/besclient ]; then
   fi
 fi
 
+# pause 5 seconds to wait for bigfix to get going a bit
 sleep 5
 
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
