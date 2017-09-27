@@ -31,6 +31,8 @@ RUN bash -c "echo 'slapd slapd/password2 password thisisabadpassword' | debconf-
 RUN apt-get install -qq ldap-utils
 
 #TODO: https://www.ldap-account-manager.org/static/doc/manual-onePage/index.html#a_installation
+# RUN apt-get install -qq ldap-account-manager
+
 
 # something for curiosity:
 RUN printenv > /tmp/env.txt
