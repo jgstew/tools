@@ -289,7 +289,7 @@ sleep 5
 
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
 # TODO: add mac support to the following:
-if [ -f /var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log ]; then
+if [ -f "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log" ]; then
   tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
   
   # Related:
