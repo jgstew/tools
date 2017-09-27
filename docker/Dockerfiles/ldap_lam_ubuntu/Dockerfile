@@ -29,6 +29,8 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 # install ldap deamon
 RUN bash -c "echo 'slapd slapd/password2 password thisisabadpassword' | debconf-set-selections && echo 'slapd slapd/password1 password thisisabadpassword' | debconf-set-selections && apt-get install -qq slapd"
 RUN apt-get install -qq ldap-utils
+# ldapsearch -H ldap://localhost -x -D "cn=admin,dc=nodomain" -W
+
 
 #TODO: https://www.ldap-account-manager.org/static/doc/manual-onePage/index.html#a_installation
 # RUN apt-get install -qq ldap-account-manager
