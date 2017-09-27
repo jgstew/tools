@@ -1,9 +1,10 @@
 
 ############################################################
 # WORK IN PROGRESS - UNTESTED!
+# Usage, in empty dir: sudo docker build -t "ldap_lam_ubuntu" .
 # Dockerfile to for LDAP testing
 # Based on Ubuntu
-# Managed with BigFix
+# TODO: manage with bigfix
 ############################################################
 
 FROM ubuntu:latest
@@ -35,3 +36,4 @@ EXPOSE 22 80 443 389 636
 CMD ["/usr/sbin/sshd", "-D"]
 
 # https://docs.docker.com/engine/admin/multi-service_container/
+# https://github.com/tianon/docker-brew-ubuntu-core/issues/59
