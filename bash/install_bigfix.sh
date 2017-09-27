@@ -290,6 +290,10 @@ sleep 5
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
 if [ -f /var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log ]; then
   tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+  
+  # Related:
+  #  - https://bigfix.me/fixlet/details/24646
+  #  - https://bigfix.me/relevance/details/3020387
 fi
 
 ### Referenes:
