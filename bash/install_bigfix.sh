@@ -284,6 +284,13 @@ if [ -f /etc/init.d/besclient ]; then
   fi
 fi
 
+sleep 5
+
+# output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
+if [ -f /var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log ]; then
+  tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+fi
+
 ### Referenes:
 # - http://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
 # - http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
