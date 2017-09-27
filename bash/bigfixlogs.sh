@@ -8,6 +8,8 @@ fi
 
 ls $LogFolder
 
+cat "$LogFolder/`date +%Y%m%d`.log"
+
 # /var/opt/BESClient/__BESData/__Global/Logs
 # /Library/Application Support/Bigfix/BES Agent/__BESData/__Global/Logs
 # https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli+Endpoint+Manager/page/Common+File+Locations
