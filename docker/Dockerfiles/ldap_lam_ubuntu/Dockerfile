@@ -28,17 +28,31 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 
 # install ldap deamon
 RUN bash -c "echo 'slapd slapd/password2 password thisisabadpassword' | debconf-set-selections && echo 'slapd slapd/password1 password thisisabadpassword' | debconf-set-selections && apt-get install -qq slapd"
+#TODO: https://www.ldap-account-manager.org/static/doc/manual-onePage/index.html#a_installation
+# RUN apt-get install -qq ldap-account-manager
 RUN apt-get install -qq ldap-utils
+
+# https://www.digitalocean.com/community/tutorials/how-to-manage-and-use-ldap-servers-with-openldap-utilities
+# http://www.thegeekstuff.com/2015/02/openldap-add-users-groups
+# https://docs.oracle.com/cd/E19424-01/820-4809/bcacw/index.html
+
 # ldapsearch -H ldap://localhost -x -D "cn=admin,dc=nodomain" -W
 # ldapsearch -H ldap:// -x -D "cn=admin,dc=nodomain" -W -b "dc=nodomain"
 
 # dn: ou=bigfixadmins,dc=nodomain
 # changetype: add
+# objectclass: top
 # objectClass: organizationalUnit
 # ou: bigfixadmins
 
-#TODO: https://www.ldap-account-manager.org/static/doc/manual-onePage/index.html#a_installation
-# RUN apt-get install -qq ldap-account-manager
+# dn: uid=bigfixtest,ou=bigfixadmins,dc=nodomain
+# changetype: add
+# objectclass: top
+# objectclass: person
+# objectclass: organizationalPerson
+# uid: bigfixtest
+# cn: bigfixtest
+# userPassword: badpassword
 
 
 # something for curiosity:
@@ -49,4 +63,4 @@ CMD ["/usr/sbin/sshd", "-D"]
 
 # https://docs.docker.com/engine/admin/multi-service_container/
 # https://github.com/tianon/docker-brew-ubuntu-core/issues/59
-# https://www.digitalocean.com/community/tutorials/how-to-manage-and-use-ldap-servers-with-openldap-utilities
+
