@@ -8,10 +8,13 @@ fi
 
 LogFile="$LogFolder/`date +%Y%m%d`.log"
 
+echo $LogFolder
 ls $LogFolder
 
-cat "$LogFile"
+# https://stackoverflow.com/questions/36989457/retrieve-last-100-lines-logs
+tail -n 50 "$LogFile"
 
 # /var/opt/BESClient/__BESData/__Global/Logs
 # /Library/Application Support/Bigfix/BES Agent/__BESData/__Global/Logs
 # https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli+Endpoint+Manager/page/Common+File+Locations
+
