@@ -11,7 +11,7 @@ LogFile="$LogFolder/`date +%Y%m%d`.log"
 
 echo $LogFolder
 ls $LogFolder
-
+echo "_____________________________________________________________________________________"
 # https://stackoverflow.com/questions/36989457/retrieve-last-100-lines-logs
 tail -n 50 "$LogFile"
 
