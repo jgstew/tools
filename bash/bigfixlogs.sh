@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 # this IF could be better, but this should mostly work:
 if [ -d "/Library/Application Support/Bigfix/BES Agent/__BESData/__Global/Logs" ]; then
