@@ -32,6 +32,10 @@ RUN apt-get install -qq ldap-utils
 # ldapsearch -H ldap://localhost -x -D "cn=admin,dc=nodomain" -W
 # ldapsearch -H ldap:// -x -D "cn=admin,dc=nodomain" -W -b "dc=nodomain"
 
+# dn: ou=bigfixadmins,dc=nodomain
+# changetype: add
+# objectClass: organizationalUnit
+# ou: bigfixadmins
 
 #TODO: https://www.ldap-account-manager.org/static/doc/manual-onePage/index.html#a_installation
 # RUN apt-get install -qq ldap-account-manager
@@ -45,3 +49,4 @@ CMD ["/usr/sbin/sshd", "-D"]
 
 # https://docs.docker.com/engine/admin/multi-service_container/
 # https://github.com/tianon/docker-brew-ubuntu-core/issues/59
+# https://www.digitalocean.com/community/tutorials/how-to-manage-and-use-ldap-servers-with-openldap-utilities
