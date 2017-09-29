@@ -36,8 +36,10 @@ changetype: add
 objectclass: top
 objectclass: person
 objectclass: organizationalPerson
+objectclass: inetorgperson
 uid: bigfixtest
 cn: bigfixtest
+sn: bigfixtest
 userPassword: badpassword
 _END_OF_FILE_
 
@@ -45,7 +47,7 @@ _END_OF_FILE_
 delete {parameter "file"}
 copy __createfile {parameter "file"}
 
-wait bash -c "ldapmodify -H ldap:// -x -D \"cn=admin,dc=nodomain\" -w {parameter "password"} -f {parameter "file"}"
+wait bash -c "ldapmodify -H ldap:// -x -D 'cn=admin,dc=nodomain' -w {parameter "password"} -f {parameter "file"} > /tmp/_bigfix_results.log"
 
 // https://github.com/jgstew/tools/blob/master/docker/Dockerfiles/ldap_lam_ubuntu/Dockerfile
 </ActionScript>
