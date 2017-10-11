@@ -2,7 +2,7 @@
 ############################################################
 # WORK IN PROGRESS - UNTESTED!
 # Usage, in empty dir, to create image:  sudo docker build -t "ldap_lam_ubuntu" .
-# Usage, to run a container instance of this:  sudo docker run -d ldap_lam_ubuntu
+# Usage, to run a container instance of this:  sudo docker run -d -P ldap_lam_ubuntu
 # Dockerfile to for LDAP testing
 # Based on Ubuntu
 # TODO: manage with bigfix
