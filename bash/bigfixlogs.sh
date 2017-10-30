@@ -9,9 +9,11 @@ fi
 
 LogFile="$LogFolder/`date +%Y%m%d`.log"
 
+# Start of output:
+echo "-------------------------------------------------------------------------------------"
 echo $LogFolder
 ls $LogFolder
-echo "_____________________________________________________________________________________"
+echo "-------------------------------------------------------------------------------------"
 # https://stackoverflow.com/questions/36989457/retrieve-last-100-lines-logs
 # https://ss64.com/bash/tail.html
 tail --lines=25 --verbose "$LogFile"
