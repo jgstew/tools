@@ -14,9 +14,6 @@ RUN wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigf
 
 RUN StartBigFix=false bash install_bigfix.sh _PUT.YOUR.RELAY.HERE.hostnameORfqdnORip_
 
-# incase SSH is installed later for debugging:
-EXPOSE 22
-
 # start bigfix client when container is started
 # using this to make it keep running:  tail -f /dev/null
 # could potentially use QnA to keep it running instead, which would be interesting
