@@ -1,6 +1,6 @@
 
 ############################################################
-# Dockerfile to for LDAP testing
+# Dockerfile to for LDAP testing:  https://github.com/jgstew/tools/blob/master/docker/Dockerfiles/ldap_ubuntu/Dockerfile
 # WORK IN PROGRESS - UNTESTED!
 # Usage, in empty dir, to create image:  sudo docker build -t "ldap_ubuntu" .
 # Usage, to run a container instance of this:  sudo docker run -d -P ldap_ubuntu
