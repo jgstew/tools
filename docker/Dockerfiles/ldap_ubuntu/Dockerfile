@@ -25,5 +25,6 @@ RUN apt-get install -qq ldap-utils
 # ldapsearch -H ldap://localhost -x -D "cn=admin,dc=nodomain" -W
 # ldapsearch -H ldap:// -x -D "cn=admin,dc=nodomain" -W -b "dc=nodomain"
 
+RUN service slapd start
 EXPOSE 389 636
-CMD ["/etc/init.d/slapd", "start"]
+CMD ["/usr/bin/tail", "-f", "/dev/null"]
