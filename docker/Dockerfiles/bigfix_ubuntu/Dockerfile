@@ -4,7 +4,7 @@
 #  currently must replace _PUT.YOUR.RELAY.HERE.hostnameORfqdnORip_ below
 # Run the BigFix Client on Ubuntu
 #  - https://github.com/jgstew/tools/blob/master/bash/docker_bigfix_client.sh
-# docker run -d -P --init --expose 52311 bigfix_ubuntu
+# docker run -d -P --init bigfix_ubuntu
 ############################################################
 
 FROM ubuntu:latest
