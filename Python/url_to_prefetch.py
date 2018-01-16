@@ -6,12 +6,13 @@ try:
 except ImportError:
   from urllib2 import urlopen # Python 2
 
-import sys
+#import sys
+
 
 def url_to_prefetch(url):
   hashes = sha1(), sha256()
   chunksize = max(4096, max(h.block_size for h in hashes))
-  size = 0
+  size = 1
   filename = "testfile"
   
   response = urlopen(url)
@@ -23,7 +24,12 @@ def url_to_prefetch(url):
       h.update(chunk)
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
       # TODO: size is not correct!!!
-      size = size + sys.getsizeof(chunk)
+      try:
+        size = size + ( len(str(chunk)) / 2 )
+      except UnicodeDecodeError:
+        print(size)
+        # https://docs.python.org/2/tutorial/errors.html
+        raise
   
   # https://www.learnpython.org/en/String_Formatting
   return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
