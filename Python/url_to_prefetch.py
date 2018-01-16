@@ -22,6 +22,9 @@ except ImportError:
 
 def url_to_prefetch(url):
   hashes = sha1(), sha256()
+  # chunksize seems like it could be anything
+  #   it is probably best if it is a multiple of a typical hash block_size
+  #   a larger chunksize is probably best for faster downloads
   chunksize = max(4096, max(h.block_size for h in hashes))
   size = 0
   #iterations = 0
