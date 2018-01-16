@@ -12,7 +12,6 @@
 # TODO: Consider adding options to cache the file downloads & log/cache the prefetches generated
 
 
-from __future__ import with_statement # adds `with` capabilities to python 2.5 for compatibility... only need if using python 2.5 & with
 from hashlib import sha1, sha256
 
 try:
