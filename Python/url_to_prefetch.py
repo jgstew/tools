@@ -22,10 +22,11 @@ def url_to_prefetch(url):
     for h in hashes:
       h.update(chunk)
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
+      # TODO: size is not correct!!!
       size = size + sys.getsizeof(chunk)
   
   # https://www.learnpython.org/en/String_Formatting
-  return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, "SHA1ph", size, url, size) )
+  return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
 
 
 
