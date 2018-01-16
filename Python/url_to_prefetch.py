@@ -1,16 +1,12 @@
 from __future__ import with_statement
 from hashlib import sha1, sha256
 
-
 try:
   from urllib.request import urlopen # Python 3
 except ImportError:
   from urllib2 import urlopen # Python 2
 
-# https://stackoverflow.com/a/26767972
 import sys
-#reload(sys)
-#sys.setdefaultencoding('Cp1252')
 
 def url_to_prefetch(url):
   hashes = sha1(), sha256()
