@@ -3,7 +3,7 @@
 #      downloads the file at the URL, and 
 #    Outputs a BigFix Prefetch statement.
 
-# NOTE: not sure if `size` is always accurate. Need to investigate further with more examples. TODO
+# NOTE: not sure if `size` is always accurate. Need to investigate further with more examples and different `chunksize`. TODO
 
 from __future__ import with_statement
 from hashlib import sha1, sha256
@@ -35,6 +35,7 @@ def url_to_prefetch(url):
       try:
         size = size + ( len(str(chunk)) )
       except UnicodeDecodeError:
+        # this try/except block was for debugging size issues, probably not needed anymore.
         print(size)
         # https://docs.python.org/2/tutorial/errors.html
         raise
@@ -49,9 +50,10 @@ def url_to_prefetch(url):
   return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
 
 
-
+# if called directly, then run this example:
 if __name__ == '__main__':
   print( url_to_prefetch("http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/07/windows10.0-kb3172729-x64_18df742fad6bebc01e617c2d4f92e0d325e5138f.msu") )
+
 
 # References: 
 #  - https://stackoverflow.com/questions/537542/how-can-i-create-multiple-hashes-of-a-file-using-only-one-pass
