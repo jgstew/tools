@@ -1,3 +1,10 @@
+#  function url_to_prefetch(url) takes
+#    Input a URL of a file
+#      downloads the file at the URL, and 
+#    Outputs a BigFix Prefetch statement.
+
+# NOTE: not sure if `size` is always accurate. Need to investigate further with more examples. TODO
+
 from __future__ import with_statement
 from hashlib import sha1, sha256
 
@@ -25,7 +32,6 @@ def url_to_prefetch(url):
       h.update(chunk)
       #iterations = iterations + 1
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
-      # TODO: verify size, does not always seem to be correct
       try:
         size = size + ( len(str(chunk)) )
       except UnicodeDecodeError:
