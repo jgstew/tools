@@ -44,7 +44,7 @@ def url_to_prefetch(url):
   size = size / 2
 
   # https://www.learnpython.org/en/String_Formatting
-  # TODO: not sure how to get the results from `hashes` by name (sha1) rather than by index
+  # TODO: not sure how to get the results from `hashes` by name (sha1) rather than by index (0)
   return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
 
 
