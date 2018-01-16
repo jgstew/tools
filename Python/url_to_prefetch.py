@@ -23,7 +23,7 @@ def url_to_prefetch(url):
     for h in hashes:
       h.update(chunk)
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
-      # TODO: size is not correct!!!
+      # TODO: verify size, may not always be correct
       try:
         size = size + ( len(str(chunk)) / 2 )
       except UnicodeDecodeError:
