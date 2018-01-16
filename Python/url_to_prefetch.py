@@ -12,7 +12,8 @@ except ImportError:
 def url_to_prefetch(url):
   hashes = sha1(), sha256()
   chunksize = max(4096, max(h.block_size for h in hashes))
-  size = 1
+  size = 0
+  iterations = 0
   filename = "testfile"
   
   response = urlopen(url)
@@ -22,15 +23,20 @@ def url_to_prefetch(url):
       break
     for h in hashes:
       h.update(chunk)
+      iterations = iterations + 1
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
-      # TODO: verify size, may not always be correct
+      # TODO: verify size, does not always seem to be correct, often off by 1
       try:
         size = size + ( len(str(chunk)) / 2 )
       except UnicodeDecodeError:
         print(size)
         # https://docs.python.org/2/tutorial/errors.html
         raise
-  
+      
+  #Debugging:
+  print(iterations)
+  print(1799999 % 4096)
+
   # https://www.learnpython.org/en/String_Formatting
   return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
 
