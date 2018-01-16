@@ -5,8 +5,11 @@ def url_to_prefetch(url)
   hashes = sha1(), sha256()
   chunksize = max(4096, max(h.block_size for h in hashes))
   size = 0
-  
 
+
+
+if __name__ == '__main__':
+  url_to_prefetch("http://google.com")
 
 # References: 
 #  - https://stackoverflow.com/questions/537542/how-can-i-create-multiple-hashes-of-a-file-using-only-one-pass
