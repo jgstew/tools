@@ -17,8 +17,6 @@ try:
 except ImportError:
   from urllib2 import urlopen # Python 2
 
-#import sys
-
 
 def url_to_prefetch(url):
   hashes = sha1(), sha256()
