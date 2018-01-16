@@ -21,7 +21,7 @@ def url_to_prefetch(url)
       h.update(chunk)
   
   # https://www.learnpython.org/en/String_Formatting
-  return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, "SHA1PlaceHolder", size, url, "SHA256PlaceHolder") )
+  return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes["sha1"].hexdigest(), size, url, "SHA256PlaceHolder") )
 
 
 
