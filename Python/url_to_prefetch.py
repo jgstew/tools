@@ -45,7 +45,7 @@ def url_to_prefetch(url):
 
 
 if __name__ == '__main__':
-  print( url_to_prefetch("http://google.com") )
+  print( url_to_prefetch("http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/07/windows10.0-kb3172729-x64_18df742fad6bebc01e617c2d4f92e0d325e5138f.msu") )
 
 # References: 
 #  - https://stackoverflow.com/questions/537542/how-can-i-create-multiple-hashes-of-a-file-using-only-one-pass
