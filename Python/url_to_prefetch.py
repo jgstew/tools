@@ -9,6 +9,9 @@
 #  Input: http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/07/windows10.0-kb3172729-x64_18df742fad6bebc01e617c2d4f92e0d325e5138f.msu
 # Output: prefetch testfile sha1:18df742fad6bebc01e617c2d4f92e0d325e5138f size:199259 http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/07/windows10.0-kb3172729-x64_18df742fad6bebc01e617c2d4f92e0d325e5138f.msu sha256:f5b55d436056a905e755984d457bac67295ad3e11531a6c33f3812cfb63ce010
 
+# TODO: Consider adding options to cache the file downloads & log/cache the prefetches generated
+
+
 from __future__ import with_statement
 from hashlib import sha1, sha256
 
@@ -41,6 +44,7 @@ def url_to_prefetch(url):
   size = size / 2
 
   # https://www.learnpython.org/en/String_Formatting
+  # TODO: not sure how to get the results from `hashes` by name (sha1) rather than by index
   return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
 
 
