@@ -1,12 +1,18 @@
 from __future__ import with_statement
 from hashlib import sha1, sha256
 
+
 try:
   from urllib.request import urlopen # Python 3
 except ImportError:
   from urllib2 import urlopen # Python 2
 
-def url_to_prefetch(url)
+# https://stackoverflow.com/a/26767972
+import sys
+#reload(sys)
+#sys.setdefaultencoding('Cp1252')
+
+def url_to_prefetch(url):
   hashes = sha1(), sha256()
   chunksize = max(4096, max(h.block_size for h in hashes))
   size = 0
@@ -19,9 +25,11 @@ def url_to_prefetch(url)
       break
     for h in hashes:
       h.update(chunk)
+      # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
+      size = size + sys.getsizeof(chunk)
   
   # https://www.learnpython.org/en/String_Formatting
-  return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes["sha1"].hexdigest(), size, url, "SHA256PlaceHolder") )
+  return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, "SHA1ph", size, url, size) )
 
 
 
