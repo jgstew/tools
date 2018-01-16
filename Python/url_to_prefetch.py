@@ -27,8 +27,7 @@ def url_to_prefetch(url):
   #   a larger chunksize is probably best for faster downloads
   chunksize = max(4096, max(h.block_size for h in hashes))
   size = 0
-  #iterations = 0
-  filename = "testfile"
+  filename = "testfile" # TODO: get filename from URL/download
   
   response = urlopen(url)
   while True:
@@ -37,18 +36,8 @@ def url_to_prefetch(url):
       break
     for h in hashes:
       h.update(chunk)
-      #iterations = iterations + 1
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
-      try:
-        size = size + ( len(str(chunk)) )
-      except UnicodeDecodeError:
-        # this try/except block was for debugging size issues, probably not needed anymore.
-        print(size)
-        # https://docs.python.org/2/tutorial/errors.html
-        raise
-      
-  #Debugging:
-  #print(iterations)
+      size = size + ( len(str(chunk)) )
 
   # if using `len(str(chunk))` then size is double for some reason.
   size = size / 2
