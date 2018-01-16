@@ -2,14 +2,21 @@ from __future__ import with_statement
 from hashlib import sha1, sha256
 
 try:
-    from urllib.request import urlopen # Python 3
+  from urllib.request import urlopen # Python 3
 except ImportError:
-    from urllib2 import urlopen # Python 2
+  from urllib2 import urlopen # Python 2
 
 def url_to_prefetch(url)
   hashes = sha1(), sha256()
   chunksize = max(4096, max(h.block_size for h in hashes))
   size = 0
+  
+  response = urlopen(url)
+  while True:
+    chunk = response.read(chunksize)
+    if not chunk:
+      break
+    f.write(chunk)
 
 
 
