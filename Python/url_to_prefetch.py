@@ -26,7 +26,7 @@ def url_to_prefetch(url):
   #   it is probably best if it is a multiple of a typical hash block_size
   #   a larger chunksize is probably best for faster downloads
   #   a larger chunksize is probably also better due to extra overhead due to meltdown mitigations
-  chunksize = max(576000, max(h.block_size for h in hashes))
+  chunksize = max(384000, max(h.block_size for h in hashes))
   size = 0
   filename = "testfile" # TODO: get filename from URL/download
   
