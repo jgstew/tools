@@ -42,7 +42,7 @@ def url_to_prefetch(url):
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
       size = size + ( len(str(chunk)) )
 
-  # if using `len(str(chunk))` then size is double for some reason.
+  # if using `len(str(chunk))` then size is double for some reason in Python2 (this is just wrong in Python3)
   size = size / 2
 
   # https://www.learnpython.org/en/String_Formatting
