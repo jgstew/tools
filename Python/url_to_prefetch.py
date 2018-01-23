@@ -60,3 +60,11 @@ if __name__ == '__main__':
 #  - https://stackoverflow.com/questions/1517616/stream-large-binary-files-with-urllib2-to-file
 #  - https://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py
 #  - https://gist.github.com/Zireael-N/ed36997fd1a967d78cb2
+
+
+#  AWS Lambda
+#from url_to_prefetch import url_to_prefetch
+#def lambda_handler(event, context):
+#    print( event['url_to_prefetch'] )
+#    return url_to_prefetch( event['url_to_prefetch'] )
+
