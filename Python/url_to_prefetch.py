@@ -22,6 +22,9 @@ except ImportError:
   from urllib2 import urlopen # Python 2
 
 
+def main():
+  print( url_to_prefetch("http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/07/windows10.0-kb3172729-x64_18df742fad6bebc01e617c2d4f92e0d325e5138f.msu") )
+
 def url_to_prefetch(url):
   hashes = sha1(), sha256()
   # chunksize seems like it could be anything
@@ -52,7 +55,7 @@ def url_to_prefetch(url):
 
 # if called directly, then run this example:
 if __name__ == '__main__':
-  print( url_to_prefetch("http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/07/windows10.0-kb3172729-x64_18df742fad6bebc01e617c2d4f92e0d325e5138f.msu") )
+  main()
 
 
 # References: 
