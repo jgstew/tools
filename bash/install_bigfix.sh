@@ -11,12 +11,11 @@
 #      Related: https://github.com/bigfix/bfdocker/tree/master/besclient
 #
 # Usage:
-#   curl -o install_bigfix.sh https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
-#   chmod u+x install_bigfix.sh
-#   ./install_bigfix.sh __ROOT_OR_RELAY_FQDN__
+#   curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
+#   bash install_bigfix.sh __ROOT_OR_RELAY_FQDN__
 #
 # Single Line:
-#  curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh ; chmod u+x install_bigfix.sh ; ./install_bigfix.sh __ROOT_OR_RELAY_FQDN__
+#  curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh ; bash install_bigfix.sh __ROOT_OR_RELAY_FQDN__
 
 # TODO: use the masthead file in current directory if present
 
