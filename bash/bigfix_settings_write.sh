@@ -13,6 +13,8 @@ else
 fi
 
 # OS X
+# NOTE: the following is only valid if working with plain files not in use by BigFix/CFPrefs
+#        see here: https://macmule.com/2014/02/07/mavericks-preference-caching/
 sudo /usr/libexec/plistbuddy -c "Set :Settings:Client:$1:Value $2" /Library/Preferences/com.bigfix.BESAgent.plist
 sudo /usr/libexec/plistbuddy -c "Print :Settings:Client:$1:Value" /Library/Preferences/com.bigfix.BESAgent.plist
 
