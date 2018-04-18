@@ -1,4 +1,7 @@
 
+echo PlistBuddy does not work correctly on MacOS due to CFPrefs caching.
+exit 999
+
 # Make sure values are provided:
 if [ -n "$1" ]; then
   if [ -n "$2" ]; then
