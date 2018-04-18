@@ -1,4 +1,6 @@
 
+# TODO: come up with a solution in python or similar
+#    - https://gist.github.com/gregneagle/01c99322cf985e771827
 echo PlistBuddy does not work correctly on MacOS due to CFPrefs caching.
 exit 999
 
