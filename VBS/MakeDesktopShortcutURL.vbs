@@ -12,3 +12,5 @@ oUrlLink.Save
 ' https://support.microsoft.com/en-us/help/244677/how-to-create-a-desktop-shortcut-with-the-windows-script-host
 ' https://ss64.com/vb/echo.html
 ' https://www.tutorialspoint.com/vbscript/vbscript_object_oriented.htm
+' https://www.bigfix.me/fixlet/details/741
+    
