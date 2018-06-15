@@ -1,14 +1,10 @@
 
 ' The microsoft example didn't work on Windows Server 2016 but this did:
 '   usage: cscript MakeDesktopShortcutURL.vbs //NoLogo
-Dim oUrlLink
-Dim objShell
 
 Set objShell = WScript.CreateObject("WScript.Shell")
 strDesktop = objShell.SpecialFolders("AllUsersDesktop")
-'WScript.Echo strDesktop
 Set oUrlLink = objShell.CreateShortcut(strDesktop+"\Microsoft Web Site.URL")
-'WScript.Echo oUrlLink
 oUrlLink.TargetPath = "http://www.microsoft.com"
 oUrlLink.Save
 
