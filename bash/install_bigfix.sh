@@ -78,6 +78,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_CheckAvailabilitySeconds=120
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_SleepIdle=500
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_PowerSaveEnable=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_SleepTime=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_WorkTime=250
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_NMOMaxQueryTime=30
@@ -89,7 +90,6 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PowerHistory_EnablePowerHistory=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryKeepDays=1825
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryDisplayDaysTech=90
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
