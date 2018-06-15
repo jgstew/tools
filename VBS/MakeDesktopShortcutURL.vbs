@@ -1,4 +1,5 @@
 
+' The microsoft example didn't work on Windows Server 2016 but this did:
 Dim oUrlLink
 Dim objShell
 
