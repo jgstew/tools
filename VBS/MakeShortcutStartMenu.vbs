@@ -6,10 +6,4 @@ Set oWS = WScript.CreateObject("WScript.Shell")
 sLinkFile = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Skype.lnk"
 Set oLink = oWS.CreateShortcut(sLinkFile)
 oLink.TargetPath = "{(value "DisplayIcon" of key whose (value "displayname" of it as string contains "Skype" of it AND value "displayname" of it as string as lowercase does not contain "Click to Call" as lowercase) of key "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" of registry as string)}"
-'    oLink.Arguments = ""
-'    oLink.Description = "Skype"
-'    oLink.HotKey = ""
-'    oLink.IconLocation = "{(value "DisplayIcon" of key whose (value "displayname" of it as string contains "Skype" of it AND value "displayname" of it as string as lowercase does not contain "Click to Call" as lowercase) of key "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" of registry as string)}, 2"
-'    oLink.WindowStyle = "1"
-'    oLink.WorkingDirectory = "{parent folder of file (value "DisplayIcon" of key whose (value "displayname" of it as string contains "Skype" of it AND value "displayname" of it as string as lowercase does not contain "Click to Call" as lowercase) of key "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" of registry as string)}"
 oLink.Save
