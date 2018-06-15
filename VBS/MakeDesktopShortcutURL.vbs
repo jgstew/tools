@@ -1,5 +1,6 @@
 
 ' The microsoft example didn't work on Windows Server 2016 but this did:
+'   usage: cscript MakeDesktopShortcutURL.vbs //NoLogo
 Dim oUrlLink
 Dim objShell
 
