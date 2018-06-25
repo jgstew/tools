@@ -11,6 +11,8 @@ $services = "BESClient"
 $maxRepeat = 120
 $status = "Running" # change to Stopped if you want to wait for services to start
 
+write-host "Waiting for BESClient Service to be ready"
+
 do
 {
     $bDesiredState = (Get-Service $services | ? {$_.status -eq $status})
