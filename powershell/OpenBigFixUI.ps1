@@ -22,17 +22,17 @@ do
 
 write-host "BESClient Status: " (Get-Service $services).status
 
-if($bDesiredState)
+if ($bDesiredState)
 {
     # https://stackoverflow.com/questions/31879814/check-if-a-file-exists-or-not-in-windows-powershell
     # if SSA, open SSA:    C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe
-    if(Test-Path "C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe" -PathType Leaf)
+    if (Test-Path "C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe" -PathType Leaf)
     {
         write-host "Opening SSA"
         Start-Process -FilePath "C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe"
     }
     # else open ClientUI:  C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe
-    if(Test-Path "C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe" -PathType Leaf)
+    ElseIf (Test-Path "C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe" -PathType Leaf)
     {
         write-host "Opening ClientUI"
         Start-Process -FilePath "C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe"
