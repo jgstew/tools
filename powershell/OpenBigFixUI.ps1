@@ -39,6 +39,8 @@ if ($bDesiredState)
     {
         write-host "Opening ClientUI"
         Start-Process -FilePath "C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe"
+        # ideally get this location dynamically: (would need the following but in PowerShell)
+        # unique values of pathnames of (folder it) of (it as string as trimmed string) of (values "InstallLocation" of keys whose(value "DisplayName" of it as string contains "BigFix Client") of keys "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" of registry ; values "EnterpriseClientFolder" of keys "HKEY_LOCAL_MACHINE\SOFTWARE\BigFix\EnterpriseClient" of registry )
     }
     Else
     {
