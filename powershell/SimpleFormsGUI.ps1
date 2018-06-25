@@ -1,4 +1,5 @@
 
+# NOTE: this doesn't actually do anything useful currently.
 
 Add-Type -AssemblyName System.Windows.Forms
 
@@ -34,5 +35,4 @@ $Form.Add_Shown( { $form.Activate() } )
 
 $Form.ShowDialog()
 #$Form.Show()
-
 #sleep -Milliseconds 3000
