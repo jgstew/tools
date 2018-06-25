@@ -9,9 +9,10 @@
 # https://stackoverflow.com/questions/28186904/powershell-wait-for-service-to-be-stopped-or-started
 $services = "BESClient"
 $maxRepeat = 120
+$msSleepTime = 1000
 $status = "Running" # change to Stopped if you want to wait for services to start
 
-write-host "Waiting for BESClient Service to be ready"
+write-host "Waiting for BESClient Service to be ready (up to" ($maxRepeat * $msSleepTime / 1000 / 60) "minutes max)"
 
 do
 {
@@ -19,7 +20,7 @@ do
     $maxRepeat--
     if ( !($bDesiredState))
     {
-        sleep -Milliseconds 1000
+        sleep -Milliseconds $msSleepTime
     }
 } until ($bDesiredState -or $maxRepeat -eq 0)
 
