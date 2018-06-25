@@ -1,5 +1,5 @@
 
-# Tested in PowerShell Core 6.0.2 on Windows 10
+# Tested in PowerShell 5.1 & PowerShell Core 6.0.2 on Windows 10
 # Usecase: trigger BigFix UI with desktop shortcut, but if done too soon, BigFix won't be started and an error will be displayed without this script.
 
 # Uncomment following line to disable write-host output to console:
