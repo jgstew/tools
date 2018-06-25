@@ -14,6 +14,7 @@ $status = "Running" # change to Stopped if you want to wait for services to star
 
 write-host "Waiting for BESClient Service to be ready (up to" ($maxRepeat * $msSleepTime / 1000 / 60) "minutes max)"
 
+# There is an easier option: # http://www.powershellmagazine.com/2013/04/10/pstip-wait-for-a-service-to-reach-a-specified-status/
 do
 {
     $bDesiredState = (Get-Service $services | ? {$_.status -eq $status})
