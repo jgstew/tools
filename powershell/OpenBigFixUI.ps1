@@ -25,11 +25,14 @@ if($bDesiredState)
     if(Test-Path "C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe" -PathType Leaf)
     {
         write-host "Opening SSA"
+        Start-Process -FilePath "C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe"
     }
     # else open ClientUI:  C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe
     if(Test-Path "C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe" -PathType Leaf)
     {
         write-host "Opening ClientUI"
+        Start-Process -FilePath "C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe"
     }
 }
 
+write-host "Finished"
