@@ -1,5 +1,6 @@
 
 # NOTE: this doesn't actually do anything useful currently.
+# I was trying to make a simplifed UI for displaying output of a script, like this: https://github.com/jgstew/tools/blob/master/powershell/OpenBigFixUI.ps1
 
 Add-Type -AssemblyName System.Windows.Forms
 
