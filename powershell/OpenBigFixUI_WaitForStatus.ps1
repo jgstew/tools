@@ -8,7 +8,7 @@
 
 # https://stackoverflow.com/questions/28186904/powershell-wait-for-service-to-be-stopped-or-started
 $service = "BESClient"
-$timeWait = "00:03:00"
+$timeWait = "00:02:00"
 $status = "Running" # change to Stopped if you want to wait for services to start
 
 write-host "Waiting for BESClient Service to be ready (up to" ($timeWait) "max)"
@@ -16,12 +16,15 @@ write-host "Waiting for BESClient Service to be ready (up to" ($timeWait) "max)"
 # http://www.powershellmagazine.com/2013/04/10/pstip-wait-for-a-service-to-reach-a-specified-status/
 $svc = (Get-Service $service)
 $svc.WaitForStatus($status,$timeWait)
-$bDesiredState = (Get-Service $service | ? {$_.status -eq $status})
+$bDesiredState = ($svc | ? {$_.status -eq $status})
 
-write-host "BESClient Status: " (Get-Service $service).status
+write-host "BESClient Status: " $svc.status
 
 if ($bDesiredState)
 {
+    # add slight delay in case service just started
+    sleep -Milliseconds 500
+
     # https://stackoverflow.com/questions/31879814/check-if-a-file-exists-or-not-in-windows-powershell
     # if SSA, open SSA:    C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe
     if (Test-Path "C:\Program Files (x86)\BigFix Enterprise\BigFix Self Service Application\BigFixSSA.exe" -PathType Leaf)
