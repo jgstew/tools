@@ -40,6 +40,10 @@ if ($bDesiredState)
         write-host "Opening ClientUI"
         Start-Process -FilePath "C:\Program Files (x86)\BigFix Enterprise\BES Client\TriggerClientUI.exe"
     }
+    Else
+    {
+        write-host "Couldn't Find BigFix UI EXEs"
+    }
 }
 
 write-host "Finished"
