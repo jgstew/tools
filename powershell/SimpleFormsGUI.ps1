@@ -1,6 +1,5 @@
 
 # NOTE: this doesn't actually do anything useful currently.
-# I was trying to make a simplifed UI for displaying output of a script, like this: https://github.com/jgstew/tools/blob/master/powershell/OpenBigFixUI.ps1
 
 Add-Type -AssemblyName System.Windows.Forms
 
@@ -14,26 +13,32 @@ $img = [System.Drawing.Image]::FromStream($ms, $true)
 
 $Form = New-Object system.Windows.Forms.Form
 $Form.Width = 350
-$Form.Height = 75
+$Form.Height = 400
 $Form.Text = "Waiting For BESClient"
-$Form.Font = New-Object System.Drawing.Font("Times New Roman",14,[System.Drawing.FontStyle]::Bold)
-$Label = New-Object System.Windows.Forms.Label
-$Label.Text = "       Waiting For BESClient Service"
-#$Label.BackColor = [System.Drawing.Color]::FromName("Transparent")
-$Label.AutoSize = $True
-
-$Form.Controls.Add($Label)
+#$Form.Font = New-Object System.Drawing.Font("Times New Roman",14,[System.Drawing.FontStyle]::Bold)
 
 $pictureBox = new-object Windows.Forms.PictureBox
 $pictureBox.Width =  $img.Size.Width;
 $pictureBox.Height =  $img.Size.Height;
 $pictureBox.Image = $img;
-
-
 $Form.controls.add($pictureBox)
 $pictureBox.BringToFront();
+
+
+$LabelScriptOutput = New-Object System.Windows.Forms.Label
+$LabelScriptOutput.AutoSize = $True
+$LabelScriptOutput.Location = new-object System.Drawing.Size(40,5)
+$LabelScriptOutput.Text = ""
+$Form.Controls.Add($LabelScriptOutput)
+
 $Form.Add_Shown( { $form.Activate() } )
 
-$Form.ShowDialog()
-#$Form.Show()
-#sleep -Milliseconds 3000
+#$Form.ShowDialog()
+$Form.Show()
+$LabelScriptOutput.Text += "Waiting for BESClient Service to be ready `n"
+$LabelScriptOutput.Text += "BESClient Status: Running `n"
+$LabelScriptOutput.Text += "Opening ClientUI `n"
+$LabelScriptOutput.Text += "Finished"
+
+# this prevents the form from animating, which isn't ideal.
+sleep -Milliseconds 3000
