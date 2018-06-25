@@ -1,7 +1,11 @@
 
 # Tested in PowerShell Core 6.0.2 on Windows 10
-# https://stackoverflow.com/questions/28186904/powershell-wait-for-service-to-be-stopped-or-started
 
+# Uncomment following line to disable write-host output to console:
+# function global:Write-Host() {}
+
+
+# https://stackoverflow.com/questions/28186904/powershell-wait-for-service-to-be-stopped-or-started
 $services = "BESClient"
 $maxRepeat = 120
 $status = "Running" # change to Stopped if you want to wait for services to start
