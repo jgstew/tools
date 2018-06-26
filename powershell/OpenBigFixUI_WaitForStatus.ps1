@@ -47,3 +47,6 @@ if ($bDesiredState)
 }
 
 write-host "Finished"
+
+# don't exit too quickly (useful if invoked by shortcut)
+sleep -Milliseconds 800
