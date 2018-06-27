@@ -9,3 +9,4 @@ SET BASEFOLDER=C:\Windows\Temp
 
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/2/5/0/2508F7B4-6DDE-4C3E-B1FA-E1EB66F2F79F/SQLServer2016-SSEI-Dev.exe', '%BASEFOLDER%\SQLServer-SSEI-Dev.exe') }" -ExecutionPolicy Bypass
 
+REM SQLServer-SSEI-Dev.exe /ACTION=Install /IACCEPTSQLSERVERLICENSETERMS /QS /ADDCURRENTUSERASSQLADMIN /SQLSVCINSTANTFILEINIT="True"
