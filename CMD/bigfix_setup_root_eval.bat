@@ -15,5 +15,7 @@ REM https://docs.microsoft.com/en-us/sql/database-engine/install-windows/install
 
 
 REM https://github.com/jgstew/bigfix-content/blob/f36708ebf7af38f84a286f3b79131faccb1d2e9c/fixlet/Install%20SQL%20Server%20Management%20Studio%2016.5.1%20-%20Windows.bes
+REM Download SQL Server Management Studio
+
 REM Install SQL Server Management Studio ?
 
