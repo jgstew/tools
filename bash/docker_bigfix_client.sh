@@ -24,6 +24,8 @@ sudo docker run -d --restart=unless-stopped fedora bash -c "yum install initscri
 
 sudo docker run -d --restart=unless-stopped oraclelinux bash -c "cd /tmp;curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
 
+# TODO: https://hub.docker.com/_/amazonlinux/
+
 # http://stackoverflow.com/questions/30209776/docker-container-will-automatically-stop-after-docker-run-d
 # http://stackoverflow.com/a/33497697/861745
 
