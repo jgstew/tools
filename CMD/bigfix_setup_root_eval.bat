@@ -16,6 +16,7 @@ REM https://docs.microsoft.com/en-us/sql/database-engine/install-windows/install
 
 REM https://github.com/jgstew/bigfix-content/blob/f36708ebf7af38f84a286f3b79131faccb1d2e9c/fixlet/Install%20SQL%20Server%20Management%20Studio%2016.5.1%20-%20Windows.bes
 REM Download SQL Server Management Studio
-
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/0/5/B/05B2AF8F-906F-4C57-A58E-5780F64F9D62/SSMS-Setup-ENU.exe', '%BASEFOLDER%\SSMS-Setup-ENU.exe') }" -ExecutionPolicy Bypass
+REM https://download.microsoft.com/download/0/5/B/05B2AF8F-906F-4C57-A58E-5780F64F9D62/SSMS-Setup-ENU.exe
 REM Install SQL Server Management Studio ?
-
+%BASEFOLDER%\SSMS-Setup-ENU.exe /install /quiet /norestart
