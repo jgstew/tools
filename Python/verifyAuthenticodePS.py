@@ -10,11 +10,10 @@ import subprocess
 import sys
 
 sFileName = r"C:\Windows\explorer.exe"
-# TODO: capture the output in python and evaluate it rather than just passing through the PowerShell result with stdout=sys.stdout
-# TODO: not sure if `Popen` is the best `subprocess` option. I'm just using the first thing that worked that I found... should probably use subprocess.check_output
 # https://stackoverflow.com/questions/21944895/running-powershell-script-within-python-script-how-to-make-python-print-the-pow
-spPowerSh = subprocess.Popen( ['powershell', '-ExecutionPolicy', 'Bypass', '-command', r'(Get-AuthenticodeSignature "' + sFileName + r'").Status -eq "Valid"'], stdout=sys.stdout )
-spPowerSh.communicate()
+sResult = subprocess.check_output( ['powershell', '-ExecutionPolicy', 'Bypass', '-command', r'(Get-AuthenticodeSignature "' + sFileName + r'").Status -eq "Valid"']  )
 
-
-# This will output `True` if the signature is valid.
+if "True" in sResult:
+    print "Athenticode Signature is Valid"
+else:
+    print "!!Authenticode Signature is Invalid!!"
