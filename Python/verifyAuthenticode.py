@@ -3,6 +3,7 @@
 # https://twitter.com/jgstew/status/1012509162540974080
 # https://programtalk.com/vs2/python/5137/PythonForWindows/windows/wintrust.py/
 # https://github.com/hakril/PythonForWindows/blob/master/samples/crypto/wintrust.py
+# https://github.com/jgstew/tools/blob/master/Python/verifyAuthenticodePS.py
 
 import windows.wintrust
 # git clone https://github.com/hakril/PythonForWindows.git
