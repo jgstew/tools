@@ -1,5 +1,5 @@
 
-# This is Windows Only
+# This is Windows Only and Python2 only: https://github.com/hakril/PythonForWindows/projects/1
 # https://twitter.com/jgstew/status/1012509162540974080
 # https://programtalk.com/vs2/python/5137/PythonForWindows/windows/wintrust.py/
 # https://github.com/hakril/PythonForWindows/blob/master/samples/crypto/wintrust.py
