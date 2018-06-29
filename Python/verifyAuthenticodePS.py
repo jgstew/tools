@@ -3,6 +3,7 @@
 # https://twitter.com/jgstew/status/1011657455275610112
 # https://github.com/jgstew/tools/blob/master/CMD/PS_VerifyFileSig.bat
 # https://github.com/jgstew/tools/blob/master/Python/verifyAuthenticode.py
+# https://docs.python.org/2/library/subprocess.html
 
 # powershell -ExecutionPolicy Bypass -command "(Get-AuthenticodeSignature \"C:\Windows\explorer.exe\").Status -eq 'Valid'"
 import subprocess
