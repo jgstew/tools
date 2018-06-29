@@ -6,7 +6,7 @@
 
 import windows.wintrust
 # git clone https://github.com/hakril/PythonForWindows.git
-# python .\PythonForWindows\setup.py install
+# cd PythonForWindows && python .\setup.py install
 
 sFileName = r"C:\Windows\explorer.exe"
 
