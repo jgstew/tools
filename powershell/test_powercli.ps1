@@ -20,3 +20,6 @@ Get-ResourcePool
 
 ## This worked:
 #Import-VApp -Source "_PATH_\Win7.ova" -Name "PowerCLItest Win7" -Datastore _NAME_DS05 -VMHost esxi120._FQDN_
+
+# Enable Paste for all VMs:
+Get-VM | New-AdvancedSetting -name "isolation.tools.paste.disable" -Value $false -Confirm:$false
