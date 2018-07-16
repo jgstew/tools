@@ -8,6 +8,8 @@
 #   docker build -f Dockerfile -t bigfix_centos_ROOTSERVER_ .
 # Run it:
 #   docker run -d -P --init --restart=unless-stopped bigfix_centos_ROOTSERVER_
+# Run Many(10):
+#   for i in {1..10}; do docker run -d -P --init --restart=unless-stopped bigfix_centos_ROOTSERVER_; done
 ############################################################
 
 FROM centos:latest
