@@ -6,7 +6,8 @@
 #  - https://github.com/jgstew/tools/blob/master/bash/docker_bigfix_client.sh
 # Make the container image:
 #   docker build -f Dockerfile -t bigfix_centos_ROOTSERVER_ .
-# docker run -d -P --init --restart=unless-stopped bigfix_centos_ROOTSERVER_
+# Run it:
+#   docker run -d -P --init --restart=unless-stopped bigfix_centos_ROOTSERVER_
 ############################################################
 
 FROM centos:latest
