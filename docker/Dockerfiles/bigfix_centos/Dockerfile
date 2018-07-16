@@ -4,7 +4,9 @@
 #  currently must replace _PUT.YOUR.RELAY.HERE.hostnameORfqdnORip_ below
 # Run the BigFix Client on CentOS
 #  - https://github.com/jgstew/tools/blob/master/bash/docker_bigfix_client.sh
-# docker run -d -P --init bigfix_centos
+# Make the container image:
+#   docker build -f Dockerfile -t bigfix_centos_ROOTSERVER_ .
+# docker run -d -P --init --restart=unless-stopped bigfix_centos_ROOTSERVER_
 ############################################################
 
 FROM centos:latest
