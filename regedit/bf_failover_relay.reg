@@ -1,0 +1,4 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\BigFix\EnterpriseClient\Settings\Client\_BESClient_RelaySelect_FailoverRelay]
+"value"="http://FQDN:52311/bfmirror/downloads/"
