@@ -25,4 +25,4 @@ Session Relevance getting list of matching BES Computers:
     (name of item 0 of it | "<noname>", ip address of item 0 of it as string | "<noIP>", id of item 0 of it) of (it, ip addresses of it as string) whose( item 1 of it is contained by set of ("0.1.1.1" ; "10.1.1.1" ; "192.1.1.1" ; "2.1.1.1" ; "92.1.1.1") ) of bes computers
 
 
-NOTE: using `first matches` in the relevance helps with the partial match issue above.
+NOTE: using `first matches` in the relevance helps with the partial match issue above, but causes the relevance to only grab the first IP per file-line.
