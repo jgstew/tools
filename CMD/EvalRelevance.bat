@@ -1,4 +1,4 @@
-
+REM Get QnA.exe location from registry, and pass parameters as relevance to evaluate
 @echo off
 Set Relevance=%*
 
