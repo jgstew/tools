@@ -1,4 +1,5 @@
-REM @echo off
+@echo off
+REM Related: https://github.com/jgstew/tools/blob/master/bash/openQnA.sh
 Set Relevance=%*
 
 Set WoW=
