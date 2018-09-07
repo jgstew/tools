@@ -1,4 +1,4 @@
-REM Get QnA.exe location from registry, and pass parameters as relevance to evaluate
+REM Get QnA.exe location from registry, and pass parameters as relevance to evaluate (registry location only valid on x64 systems)
 @echo off
 Set Relevance=%*
 
