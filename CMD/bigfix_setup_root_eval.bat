@@ -25,6 +25,6 @@ REM for some reason, this didn't create a start menu shortcut it seems for SQL S
 
 
 REM Download BigFix Root Server:
-REM powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-9.5.9.62.exe', '%BASEFOLDER%\BigFix-BES.exe') }" -ExecutionPolicy Bypass
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-9.5.9.62.exe', '%BASEFOLDER%\BigFix-BES.exe') }" -ExecutionPolicy Bypass
 REM Install:
 REM %BASEFOLDER%\BigFix-BES.exe
