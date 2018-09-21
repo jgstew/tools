@@ -31,3 +31,7 @@ REM Download BigFix Root Server:
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-9.5.9.62.exe', '%BASEFOLDER%\BigFix-BES.exe') }" -ExecutionPolicy Bypass
 REM Install:
 REM %BASEFOLDER%\BigFix-BES.exe
+
+
+REM press any key to continue....
+pause
