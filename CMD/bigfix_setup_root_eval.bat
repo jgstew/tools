@@ -7,6 +7,9 @@ REM http://download.microsoft.com/download/2/5/0/2508F7B4-6DDE-4C3E-B1FA-E1EB66F
 
 SET BASEFOLDER=C:\Windows\Temp
 
+REM Open folder:
+start "" %BASEFOLDER%
+
 REM Download SQLServer Developer Edition:
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/2/5/0/2508F7B4-6DDE-4C3E-B1FA-E1EB66F2F79F/SQLServer2016-SSEI-Dev.exe', '%BASEFOLDER%\SQLServer-SSEI-Dev.exe') }" -ExecutionPolicy Bypass
 REM Install SQLServer Developer Edition:
