@@ -7,7 +7,7 @@ REM http://download.microsoft.com/download/2/5/0/2508F7B4-6DDE-4C3E-B1FA-E1EB66F
 
 SET BASEFOLDER=C:\tmp
 
-REM Make folder if not existing:
+REM Make folder if not existing:  https://stackoverflow.com/questions/4165387/create-folder-with-batch-but-only-if-it-doesnt-already-exist
 if not exist "%BASEFOLDER%" mkdir %BASEFOLDER%
 
 REM Open folder:
