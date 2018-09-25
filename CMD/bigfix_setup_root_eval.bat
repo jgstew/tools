@@ -18,7 +18,7 @@ powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://downloa
 REM Install SQLServer Developer Edition:
 REM https://docs.microsoft.com/en-us/sql/database-engine/install-windows/install-sql-server-from-the-command-prompt?view=sql-server-2017
 REM Silent Command??:  /Q /ACTION=Install /IACCEPTSQLSERVERLICENSETERMS /MEDIAPATH="%BASEFOLDER%\SQLServerMedia"
-%BASEFOLDER%\SQLServer-SSEI-Dev.exe
+%BASEFOLDER%\SQLServer-SSEI-Dev.exe /MEDIAPATH="%BASEFOLDER%\SQLServerMedia" /ACTION=Download /LANGUAGE=en-US /MEDIATYPE=CAB /QUIET
 
 
 REM https://github.com/jgstew/bigfix-content/blob/f36708ebf7af38f84a286f3b79131faccb1d2e9c/fixlet/Install%20SQL%20Server%20Management%20Studio%2016.5.1%20-%20Windows.bes
