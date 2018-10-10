@@ -10,3 +10,5 @@ for /f "tokens=2" %%a in (
 )
 
 echo expration: %RESULT%
+
+REM compare: https://stackoverflow.com/questions/17649235/compare-2-dates-in-a-windows-batch-file
