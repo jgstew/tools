@@ -2,6 +2,8 @@ JavaScript required to create a prefetch from a virustotal analysis, meant to be
 
 This site has a bunch of ads all over it, but you can find this here: http://marklets.com/VirusTotal%20to%20Prefetch.aspx
 
+This seems to allow downloading of a file with the prefetch: https://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server
+
 ------
 
 ### Screenshots of results of VirusTotal2PrefetchTable.js
