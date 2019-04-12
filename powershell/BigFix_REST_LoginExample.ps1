@@ -1,7 +1,7 @@
 # based upon script by Jeff Schafer
 
 # Invoke:
-# powershell -ExecutionPolicy Bypass .\BigFix_REST.ps1
+# powershell -ExecutionPolicy Bypass .\BigFix_REST_LoginExample.ps1
 
 add-type @"
   using System.Net;
