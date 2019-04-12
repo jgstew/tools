@@ -20,6 +20,8 @@ $AllProtocols = [System.Net.SecurityProtocolType]'Ssl3,Tls,Tls11,Tls12'
 
 $server = 'bigfix' # BigFix Root Server address
 $port = '52311' # BigFix Root Server port
+
+# https://developer.bigfix.com/rest-api/api/login.html
 $urlbase = "https://${server}:${port}/api/login"
 
 $credential = Get-Credential
