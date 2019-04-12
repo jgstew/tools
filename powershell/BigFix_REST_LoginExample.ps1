@@ -1,4 +1,4 @@
-# based upon script by Jeff Schafer
+# based upon script by Ed Redmond
 
 # Invoke:
 # powershell -ExecutionPolicy Bypass .\BigFix_REST_LoginExample.ps1
