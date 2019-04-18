@@ -64,7 +64,7 @@ if __name__ == '__main__':
 #  - https://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py
 #  - https://gist.github.com/Zireael-N/ed36997fd1a967d78cb2
 #  - https://blog.sourcerer.io/full-guide-to-developing-rest-apis-with-aws-api-gateway-and-aws-lambda-d254729d6992
-
+#  - https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-create-api-as-simple-proxy-for-lambda.html
 
 #  AWS Lambda
 #from url_to_prefetch import url_to_prefetch
