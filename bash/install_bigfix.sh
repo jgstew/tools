@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Short link: http://bit.ly/installbigfix
 #
+#   Work In Progresss:  curl http://bit.ly/installbigfix | grep -o '".*"' | sed 's/"//g'
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
