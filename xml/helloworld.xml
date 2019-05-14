@@ -1,3 +1,5 @@
 <?xml version="1.0"?>
 <!-- vim: set syntax=xml: -->
-<MyAwesomeRootTag>Hello World!</MyAwesomeRootTag>
+<MyAwesomeRootTag>
+  Hello World!
+</MyAwesomeRootTag>
