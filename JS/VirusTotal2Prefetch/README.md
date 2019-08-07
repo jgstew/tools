@@ -1,3 +1,6 @@
+
+# NOTE: This is for the old VirusTotal UI that no longer exists.
+
 JavaScript required to create a prefetch from a virustotal analysis, meant to be used as a bookmarklet.
 
 This site has a bunch of ads all over it, but you can find this here: http://marklets.com/VirusTotal%20to%20Prefetch.aspx
