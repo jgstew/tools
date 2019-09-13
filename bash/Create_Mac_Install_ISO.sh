@@ -28,3 +28,5 @@ bash -c "mv /tmp/Catalina.cdr /tmp/Catalina.iso"
 # ???
 # unmount/eject:  /Volumes/Catalina   (seems like this is already handled by createinstallmedia step)
 #        delete:  /tmp/Catalina.dmg
+
+# Related:  https://github.com/munki/macadmin-scripts/blob/master/installinstallmacos.py
