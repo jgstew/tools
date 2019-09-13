@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# exists files "/Applications/Install macOS Catalina Beta.app/Contents/Resources/createinstallmedia"
+
 cd /tmp
 
 bash -c "hdiutil attach /tmp/Catalina.dmg -noverify -nobrowse -mountpoint /Volumes/Catalina"
