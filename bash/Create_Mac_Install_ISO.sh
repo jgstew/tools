@@ -25,5 +25,5 @@ bash -c "hdiutil convert /tmp/Catalina.dmg -format UDTO -o /tmp/Catalina.cdr"
 bash -c "mv /tmp/Catalina.cdr /tmp/Catalina.iso"
 
 # ???
-# unmount/eject:  /Volumes/Catalina
+# unmount/eject:  /Volumes/Catalina   (seems like this is already handled by createinstallmedia step)
 #        delete:  /tmp/Catalina.dmg
