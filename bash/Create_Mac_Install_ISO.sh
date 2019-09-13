@@ -11,7 +11,7 @@ bash -c "hdiutil create -o /tmp/Catalina -size 7900m -volname Catalina -layout S
 bash -c "hdiutil attach /tmp/Catalina.dmg -noverify -nobrowse -mountpoint /Volumes/Catalina"
 
 # createinstallmedia inside created volume
-# does this have a -nobrowse option? This appears on the desktop when run in terminal interactively
+# does this have a -nobrowse option? This appears on the desktop when run in terminal interactively (does not seem like it)
 bash -c "sudo /Applications/Install\ macOS\ Catalina\ Beta.app/Contents/Resources/createinstallmedia --volume /Volumes/Catalina --nointeraction"
 
 # unmount/eject
