@@ -12,6 +12,7 @@ bash -c "hdiutil attach /tmp/Catalina.dmg -noverify -nobrowse -mountpoint /Volum
 
 # createinstallmedia inside created volume
 # does this have a -nobrowse option? This appears on the desktop when run in terminal interactively (does not seem like it)
+# Consider `--downloadassets` ?  https://scriptingosx.com/2018/10/include-assets-in-external-macos-installer-drives/
 bash -c "sudo /Applications/Install\ macOS\ Catalina\ Beta.app/Contents/Resources/createinstallmedia --volume /Volumes/Catalina --nointeraction"
 
 # unmount/eject
