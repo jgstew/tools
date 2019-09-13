@@ -30,3 +30,4 @@ bash -c "mv /tmp/Catalina.cdr /tmp/Catalina.iso"
 #        delete:  /tmp/Catalina.dmg
 
 # Related:  https://github.com/munki/macadmin-scripts/blob/master/installinstallmacos.py
+# Related:  https://robservatory.com/install-macos-10-15-catalina-in-a-fusion-virtual-machine/
