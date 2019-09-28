@@ -40,7 +40,7 @@ class Class1
         if (theIcon != null)
         {
             // Save it to disk, or do whatever you want with it.
-            using (var stream = new System.IO.FileStream(@"C:\Users\Public\Downloads\setup.ico", System.IO.FileMode.CreateNew))
+            using (var stream = new System.IO.FileStream(@filePath+".ico", System.IO.FileMode.CreateNew))
             {
                 theIcon.Save(stream);
             }
