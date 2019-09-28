@@ -1,0 +1,65 @@
+// 2>nul||@goto :batch
+/*
+:batch
+@echo off
+setlocal
+
+:: find csc.exe
+set "csc="
+for /r "%SystemRoot%\Microsoft.NET\Framework\" %%# in ("*csc.exe") do  set "csc=%%#"
+
+if not exist "%csc%" (
+   echo no .net framework installed
+   exit /b 10
+)
+
+if not exist "%~n0.exe" (
+   call %csc% /nologo /r:"Microsoft.VisualBasic.dll" /out:"%~n0.exe" "%~dpsfnx0" || (
+      exit /b %errorlevel% 
+   )
+)
+%~n0.exe %*
+endlocal & exit /b %errorlevel%
+
+*/
+
+// reference  
+// https://stackoverflow.com/questions/462270/get-file-icon-used-by-shell
+// https://gallery.technet.microsoft.com/scriptcenter/eeff544a-f690-4f6b-a586-11eea6fc5eb8
+
+using System.Drawing;
+
+
+class Class1
+{
+    public static void Main()
+    {
+        var filePath =  @"C:\Users\Public\Downloads\setup.exe";
+        var theIcon = IconFromFilePath(filePath);
+
+        if (theIcon != null)
+        {
+            // Save it to disk, or do whatever you want with it.
+            using (var stream = new System.IO.FileStream(@"C:\Users\Public\Downloads\setup.ico", System.IO.FileMode.CreateNew))
+            {
+                theIcon.Save(stream);
+            }
+        }
+    }
+
+    public static Icon IconFromFilePath(string filePath)
+    {
+        var result = (Icon)null;
+
+        try
+        {
+            result = Icon.ExtractAssociatedIcon(filePath);
+        }
+        catch (System.Exception)
+        {
+            // swallow and return nothing. You could supply a default Icon here as well
+        }
+
+        return result;
+    }
+}
