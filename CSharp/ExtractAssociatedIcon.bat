@@ -28,14 +28,19 @@ endlocal & exit /b %errorlevel%
 // https://www.bigfix.me/fixlet/details/21898
 // https://gallery.technet.microsoft.com/scriptcenter/eeff544a-f690-4f6b-a586-11eea6fc5eb8
 
+using System; // required by Console.WriteLine
 using System.Drawing;
 
 
 class Class1
 {
-    public static void Main()
+    public static void Main( string[] args )
     {
-        var filePath =  @"C:\Users\Public\Downloads\setup.exe";
+        var filePath =  @"setup.exe";
+        if (args.Length != 0)
+        {
+            filePath =  @args[0];
+        }
         var theIcon = IconFromFilePath(filePath);
 
         if (theIcon != null)
@@ -59,6 +64,7 @@ class Class1
         catch (System.Exception)
         {
             // swallow and return nothing. You could supply a default Icon here as well
+            Console.WriteLine("ERROR: No Icon Found   TODO: Provide Default Icon?");
         }
 
         return result;
