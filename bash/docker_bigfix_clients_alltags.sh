@@ -22,7 +22,7 @@ fi
 wget -q https://registry.hub.docker.com/v1/repositories/ubuntu/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep -o "^[0-9]*\.[0-9]*" | uniq | while read -r line ; do
     echo "- Processing ubuntu:$line -"
     
-    # sudo docker run -d --restart=unless-stopped ubuntu:$line bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
+    sudo docker run -d --restart=unless-stopped ubuntu:$line bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
 done
 
 
@@ -31,7 +31,7 @@ done
 wget -q https://registry.hub.docker.com/v1/repositories/debian/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep -o "^[0-9]*" | uniq  | while read -r line ; do
     echo "- Processing debian:$line -"
     
-    # sudo docker run -d --restart=unless-stopped debian:$line bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
+    sudo docker run -d --restart=unless-stopped debian:$line bash -c "apt-get update;apt-get install wget -y;wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh;chmod u+x install_bigfix.sh;./install_bigfix.sh $RELAYFQDN;tail -f /dev/null"
 done
 
 
