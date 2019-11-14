@@ -60,6 +60,7 @@ EXIT /B
 #!/usr/bin/env bash
 # Short link: http://bit.ly/installbigfix
 #
+#   Work In Progresss:  curl http://bit.ly/installbigfix | grep -o '".*"' | sed 's/"//g'
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
@@ -70,12 +71,11 @@ EXIT /B
 #      Related: https://github.com/bigfix/bfdocker/tree/master/besclient
 #
 # Usage:
-#   curl -o install_bigfix.sh https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
-#   chmod u+x install_bigfix.sh
-#   ./install_bigfix.sh __ROOT_OR_RELAY_FQDN__
+#   curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh
+#   bash install_bigfix.sh __ROOT_OR_RELAY_FQDN__
 #
 # Single Line:
-#  curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh ; chmod u+x install_bigfix.sh ; ./install_bigfix.sh __ROOT_OR_RELAY_FQDN__
+#  curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigfix.sh ; bash install_bigfix.sh __ROOT_OR_RELAY_FQDN__
 
 # TODO: use the masthead file in current directory if present
 
@@ -101,7 +101,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=9.5.6.63
+URLVERSION=9.5.13.130
 URLMAJORMINOR=`echo $URLVERSION | awk '/./ {gsub(/\./, " "); print $1 $2}'`
 
 # check for x32bit or x64bit OS
@@ -138,6 +138,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_CheckAvailabilitySeconds=120
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_SleepIdle=500
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_PowerSaveEnable=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_SleepTime=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_WorkTime=250
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_NMOMaxQueryTime=30
@@ -149,7 +150,6 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PowerHistory_EnablePowerHistory=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryKeepDays=1825
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryDisplayDaysTech=90
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
@@ -337,7 +337,23 @@ if [ -f /etc/init.d/besclient ]; then
     chmod 600 /var/opt/BESClient/besclient.config
   fi
 
-  /etc/init.d/besclient start
+  # Do not start bigfix if: StartBigFix=false
+  if [[ "$StartBigFix" != "false" ]]; then
+    /etc/init.d/besclient start
+  fi
+fi
+
+# pause 5 seconds to wait for bigfix to get going a bit
+sleep 5
+
+# output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
+# TODO: add mac support to the following:
+if [ -f "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log" ]; then
+  tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+  
+  # Related:
+  #  - https://bigfix.me/fixlet/details/24646
+  #  - https://bigfix.me/relevance/details/3020387
 fi
 
 ### Referenes:
@@ -348,4 +364,3 @@ fi
 # - http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 # - https://forum.bigfix.com/t/script-to-kickstart-the-installation-of-bigfix-on-os-x-debian-family-rhel-family/17023
 # - http://stackoverflow.com/questions/30557508/bash-checking-if-string-does-not-contain-other-string
-
