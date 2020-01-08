@@ -12,9 +12,10 @@ if %errorlevel% NEQ 1 goto end
 REM if errorlevel = 1 then BigFix is NOT installed
 
 echo Install BigFix since it is missing:
-
-SET RELAYFQDN=_Must_Set_FQDN_
-SET MASTHEADURL=http://%RELAYFQDN%:52311/masthead/masthead.afxm
+IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
+REM KNOWN ISSUE: if enhanced security is enabled on root/relay, then must use HTTPS for masthead download. This will mean that the download part will have to ignore SSL errors
+SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
+SET RELAYFQDN=%1
 SET BASEFOLDER=%TMP%
 
 cd %BASEFOLDER%
