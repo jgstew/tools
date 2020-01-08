@@ -15,6 +15,11 @@ SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET RELAYFQDN=%1
 SET BASEFOLDER=C:\Windows\Temp
 
+REM check if BigFix is installed
+sc query besclient | find /I "besclient" > nul
+if %errorlevel% NEQ 1 goto end
+REM if errorlevel = 1 then BigFix is NOT installed
+
 REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already in the CWD
 REM  TODO: check for admin rights http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
 
@@ -54,5 +59,6 @@ ECHO
 ECHO Installing BigFix now.
 %BASEFOLDER%\BESClient.exe /s /v"/l*voicewarmup %BASEFOLDER%\install_bigfix.log /qn"
 
+:end
 EXIT /B
 ::CMDLITERAL
