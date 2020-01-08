@@ -18,7 +18,7 @@ SET BASEFOLDER=C:\Windows\Temp
 REM check if BigFix is installed
 sc query besclient | find /I "besclient" > nul
 if %errorlevel% NEQ 1 goto end
-REM if errorlevel = 1 then BigFix is NOT installed
+REM if errorlevel = 1 then BigFix is NOT installed, so continue:
 
 REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already in the CWD
 REM  TODO: check for admin rights http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
