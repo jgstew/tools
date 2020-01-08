@@ -1,6 +1,6 @@
 @echo off
 
-REM This is a work in progress!
+REM This is based upon: https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
 
 REM related: https://forum.bigfix.com/t/logon-script-to-install-bigfix-agent/22119/2
 
