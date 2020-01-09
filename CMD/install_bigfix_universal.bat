@@ -2,7 +2,7 @@
 @ECHO OFF
 REM Short link: http://bit.ly/installbigfix
 REM  Usage: 
-REM powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/CMD/install_bigfix.bat', 'install_bigfix.bat') }" -ExecutionPolicy Bypass
+REM powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/CMD/install_bigfix_universal.bat', 'install_bigfix.bat') }" -ExecutionPolicy Bypass
 REM install_bigfix.bat __FQDN_OF_ROOT_OR_RELAY__
 
 REM    Source: https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
@@ -15,6 +15,11 @@ SET MASTHEADURL=http://%1:52311/masthead/masthead.afxm
 SET RELAYFQDN=%1
 SET BASEFOLDER=C:\Windows\Temp
 
+REM check if BigFix is installed
+sc query besclient | find /I "besclient" > nul
+if %errorlevel% NEQ 1 goto end
+REM if errorlevel = 1 then BigFix is NOT installed, so continue:
+
 REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already in the CWD
 REM  TODO: check for admin rights http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
 
@@ -24,7 +29,7 @@ where /q powershell || ECHO Cound not find powershell. && EXIT /B
 @ECHO ON
 REM this following line will need to ignore SSL errors if HTTPS is used instead of HTTP
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%', '%BASEFOLDER%\actionsite.afxm') }" -ExecutionPolicy Bypass
-powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.6.63.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
 @ECHO OFF
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
@@ -54,6 +59,7 @@ ECHO
 ECHO Installing BigFix now.
 %BASEFOLDER%\BESClient.exe /s /v"/l*voicewarmup %BASEFOLDER%\install_bigfix.log /qn"
 
+:end
 EXIT /B
 ::CMDLITERAL
 
