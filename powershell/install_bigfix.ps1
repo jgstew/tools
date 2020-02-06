@@ -6,7 +6,7 @@ $RELAYFQDN=$args[0]
 # Check if $RELAYFQDN is set
 if ($RELAYFQDN.length -lt 2)
 {
-    Write-Host "Must provide Relay FQDN as parameter. " $RELAYFQDN.Length
+    Write-Host "ERROR: Must provide Relay FQDN as parameter"
     Exit -1
 }
 
@@ -18,10 +18,22 @@ cd "$BASEFOLDER"
 Write-Host "Downloading: " $MASTHEADURL
 #(New-Object Net.WebClient).DownloadFile($MASTHEADURL, "$BASEFOLDER\actionsite.afxm")
 
-# TODO: only continue if actionsite file exists!
+# only continue if actionsite file exists
+if ( -not (Test-Path "$BASEFOLDER\actionsite.afxm") )
+{
+    Write-Host "ERROR: actionsite file missing: $BASEFOLDER\actionsite.afxm"
+    Exit -2
+}
 
 Write-Host "Downloading: http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe" 
 #(New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe', "$BASEFOLDER\BESClient.exe")
+
+# only continue if BESClient.exe file exists
+if ( -not (Test-Path "$BASEFOLDER\BESClient.exe") )
+{
+    Write-Host "ERROR: BigFix Client Installer file missing: $BASEFOLDER\BESClient.exe"
+    Exit -3
+}
 
 ECHO "_BESClient_RelaySelect_FailoverRelay=http://$($RELAYFQDN):52311/bfmirror/downloads/" >$BASEFOLDER\clientsettings.cfg
 ECHO __RelaySelect_Automatic=1 >>$BASEFOLDER\clientsettings.cfg
@@ -39,4 +51,5 @@ ECHO _BESClient_Download_UtilitiesCacheLimitMB=500 >>$BASEFOLDER\clientsettings.
 ECHO _BESClient_Download_DownloadsCacheLimitMB=5000 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >>$BASEFOLDER\clientsettings.cfg
 
+Write-Host "Installing BigFix now."
 .\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
