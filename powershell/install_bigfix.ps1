@@ -16,7 +16,7 @@ $BASEFOLDER=[System.Environment]::GetEnvironmentVariable('TEMP','Machine')
 cd "$BASEFOLDER"
 
 Write-Host "Downloading: " $MASTHEADURL
-#(New-Object Net.WebClient).DownloadFile($MASTHEADURL, "$BASEFOLDER\actionsite.afxm")
+(New-Object Net.WebClient).DownloadFile($MASTHEADURL, "$BASEFOLDER\actionsite.afxm")
 
 # only continue if actionsite file exists
 if ( -not (Test-Path "$BASEFOLDER\actionsite.afxm") )
@@ -26,7 +26,7 @@ if ( -not (Test-Path "$BASEFOLDER\actionsite.afxm") )
 }
 
 Write-Host "Downloading: http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe" 
-#(New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe', "$BASEFOLDER\BESClient.exe")
+(New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe', "$BASEFOLDER\BESClient.exe")
 
 # only continue if BESClient.exe file exists
 if ( -not (Test-Path "$BASEFOLDER\BESClient.exe") )
