@@ -3,7 +3,12 @@
 
 $RELAYFQDN=$args[0]
 
-# TODO: check if $RELAYFQDN is set!
+# Check if $RELAYFQDN is set
+if ($RELAYFQDN.length -lt 2)
+{
+    Write-Host "Must provide Relay FQDN as parameter. " $RELAYFQDN.Length
+    Exit -1
+}
 
 $MASTHEADURL="http://"+$RELAYFQDN+":52311/masthead/masthead.afxm"
 $BASEFOLDER=[System.Environment]::GetEnvironmentVariable('TEMP','Machine')
