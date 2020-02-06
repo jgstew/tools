@@ -1,7 +1,10 @@
 
 # adaption of this: https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
 
-$RELAYFQDN='test'
+$RELAYFQDN=$args[0]
+
+# TODO: check if $RELAYFQDN is set!
+
 $MASTHEADURL="http://"+$RELAYFQDN+":52311/masthead/masthead.afxm"
 $BASEFOLDER=[System.Environment]::GetEnvironmentVariable('TEMP','Machine')
 
@@ -9,6 +12,8 @@ cd "$BASEFOLDER"
 
 Write-Host "Downloading: " $MASTHEADURL
 #(New-Object Net.WebClient).DownloadFile($MASTHEADURL, "$BASEFOLDER\actionsite.afxm")
+
+# TODO: only continue if actionsite file exists!
 
 Write-Host "Downloading: http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe" 
 #(New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe', "$BASEFOLDER\BESClient.exe")
