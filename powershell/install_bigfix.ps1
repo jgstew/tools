@@ -1,6 +1,7 @@
 
 # adaption of this:  https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
 #         see also:  https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
+# NOTE: This can be used to deploy BigFix automatically to an Azure Windows VM with a custom Azure script extension
 
 $RELAYFQDN=$args[0]
 
