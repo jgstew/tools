@@ -3,7 +3,7 @@
 
 $RELAYFQDN='test'
 $MASTHEADURL="http://"+$RELAYFQDN+":52311/masthead/masthead.afxm"
-$BASEFOLDER='C:\Windows\Temp'
+$BASEFOLDER=[System.Environment]::GetEnvironmentVariable('TEMP','Machine')
 
 cd "$BASEFOLDER"
 
@@ -28,3 +28,5 @@ ECHO _BESClient_Log_MaxSize=1536000 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_UtilitiesCacheLimitMB=500 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_DownloadsCacheLimitMB=5000 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >>$BASEFOLDER\clientsettings.cfg
+
+.\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
