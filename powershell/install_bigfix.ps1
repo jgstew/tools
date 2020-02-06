@@ -1,5 +1,6 @@
 
-# adaption of this: https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
+# adaption of this:  https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
+#         see also:  https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
 
 $RELAYFQDN=$args[0]
 
