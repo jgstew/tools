@@ -40,10 +40,7 @@ def url_to_prefetch(url):
     for h in hashes:
       h.update(chunk)
       # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
-      size += len(chunk)
-
-  # if using `len(chunk)` then size is double for some reason.
-  size = size / 2
+    size += len(chunk)
 
   # https://www.learnpython.org/en/String_Formatting
   # TODO: not sure how to get the results from `hashes` by name (sha1) rather than by index (0)
