@@ -10,7 +10,7 @@
 
 # TODO: Consider adding options to cache the file downloads & log/cache the prefetches generated
 
-import os
+import posixpath
 from hashlib import sha1, sha256
 
 try:
@@ -27,12 +27,14 @@ def url_to_prefetch(url):
   # chunksize seems like it could be anything
   #   it is probably best if it is a multiple of a typical hash block_size
   #   a larger chunksize is probably best for faster downloads
-  #   a larger chunksize is probably also better due to extra overhead due to meltdown mitigations
   chunksize = max(384000, max(h.block_size for h in hashes))
   size = 0
-  filename = os.path.basename(url)
+
+  # TODO: handle other cases, ensure default name if none set
+  filename = posixpath.basename(url)
   
   response = urlopen(url)
+  # TODO: Get Header If Present for Download Estimate:  int(req.info().getheader('Content-Length').strip())
   while True:
     chunk = response.read(chunksize)
     if not chunk:
