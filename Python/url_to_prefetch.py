@@ -37,10 +37,9 @@ def url_to_prefetch(url):
     chunk = response.read(chunksize)
     if not chunk:
       break
+    size += len(chunk)
     for h in hashes:
       h.update(chunk)
-      # https://stackoverflow.com/questions/4013230/how-many-bytes-does-a-string-have
-    size += len(chunk)
 
   # https://www.learnpython.org/en/String_Formatting
   return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
