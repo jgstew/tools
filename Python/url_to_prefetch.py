@@ -10,7 +10,7 @@
 
 # TODO: Consider adding options to cache the file downloads & log/cache the prefetches generated
 
-
+import os
 from hashlib import sha1, sha256
 
 try:
@@ -30,7 +30,7 @@ def url_to_prefetch(url):
   #   a larger chunksize is probably also better due to extra overhead due to meltdown mitigations
   chunksize = max(384000, max(h.block_size for h in hashes))
   size = 0
-  filename = "testfile" # TODO: get filename from URL/download
+  filename = os.path.basename(url)
   
   response = urlopen(url)
   while True:
@@ -43,7 +43,6 @@ def url_to_prefetch(url):
     size += len(chunk)
 
   # https://www.learnpython.org/en/String_Formatting
-  # TODO: not sure how to get the results from `hashes` by name (sha1) rather than by index (0)
   return ( "prefetch %s sha1:%s size:%d %s sha256:%s" % (filename, hashes[0].hexdigest(), size, url, hashes[1].hexdigest()) )
 
 
