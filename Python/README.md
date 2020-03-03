@@ -1,6 +1,8 @@
 
 ## Python Utility Scripts
 
+This location is for various short independant Python Utility Scripts.
+
 ### Related:
 
 - https://github.com/jgstew/generate-prefetch
