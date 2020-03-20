@@ -1,3 +1,5 @@
+# To download:
+#  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/powershell/install_bigfix.ps1', "\Windows\temp\install_bigfix.ps1")
 
 # adaption of this:  https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
 #         see also:  https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
