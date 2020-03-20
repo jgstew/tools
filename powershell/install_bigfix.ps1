@@ -7,6 +7,12 @@
 #         see also:  https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
 # NOTE: This can be used to deploy BigFix automatically to an Azure Windows VM with a custom Azure script extension
 
+if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
+{
+    Write-Host "ERROR: BigFix is already installed!"
+    Exit 1
+}
+
 $RELAYFQDN=$args[0]
 
 # Check if $RELAYFQDN is set
@@ -59,3 +65,5 @@ ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >>$BASEFOLDER\clientsettings.cfg
 
 Write-Host "Installing BigFix now."
 .\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
+
+Exit 0
