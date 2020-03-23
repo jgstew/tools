@@ -11,7 +11,7 @@ if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
 {
     Write-Host "ERROR: BigFix is already installed!"
     Write-Host "Last 20 lines of newest log file:"
-    Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") | select -Last 20
+    Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue | select -Last 20
     Exit 1
 }
 
@@ -69,6 +69,6 @@ Write-Host "Installing BigFix now."
 .\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
 
 Write-Host "Last 20 lines of newest log file:"
-Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") | select -Last 20
+Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue | select -Last 20
 
 Exit 0
