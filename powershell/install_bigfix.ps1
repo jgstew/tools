@@ -12,7 +12,8 @@ if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
     Write-Host "ERROR: BigFix is already installed!"
     Write-Host "Last 20 lines of newest log file:"
     Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue | select -Last 20
-    # Number of errors in log: (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\"+ (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue) -like "*error*" | measure | % { $_.Count }
+    # Number of errors in log:  (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\"+ (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue) -like "*error*" | measure | % { $_.Count }
+    # Lines with errors in ALL bigfix client logs:  (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\*.log") -ErrorAction SilentlyContinue) -like "*error*"
     Exit 1
 }
 
