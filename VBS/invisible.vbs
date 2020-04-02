@@ -7,3 +7,4 @@ CreateObject("Wscript.Shell").Run """" & WScript.Arguments(0) & """", 0, False
 ' http://stackoverflow.com/questions/5559081/running-a-bat-file-in-background-with-invisible-vbs-but-how-to-stop-it
 ' https://productforums.google.com/forum/#!topic/drive/v7ibbEPEsBc
 ' https://github.com/UNT-CAS/HiddenRun/blob/master/HiddenRun.vbs
+' https://github.com/UNT-CAS/HiddenPowershell
