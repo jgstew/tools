@@ -16,7 +16,7 @@ start "" %BASEFOLDER%
 
 REM https://github.com/jgstew/bigfix-content/blob/master/fixlet/Install%20SQL%20Server%20Management%20Studio%2016.5.1%20-%20Windows.bes
 REM Download SQL Server Management Studio:
-start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/0/5/B/05B2AF8F-906F-4C57-A58E-5780F64F9D62/SSMS-Setup-ENU.exe', '%BASEFOLDER%\SSMS-Setup-ENU.exe') }" -ExecutionPolicy Bypass
+start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/f/e/b/feb0e6be-21ce-4f98-abee-d74065e32d0a/SSMS-Setup-ENU.exe', '%BASEFOLDER%\SSMS-Setup-ENU.exe') }" -ExecutionPolicy Bypass
 
 
 REM Download BigFix Root Server:
