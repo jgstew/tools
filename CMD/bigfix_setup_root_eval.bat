@@ -20,7 +20,7 @@ start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('https
 
 
 REM Download BigFix Root Server:
-start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-9.5.9.62.exe', '%BASEFOLDER%\BigFix-BES.exe') }" -ExecutionPolicy Bypass
+start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/100/BigFix-BES-Server-10.0.0.133.exe', '%BASEFOLDER%\BigFix-BES.exe') }" -ExecutionPolicy Bypass
 
 
 REM Download SQLServer Developer Edition:
