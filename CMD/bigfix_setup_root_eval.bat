@@ -40,8 +40,11 @@ REM https://download.microsoft.com/download/0/5/B/05B2AF8F-906F-4C57-A58E-5780F6
 REM Install SQL Server Management Studio:
 %BASEFOLDER%\SSMS-Setup-ENU.exe /install /quiet /norestart
 
-REM for some reason, this didn't create a start menu shortcut it seems for SQL Server Management Studio
-
 
 REM press any key to continue....
 pause
+
+REM  TODO: configure SQL SA account?
+REM  TODO: configure SQL login from AD account / local win admin account?
+REM  TODO: open firewall for MSSQL to local subnet ?
+REM  TODO: open firewall for BigFix to local subnet+ ?
