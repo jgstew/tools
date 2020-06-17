@@ -10,12 +10,13 @@ def get_filename_from_pathname(pathnames):
         print( pathname.replace('\\','/').replace('}','/').split('/')[-1] )
 
 def main():
-    str_pathname = "path blah/ path \ this}file name from string.txt"
+    str_pathname = r"path blah/ path \ this}file name from string.txt"
     array_pathnames = [
-        "",
-        "file name from array.txt",
-        "path blah/ path \ this}file name.txt",
-        "path blah/ path \ this}file.txt"
+        r"",
+        r"file name from array.txt",
+        r"path blah/ path \ this}file name.txt",
+        r"path blah/ path \ this}file.txt",
+        r"\test/test\test.txt"
     ]
     get_filename_from_pathname(str_pathname)
     get_filename_from_pathname(array_pathnames)
