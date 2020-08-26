@@ -56,6 +56,7 @@ REM  TODO: BES Admin: schedule BES Property ID Mapper
 REM  TODO: configure REST API creds - Web Reports - etc
 REM  TODO: enable sites, subscribe computers
 REM  TODO: setup download plugins (deploy Enable Encryption for Clients for root/relays, enable analyses)
+REM  TODO: Install BES Server Plugin Service, Configure SOAP API creds, Configure REST API creds
 REM  TODO: deploy actions to configure default client settings
 REM  TODO: Activate Analyses: Wake-on-LAN Analysis, Download Plug-in Versions, BES Health Checks Analysis, BES Relay Status
 REM  TODO: create custom site(s) `Shared` `Dashboards` `Private`
