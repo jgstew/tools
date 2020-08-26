@@ -54,9 +54,11 @@ REM  TODO: BES Admin: set recommended BES Admin Settings
 REM  TODO: BES Admin: create encryption keys for client encryption in BES Admin
 REM  TODO: BES Admin: schedule BES Property ID Mapper
 REM  TODO: configure REST API creds - Web Reports - etc
+REM  TODO: enable sites, subscribe computers
+REM  TODO: setup download plugins (deploy Enable Encryption for Clients for root/relays, enable analyses)
+REM  TODO: deploy actions to configure default client settings
+REM  TODO: Activate Analyses: Wake-on-LAN Analysis, Download Plug-in Versions, BES Health Checks Analysis, BES Relay Status
 REM  TODO: create custom site(s) `Shared` `Dashboards` `Private`
 REM  TODO: create roles 
-REM  TODO: enable sites, subscribe computers
 REM  TODO: install adobe flash for IE for root or console systems (DISM)
-REM  TODO: setup download plugins (enable analyses, deploy Enable Encryption for Clients for root/relays)
 REM  TODO: 
