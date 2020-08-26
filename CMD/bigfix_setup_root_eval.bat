@@ -58,5 +58,5 @@ REM  TODO: create custom site(s) `Shared` `Dashboards` `Private`
 REM  TODO: create roles 
 REM  TODO: enable sites, subscribe computers
 REM  TODO: install adobe flash for IE for root or console systems (DISM)
-REM  TODO: setup download plugins
+REM  TODO: setup download plugins (enable analyses, deploy Enable Encryption for Clients for root/relays)
 REM  TODO: 
