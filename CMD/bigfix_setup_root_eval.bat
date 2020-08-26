@@ -49,9 +49,10 @@ REM  TODO: configure SQL login from AD account / local win admin account?
 REM  TODO: open firewall for MSSQL to local subnet ?
 REM  TODO: open firewall for BigFix to local subnet+ ?
 REM  TODO: create local MO account
-REM  TODO: create BES Admin Password
-REM  TODO: set recommended BES Admin Settings
-REM  TODO: create encryption keys for client encryption in BES Admin
+REM  TODO: BES Admin: create BES Admin Password
+REM  TODO: BES Admin: set recommended BES Admin Settings
+REM  TODO: BES Admin: create encryption keys for client encryption in BES Admin
+REM  TODO: BES Admin: schedule BES Property ID Mapper
 REM  TODO: configure REST API creds - Web Reports - etc
 REM  TODO: create custom site(s) `Shared` `Dashboards` `Private`
 REM  TODO: create roles 
