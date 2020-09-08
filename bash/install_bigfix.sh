@@ -100,7 +100,7 @@ fi
 
 if [[ $OSTYPE == darwin* ]]; then
   # Mac OS X
-  INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOSX10.7.pkg"
+  INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOSX10.14.pkg"
   INSTALLER="/tmp/BESAgent.pkg"
 else
   # For most Linux:
@@ -140,7 +140,7 @@ else
       URLBITS=i686
     fi
     
-    INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe5.$URLBITS.rpm"
+    INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe6.$URLBITS.rpm"
     
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
