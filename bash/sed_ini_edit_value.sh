@@ -1,5 +1,6 @@
 
-# WARNING: `-i ''` causes this to directly overwrite the existing file with changes
+# WARNING: `-i ''` causes this to directly overwrite the existing file with changes on macOS
+#    Note: on Linux, use `-i` only  instead of `-i ''` on macOS
 sed -i '' '/\(^use_fully_qualified_names *= *\).*/ s//\1False/' sssd.conf
 
 
