@@ -8,13 +8,15 @@
 
 #Get-ADUser -Filter * -SearchBase "OU=Users,OU=demo,DC=DEMO,DC=COM" | FT SamAccountName -A
 
+Start-Transcript ($MyInvocation.MyCommand.Source + ".log")
+
 $AD_DOMAIN = "demo.com"
 $AD_DC_PATH = $AD_DOMAIN.ToUpper().Split(".")
 $AD_DC_PATH = $AD_DC_PATH -join ",DC="
 $AD_DC_PATH = "DC=" + $AD_DC_PATH
 Write-Host $AD_DC_PATH
-$AD_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
-Write-Host $AD_PATH_ADDRESS
+$AD_USER_OU_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
+Write-Host $AD_USER_OU_PATH_ADDRESS
 
 # TODO: get this from a file, loop:
 $new_SamAccountName = "first.LAST"
@@ -32,3 +34,7 @@ $UserPrincipalName = $new_SamAccountName + "@" + $AD_DOMAIN
 Write-Host $new_SamAccountName
 Write-Host $FullName
 Write-Host $UserPrincipalName
+
+
+
+Stop-Transcript
