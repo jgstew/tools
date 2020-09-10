@@ -6,7 +6,7 @@
 
 #$AD_Creds = Get-Credential
 
-#Get-ADUser -Filter * -SearchBase "OU=Users,OU=demo,DC=DEMO,DC=BIGFIX,DC=COM" | FT SamAccountName -A
+#Get-ADUser -Filter * -SearchBase "OU=Users,OU=demo,DC=DEMO,DC=COM" | FT SamAccountName -A
 
 $AD_DOMAIN = "demo.com"
 $AD_DC_PATH = $AD_DOMAIN.ToUpper().Split(".")
