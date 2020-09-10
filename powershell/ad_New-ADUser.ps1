@@ -11,6 +11,7 @@
 Start-Transcript ($MyInvocation.MyCommand.Source + ".log") # -Append
 
 $AD_DOMAIN = "demo.com"
+$MAIL_DOMAIN = "mail.demo.com"
 # the following is to turn `demo.com` into `DC=DEMO,DC=COM`
 $AD_DC_PATH = ("DC=" + $AD_DOMAIN).ToUpper().Split(".")
 $AD_DC_PATH = $AD_DC_PATH -join ",DC="
@@ -24,19 +25,23 @@ $new_SamAccountName = "first.LAST"
 $new_SamAccountName = $new_SamAccountName.ToLower()
 
 
-$pos = $new_SamAccountName.IndexOf(".")
 
+# split SamAccountName into FirstName LastName
+$pos = $new_SamAccountName.IndexOf(".")
 # https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
 $FirstName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring(0, $pos) )
 $LastName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring($pos+1) )
 $FullName = $FirstName + " " + $LastName
+
 $UserPrincipalName = $new_SamAccountName + "@" + $AD_DOMAIN
+$UserEmailAddress = $new_SamAccountName + "@" + $MAIL_DOMAIN
 
 Write-Host $new_SamAccountName
 Write-Host $FullName
 Write-Host $UserPrincipalName
+Write-Host $UserEmailAddress
 
-
+# New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(Read-Host -AsSecureString "Input Password") -Enabled $True -ChangePasswordAtLogon $False -PassThru
 
 Stop-Transcript
 
