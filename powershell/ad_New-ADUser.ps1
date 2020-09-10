@@ -12,13 +12,16 @@ Start-Transcript ($MyInvocation.MyCommand.Source + ".log") # -Append
 
 $AD_DOMAIN = "demo.com"
 $MAIL_DOMAIN = "mail.demo.com"
+
+# -----------------------------------------------------------
+
 # the following is to turn `demo.com` into `DC=DEMO,DC=COM`
 $AD_DC_PATH = ("DC=" + $AD_DOMAIN).ToUpper().Split(".")
 $AD_DC_PATH = $AD_DC_PATH -join ",DC="
-Write-Host $AD_DC_PATH # DC=DEMO,DC=COM
+Write-Verbose $AD_DC_PATH # DC=DEMO,DC=COM
 
 $AD_USER_OU_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
-Write-Host $AD_USER_OU_PATH_ADDRESS
+Write-Verbose $AD_USER_OU_PATH_ADDRESS
 
 
 function New-AD-User-From-SAM {
@@ -47,23 +50,27 @@ function New-AD-User-From-SAM {
             Write-Verbose ("UserPrincipalName: " + $UserPrincipalName)
             Write-Verbose ("UserEmailAddress: " + $UserEmailAddress)
 
+            $RandomPassword = Get-RandomPassword 15
+            Write-Verbose ("RandomPassword: " + $RandomPassword)
+
             try {
-                # New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(Read-Host -AsSecureString "Input Password") -Enabled $True -ChangePasswordAtLogon $False -PassThru
+                $NewUser = New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(ConvertTo-SecureString $RandomPassword -AsPlainText -Force) -Enabled $True -ChangePasswordAtLogon $False -PassThru
+                Write-Host " --- User Created ---"
+                Write-Host ("Username: " + $UserPrincipalName)
+                Write-Host ("Password: " + $RandomPassword)
+                Write-Host " --- ------------ ---"
+                # TODO: Generate File with message for user?
             }
             catch [System.ServiceModel.FaultException] {
                 # $Error[0] | fl * -Force # https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/
                 Write-Warning -Message "User already exists: $new_SamAccountName"
             }
-
         }
     }
 }
 
 # TODO: get this from a file, loop:
-New-AD-User-From-SAM "firstName.TESTName" -Verbose
-
-# Example random password:
-Write-Host (Get-RandomPassword 15)
+New-AD-User-From-SAM "firstName.TESTName" # -Verbose
 
 Stop-Transcript
 
