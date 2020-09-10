@@ -21,12 +21,10 @@ $AD_USER_OU_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
 Write-Host $AD_USER_OU_PATH_ADDRESS
 
 # TODO: get this from a file, loop:
-$new_SamAccountName = "first.LAST"
-$new_SamAccountName = $new_SamAccountName.ToLower()
+$new_SamAccountName = "firstName.TESTName".ToLower()
 
 
-
-# split SamAccountName into FirstName LastName
+# split SamAccountName into FirstName LastName and force first character to uppercase
 $pos = $new_SamAccountName.IndexOf(".")
 # https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
 $FirstName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring(0, $pos) )
@@ -46,5 +44,6 @@ Write-Host $UserEmailAddress
 Stop-Transcript
 
 # References:
-#  - https://blog.netwrix.com/2018/06/07/how-to-create-new-active-directory-users-with-powershell/ 
-#  - https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
+# - https://blog.netwrix.com/2018/06/07/how-to-create-new-active-directory-users-with-powershell/ 
+# - https://docs.microsoft.com/en-us/powershell/module/addsadministration/new-aduser?view=win10-ps 
+# - https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
