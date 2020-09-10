@@ -47,3 +47,6 @@ Stop-Transcript
 # - https://blog.netwrix.com/2018/06/07/how-to-create-new-active-directory-users-with-powershell/ 
 # - https://docs.microsoft.com/en-us/powershell/module/addsadministration/new-aduser?view=win10-ps 
 # - https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
+# - https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7 
+# - https://www.computerperformance.co.uk/powershell/functions/ 
+# - https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1 
