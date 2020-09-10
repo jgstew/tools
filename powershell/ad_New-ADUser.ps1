@@ -8,13 +8,14 @@
 
 #Get-ADUser -Filter * -SearchBase "OU=Users,OU=demo,DC=DEMO,DC=COM" | FT SamAccountName -A
 
-Start-Transcript ($MyInvocation.MyCommand.Source + ".log")
+Start-Transcript ($MyInvocation.MyCommand.Source + ".log") # -Append
 
 $AD_DOMAIN = "demo.com"
-$AD_DC_PATH = $AD_DOMAIN.ToUpper().Split(".")
+# the following is to turn `demo.com` into `DC=DEMO,DC=COM`
+$AD_DC_PATH = ("DC=" + $AD_DOMAIN).ToUpper().Split(".")
 $AD_DC_PATH = $AD_DC_PATH -join ",DC="
-$AD_DC_PATH = "DC=" + $AD_DC_PATH
-Write-Host $AD_DC_PATH
+Write-Host $AD_DC_PATH # DC=DEMO,DC=COM
+
 $AD_USER_OU_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
 Write-Host $AD_USER_OU_PATH_ADDRESS
 
@@ -38,3 +39,7 @@ Write-Host $UserPrincipalName
 
 
 Stop-Transcript
+
+# References:
+#  - https://blog.netwrix.com/2018/06/07/how-to-create-new-active-directory-users-with-powershell/ 
+#  - https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
