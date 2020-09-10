@@ -20,26 +20,42 @@ Write-Host $AD_DC_PATH # DC=DEMO,DC=COM
 $AD_USER_OU_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
 Write-Host $AD_USER_OU_PATH_ADDRESS
 
+
+function New-AD-User-From-SAM {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [string[]]$new_SamAccountNames
+    )
+
+    PROCESS {
+        foreach ($new_SamAccountName in $new_SamAccountNames) {
+            Write-Host $new_SamAccountName
+            $new_SamAccountName = $new_SamAccountName.ToLower()
+            # split SamAccountName into FirstName LastName and force first character to uppercase
+            $pos = $new_SamAccountName.IndexOf(".")
+            # https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
+            $FirstName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring(0, $pos) )
+            $LastName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring($pos+1) )
+            $FullName = $FirstName + " " + $LastName
+
+            $UserPrincipalName = $new_SamAccountName + "@" + $AD_DOMAIN
+            $UserEmailAddress = $new_SamAccountName + "@" + $MAIL_DOMAIN
+
+            Write-Host $new_SamAccountName
+            Write-Host $FullName
+            Write-Host $UserPrincipalName
+            Write-Host $UserEmailAddress
+
+            # New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(Read-Host -AsSecureString "Input Password") -Enabled $True -ChangePasswordAtLogon $False -PassThru
+
+        }
+    }
+}
+
 # TODO: get this from a file, loop:
-$new_SamAccountName = "firstName.TESTName".ToLower()
+New-AD-User-From-SAM "firstName.TESTName"
 
-
-# split SamAccountName into FirstName LastName and force first character to uppercase
-$pos = $new_SamAccountName.IndexOf(".")
-# https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
-$FirstName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring(0, $pos) )
-$LastName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring($pos+1) )
-$FullName = $FirstName + " " + $LastName
-
-$UserPrincipalName = $new_SamAccountName + "@" + $AD_DOMAIN
-$UserEmailAddress = $new_SamAccountName + "@" + $MAIL_DOMAIN
-
-Write-Host $new_SamAccountName
-Write-Host $FullName
-Write-Host $UserPrincipalName
-Write-Host $UserEmailAddress
-
-# New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(Read-Host -AsSecureString "Input Password") -Enabled $True -ChangePasswordAtLogon $False -PassThru
 
 Stop-Transcript
 
