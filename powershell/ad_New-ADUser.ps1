@@ -51,7 +51,7 @@ function New-AD-User-From-SAM {
                 # New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(Read-Host -AsSecureString "Input Password") -Enabled $True -ChangePasswordAtLogon $False -PassThru
             }
             catch [System.ServiceModel.FaultException] {
-                # $Error[0] | fl * -Force
+                # $Error[0] | fl * -Force # https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/
                 Write-Warning -Message "User already exists: $new_SamAccountName"
             }
 
@@ -62,6 +62,8 @@ function New-AD-User-From-SAM {
 # TODO: get this from a file, loop:
 New-AD-User-From-SAM "firstName.TESTName" -Verbose
 
+# Example random password:
+Write-Host (Get-RandomPassword 15)
 
 Stop-Transcript
 
@@ -73,3 +75,47 @@ Stop-Transcript
 # - https://www.computerperformance.co.uk/powershell/functions/ 
 # - https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1 
 # - https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/ 
+
+
+# from: http://witit.blog/2018/10/16/bulk-create-users-in-ad-via-powershell-with-random-passwords-part-iii/ 
+function Get-RandomPassword{
+    Param(
+        [Parameter(mandatory=$true)]
+        [int]$Length
+    )
+    Begin{
+        if($Length -lt 4){
+            End
+        }
+        $Numbers = 1..9
+        $LettersLower = 'abcdefghijklmnopqrstuvwxyz'.ToCharArray()
+        $LettersUpper = 'ABCEDEFHIJKLMNOPQRSTUVWXYZ'.ToCharArray()
+        $Special = '!@#$%^&*()=+[{}]/?<>'.ToCharArray()
+
+        #For the 4 character types (upper, lower, numerical, and special),
+        #let's do a little bit of math magic
+        $N_Count = [math]::Round($Length*.2)
+        $L_Count = [math]::Round($Length*.4)
+        $U_Count = [math]::Round($Length*.2)
+        $S_Count = [math]::Round($Length*.2)
+    }
+    Process{
+        $Pwd = $LettersLower | Get-Random -Count $L_Count
+        $Pwd += $Numbers | Get-Random -Count $N_Count
+        $Pwd += $LettersUpper | Get-Random -Count $U_Count
+        $Pwd += $Special | Get-Random -Count $S_Count
+        
+        #If the password length isn't long enough (due to rounding),
+        #add X special characters, where X is the difference between
+        #the desired length and the current length.
+        if($Pwd.length -lt $Length){
+            $Pwd += $Special | Get-Random -Count ($Length - $Pwd.length)
+        }
+
+        #Lastly, grab the $Pwd string and randomize the order
+        $Pwd = ($Pwd | Get-Random -Count $Length) -join ""
+    }
+    End{
+        $Pwd
+    }
+}
