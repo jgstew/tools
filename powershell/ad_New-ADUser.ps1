@@ -22,6 +22,7 @@ Write-Host $AD_USER_OU_PATH_ADDRESS
 
 
 function New-AD-User-From-SAM {
+    # https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7 
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline)]
@@ -30,7 +31,6 @@ function New-AD-User-From-SAM {
 
     PROCESS {
         foreach ($new_SamAccountName in $new_SamAccountNames) {
-            Write-Host $new_SamAccountName
             $new_SamAccountName = $new_SamAccountName.ToLower()
             # split SamAccountName into FirstName LastName and force first character to uppercase
             $pos = $new_SamAccountName.IndexOf(".")
@@ -42,19 +42,25 @@ function New-AD-User-From-SAM {
             $UserPrincipalName = $new_SamAccountName + "@" + $AD_DOMAIN
             $UserEmailAddress = $new_SamAccountName + "@" + $MAIL_DOMAIN
 
-            Write-Host $new_SamAccountName
-            Write-Host $FullName
-            Write-Host $UserPrincipalName
-            Write-Host $UserEmailAddress
+            Write-Verbose ("new_SamAccountName: " + $new_SamAccountName)
+            Write-Verbose ("FullName: " + $FullName)
+            Write-Verbose ("UserPrincipalName: " + $UserPrincipalName)
+            Write-Verbose ("UserEmailAddress: " + $UserEmailAddress)
 
-            # New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(Read-Host -AsSecureString "Input Password") -Enabled $True -ChangePasswordAtLogon $False -PassThru
+            try {
+                # New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(Read-Host -AsSecureString "Input Password") -Enabled $True -ChangePasswordAtLogon $False -PassThru
+            }
+            catch [System.ServiceModel.FaultException] {
+                # $Error[0] | fl * -Force
+                Write-Warning -Message "User already exists: $new_SamAccountName"
+            }
 
         }
     }
 }
 
 # TODO: get this from a file, loop:
-New-AD-User-From-SAM "firstName.TESTName"
+New-AD-User-From-SAM "firstName.TESTName" -Verbose
 
 
 Stop-Transcript
@@ -66,3 +72,4 @@ Stop-Transcript
 # - https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7 
 # - https://www.computerperformance.co.uk/powershell/functions/ 
 # - https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1 
+# - https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/ 
