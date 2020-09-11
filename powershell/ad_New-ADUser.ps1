@@ -24,6 +24,24 @@ Write-Verbose $AD_DC_PATH # DC=DEMO,DC=COM
 $AD_USER_OU_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
 Write-Verbose $AD_USER_OU_PATH_ADDRESS
 
+# get this from a file instead:
+#New-AD-User-From-SAM "firstName.TESTName" # -Verbose
+
+# match `first.last` within ` first.last@demo.com ` or within ` first.last `
+#  - regexr.com/5bqku
+$REGEX = " *(\w+\.\w+)[@ ]*"
+
+# read users from file "ad_New-ADUser.ps1.txt"
+#   file should have 1 user.name per line
+foreach( $line in Get-Content ($MyInvocation.MyCommand.Source + ".txt") ) {
+    #Write-Host $line
+    if([regex]::Match($line, $REGEX)[0].Groups[1].Value){
+        # Get the first RegEx Match, Get first capture Group value
+        # - https://stackoverflow.com/questions/33913878/how-to-get-the-captured-groups-from-select-string
+        $parsed = [regex]::Match($line, $REGEX)[0].Groups[1].Value
+        New-AD-User-From-SAM $parsed # first.last
+    }
+}
 
 function New-AD-User-From-SAM {
     # https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7 
@@ -62,7 +80,7 @@ function New-AD-User-From-SAM {
                 Write-Host ("**Username:** " + $UserPrincipalName)
                 Write-Host ("**Password:** " + $RandomPassword)
                 Write-Host " --- ------------------------------------ ---"
-                # TODO: Generate File with message for user?
+                # TODO: Generate File with message for user? Automated Email?
             }
             catch [System.ServiceModel.FaultException] {
                 # $Error[0] | fl * -Force # https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/
@@ -72,8 +90,6 @@ function New-AD-User-From-SAM {
     }
 }
 
-# TODO: get this from a file, loop:
-New-AD-User-From-SAM "firstName.TESTName" # -Verbose
 
 Stop-Transcript
 
