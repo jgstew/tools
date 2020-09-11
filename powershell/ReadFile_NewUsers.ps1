@@ -3,7 +3,7 @@ Start-Transcript ($MyInvocation.MyCommand.Source + ".log") # -Append
 
 # match `first.last` within ` first.last@demo.com ` or within ` first.last `
 #  - regexr.com/5bqku
-$REGEX = " *(\w+\.\w+)[@ \n]*"
+$REGEX = " *(\w+\.\w+)[@ ]*"
 
 # read users from file "ReadFile_NewUsers.ps1.txt"
 #   file should have 1 user.name per line
