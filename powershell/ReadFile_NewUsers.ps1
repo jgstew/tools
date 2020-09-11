@@ -3,11 +3,13 @@ Start-Transcript ($MyInvocation.MyCommand.Source + ".log") # -Append
 
 # match `first.last` within ` first.last@demo.com ` or within ` first.last `
 #  - regexr.com/5bqku
-$REGEX = " *(\w+\.\w+)[@ \n]"
+$REGEX = " *(\w+\.\w+)[@ \n]*"
 
 # read users from file "ReadFile_NewUsers.ps1.txt"
+#   file should have 1 user.name per line
 foreach( $line in Get-Content ($MyInvocation.MyCommand.Source + ".txt") ) {
-    if($line -match $regex){
+    #Write-Host $line
+    if([regex]::Match($line, $REGEX)[0].Groups[1].Value){
         # Get the first RegEx Match, Get first capture Group value
         # - https://stackoverflow.com/questions/33913878/how-to-get-the-captured-groups-from-select-string
         $parsed = [regex]::Match($line, $REGEX)[0].Groups[1].Value
