@@ -12,6 +12,7 @@ Start-Transcript ($MyInvocation.MyCommand.Source + ".log") # -Append
 
 $AD_DOMAIN = "demo.com"
 $MAIL_DOMAIN = "mail.demo.com"
+$USER_MESSAGE = "Your account info for " + $AD_DOMAIN + " is: "
 
 # -----------------------------------------------------------
 
@@ -56,8 +57,9 @@ function New-AD-User-From-SAM {
             try {
                 $NewUser = New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(ConvertTo-SecureString $RandomPassword -AsPlainText -Force) -Enabled $True -ChangePasswordAtLogon $False -PassThru
                 Write-Host " --- User Created ---"
-                Write-Host ("Username: " + $UserPrincipalName)
-                Write-Host ("Password: " + $RandomPassword)
+                Write-Host $USER_MESSAGE
+                Write-Host ("*Username:* " + $UserPrincipalName)
+                Write-Host ("*Password:* " + $RandomPassword)
                 Write-Host " --- ------------ ---"
                 # TODO: Generate File with message for user?
             }
@@ -82,6 +84,9 @@ Stop-Transcript
 # - https://www.computerperformance.co.uk/powershell/functions/ 
 # - https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1 
 # - https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/ 
+
+# Related: 
+# - https://stackoverflow.com/questions/55014770/how-can-i-paste-markdown-in-microsoft-teams/55014959 
 
 
 # from: http://witit.blog/2018/10/16/bulk-create-users-in-ad-via-powershell-with-random-passwords-part-iii/ 
