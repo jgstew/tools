@@ -56,11 +56,12 @@ function New-AD-User-From-SAM {
 
             try {
                 $NewUser = New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(ConvertTo-SecureString $RandomPassword -AsPlainText -Force) -Enabled $True -ChangePasswordAtLogon $False -PassThru
-                Write-Host " --- User Created ---"
+                Write-Host " --- ------------------------------------ ---"
+                Write-Host " --- ** User Created: $new_SamAccountName ** --- "
                 Write-Host $USER_MESSAGE
-                Write-Host ("*Username:* " + $UserPrincipalName)
-                Write-Host ("*Password:* " + $RandomPassword)
-                Write-Host " --- ------------ ---"
+                Write-Host ("**Username:** " + $UserPrincipalName)
+                Write-Host ("**Password:** " + $RandomPassword)
+                Write-Host " --- ------------------------------------ ---"
                 # TODO: Generate File with message for user?
             }
             catch [System.ServiceModel.FaultException] {
