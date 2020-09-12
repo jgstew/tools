@@ -27,6 +27,7 @@ Write-Verbose $AD_USER_OU_PATH_ADDRESS
 # get this from a file instead:
 #New-AD-User-From-SAM "firstName.TESTName" # -Verbose
 
+# From: https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1
 # match `first.last` within ` first.last@demo.com ` or within ` first.last `
 #  - regexr.com/5bqku
 $REGEX = " *(\w+\.\w+)[@ ]*"
