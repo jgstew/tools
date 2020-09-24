@@ -12,6 +12,8 @@ Start-Transcript ($MyInvocation.MyCommand.Source + ".log") # -Append
 
 $AD_DOMAIN = "demo.com"
 $MAIL_DOMAIN = "mail.demo.com"
+# Array of groups to add new users to:
+$AD_GROUPS = @()
 $USER_MESSAGE = "Your account info for " + $AD_DOMAIN + " is: "
 
 # -----------------------------------------------------------
@@ -24,25 +26,6 @@ Write-Verbose $AD_DC_PATH # DC=DEMO,DC=COM
 $AD_USER_OU_PATH_ADDRESS = "OU=Users,OU=demo," + $AD_DC_PATH
 Write-Verbose $AD_USER_OU_PATH_ADDRESS
 
-# get this from a file instead:
-#New-AD-User-From-SAM "firstName.TESTName" # -Verbose
-
-# From: https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1
-# match `first.last` within ` first.last@demo.com ` or within ` first.last `
-#  - regexr.com/5bqku
-$REGEX = " *(\w+\.\w+)[@ ]*"
-
-# read users from file "ad_New-ADUser.ps1.txt"
-#   file should have 1 user.name per line
-foreach( $line in Get-Content ($MyInvocation.MyCommand.Source + ".txt") ) {
-    #Write-Host $line
-    if([regex]::Match($line, $REGEX)[0].Groups[1].Value){
-        # Get the first RegEx Match, Get first capture Group value
-        # - https://stackoverflow.com/questions/33913878/how-to-get-the-captured-groups-from-select-string
-        $parsed = [regex]::Match($line, $REGEX)[0].Groups[1].Value
-        New-AD-User-From-SAM $parsed # first.last
-    }
-}
 
 function New-AD-User-From-SAM {
     # https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7 
@@ -74,7 +57,7 @@ function New-AD-User-From-SAM {
             Write-Verbose ("RandomPassword: " + $RandomPassword)
 
             try {
-                $NewUser = New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(ConvertTo-SecureString $RandomPassword -AsPlainText -Force) -Enabled $True -ChangePasswordAtLogon $False -PassThru
+                New-ADUser -Name $FullName -GivenName $FirstName -Surname $LastName -SamAccountName $new_SamAccountName -EmailAddress $UserEmailAddress -UserPrincipalName $UserPrincipalName -Path $AD_USER_OU_PATH_ADDRESS -AccountPassword(ConvertTo-SecureString $RandomPassword -AsPlainText -Force) -Enabled $True -ChangePasswordAtLogon $False -PassThru
                 Write-Host " --- ------------------------------------ ---"
                 Write-Host " --- ** User Created: $new_SamAccountName ** --- "
                 Write-Host $USER_MESSAGE
@@ -82,17 +65,23 @@ function New-AD-User-From-SAM {
                 Write-Host ("**Password:** " + $RandomPassword)
                 Write-Host " --- ------------------------------------ ---"
                 # TODO: Generate File with message for user? Automated Email?
+
+                $AD_GROUPS | ForEach-Object {
+                    Write-Host ("Add User '" + $new_SamAccountName + "' To Group: " + $PSItem)
+                    Add-ADGroupMember -Identity $PSItem -Members $new_SamAccountName
+                }
             }
             catch [System.ServiceModel.FaultException] {
                 # $Error[0] | fl * -Force # https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/
                 Write-Warning -Message "User already exists: $new_SamAccountName"
+                
+                # hard stop:
+                Exit
             }
         }
     }
 }
 
-
-Stop-Transcript
 
 # References:
 # - https://blog.netwrix.com/2018/06/07/how-to-create-new-active-directory-users-with-powershell/ 
@@ -149,3 +138,27 @@ function Get-RandomPassword{
         $Pwd
     }
 }
+
+
+
+# get this from a file instead:
+#New-AD-User-From-SAM "firstName.TESTName" # -Verbose
+
+# match `first.last` within ` first.last@demo.com ` or within ` first.last `
+#  - regexr.com/5bqku
+$REGEX = " *(\w+\.\w+)[@ ]*"
+
+# read users from file "ad_New-ADUser.ps1.txt"
+#   file should have 1 user.name per line
+foreach( $line in Get-Content ($MyInvocation.MyCommand.Source + ".txt") ) {
+    #Write-Host $line
+    if([regex]::Match($line, $REGEX)[0].Groups[1].Value){
+        # Get the first RegEx Match, Get first capture Group value
+        # - https://stackoverflow.com/questions/33913878/how-to-get-the-captured-groups-from-select-string
+        $parsed = [regex]::Match($line, $REGEX)[0].Groups[1].Value
+        New-AD-User-From-SAM $parsed # first.last
+    }
+}
+
+
+Stop-Transcript
