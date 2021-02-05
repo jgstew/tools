@@ -7,6 +7,10 @@
 #         see also:  https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
 # NOTE: This can be used to deploy BigFix automatically to an Azure Windows VM with a custom Azure script extension
 
+$BASEFOLDER=[System.Environment]::GetEnvironmentVariable('TEMP','Machine')
+
+cd "$BASEFOLDER"
+
 if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
 {
     Write-Host "ERROR: BigFix is already installed!"
@@ -29,9 +33,6 @@ if ($RELAYFQDN.length -lt 2)
 }
 
 $MASTHEADURL="http://"+$RELAYFQDN+":52311/masthead/masthead.afxm"
-$BASEFOLDER=[System.Environment]::GetEnvironmentVariable('TEMP','Machine')
-
-cd "$BASEFOLDER"
 
 Write-Host "Downloading: " $MASTHEADURL
 (New-Object Net.WebClient).DownloadFile($MASTHEADURL, "$BASEFOLDER\actionsite.afxm")
