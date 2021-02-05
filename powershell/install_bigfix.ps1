@@ -7,6 +7,7 @@
 #         see also:  https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
 # NOTE: This can be used to deploy BigFix automatically to an Azure Windows VM with a custom Azure script extension
 
+# Run in C:\Windows\Temp by default
 $BASEFOLDER=[System.Environment]::GetEnvironmentVariable('TEMP','Machine')
 
 cd "$BASEFOLDER"
