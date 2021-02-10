@@ -1,5 +1,15 @@
 
-# https://github.com/MicksITBlogs/PowerShell/blob/master/UninstallMSIByName.ps1
+# This script is intended to remove an existing installation of BigFix so that a new install can be preformed pointing to a new server or with other changes.
+# This script will uninstall BigFix, then delete the BigFix client folder if present, then delete the BigFix client registry entries if present.
+#  - Realted: http://software.bigfix.com/download/bes/100/util/BESRemove-10.0.2.52.exe
+
+# To download and run:
+<#
+(New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1', "\Windows\temp\bigfix_uninstall_clean.ps1")
+powershell -ExecutionPolicy Bypass .\bigfix_uninstall_clean.ps1
+#>
+
+# The following is from: https://github.com/MicksITBlogs/PowerShell/blob/master/UninstallMSIByName.ps1
 <#
 	.SYNOPSIS
 		Uninstall MSI Application by its Name
@@ -70,9 +80,9 @@ Uninstall-MSIByName -ApplicationName "BigFix Client" -Switches "/qb- /norestart"
 
 
 # delete client folder if present
-Remove-Item "C:\Program Files (x86)\BigFix Enterprise\BES Client" -Recurse -ErrorAction Ignore
-Remove-Item "C:\Program Files\BigFix Enterprise\BES Client" -Recurse -ErrorAction Ignore
+Remove-Item "C:\Program Files (x86)\BigFix Enterprise\BES Client" -Recurse -Force -ErrorAction Ignore
+Remove-Item "C:\Program Files\BigFix Enterprise\BES Client" -Recurse -Force -ErrorAction Ignore
 
 # delete client settings registry if present
-Remove-Item -Path "HKLM:\SOFTWARE\WOW6432Node\BigFix\EnterpriseClient\Settings\Client" -Recurse -ErrorAction Ignore
-Remove-Item -Path "HKLM:\SOFTWARE\BigFix\EnterpriseClient\Settings\Client" -Recurse -ErrorAction Ignore
+Remove-Item -Path "HKLM:\SOFTWARE\WOW6432Node\BigFix\EnterpriseClient\Settings\Client" -Recurse -Force -ErrorAction Ignore
+Remove-Item -Path "HKLM:\SOFTWARE\BigFix\EnterpriseClient\Settings\Client" -Recurse -Force -ErrorAction Ignore
