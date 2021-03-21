@@ -35,8 +35,8 @@ if [ -n "$1" ]; then
   #        it is extremeley difficult to build a regex that could handle all versions reliably. 
   echo `cat $HTMLTMPFILE | grep -o -P -e '>\d{1,2}\.\d{1,2}\.?\d*\.?\d*<' | grep -o -P -e '\d{1,2}\.\d{1,2}\.?\d*\.?\d*' | sort -r -V | grep -m 1 -i "."`
 else
-  download_file http://support.bigfix.com/bes/release/index.html
-  echo `cat $HTMLTMPFILE | grep -m 16 -i -o -P -e '<td align="left">\d+\.\d+\.\d+\.\d+<\/td>' | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | uniq -c | grep -m 1 -i "4 " | grep -o -P -e '\d+\.\d+\.\d+\.\d+'`
+  download_file https://support.bigfix.com/bes/release/index.html
+  echo `cat $HTMLTMPFILE | grep -m 16 -i -o -P -e '>\d+\.\d+\.\d+\.\d+<\/td>' | grep -o -P -e '\d+\.\d+\.\d+\.\d+' | sort -r -V | uniq -c | grep -m 1 -i "4 " | grep -o -P -e '\d+\.\d+\.\d+\.\d+'`
 fi
 
 rm newest_version_tmp.html
