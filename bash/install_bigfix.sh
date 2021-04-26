@@ -31,6 +31,10 @@ command_exists () {
 # http://www.tldp.org/LDP/abs/html/comparison-ops.html
 if [ -n "$1" ]; then
   MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
+  # if parameter contains colon:
+  if [[ "$1" == *":"* ]]; then
+    MASTHEADURL="http://$1/masthead/masthead.afxm"
+  fi
   RELAYFQDN=$1
 else
   # TODO: allow a masthead to be provided in the CWD instead.
