@@ -30,12 +30,13 @@ command_exists () {
 # if $1 exists, then set MASTHEADURL
 # http://www.tldp.org/LDP/abs/html/comparison-ops.html
 if [ -n "$1" ]; then
-  MASTHEADURL="http://$1:52311/masthead/masthead.afxm"
+  MASTHEADURL="https://$1:52311/masthead/masthead.afxm"
+  RELAYFQDN="$1:52311"
   # if parameter contains colon:
   if [[ "$1" == *":"* ]]; then
-    MASTHEADURL="http://$1/masthead/masthead.afxm"
+    MASTHEADURL="https://$1/masthead/masthead.afxm"
+    RELAYFQDN=$1
   fi
-  RELAYFQDN=$1
 else
   # TODO: allow a masthead to be provided in the CWD instead.
   echo Must provide FQDN of Root or Relay
@@ -76,7 +77,7 @@ fi
 if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   # create clientsettings.cfg file
   echo -n > $INSTALLDIR/clientsettings.cfg
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=http://$RELAYFQDN:52311/bfmirror/downloads/
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=https://$RELAYFQDN:52311/bfmirror/downloads/
   >> $INSTALLDIR/clientsettings.cfg echo __RelaySelect_Automatic=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
