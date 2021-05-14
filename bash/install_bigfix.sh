@@ -99,6 +99,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryKeepDays=1825
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryDisplayDaysTech=90
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PersistentConnection_Enabled=1
   # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=`echo $SUDO_USER`
 fi
