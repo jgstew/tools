@@ -296,8 +296,13 @@ sleep 15
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
 # TODO: add mac support to the following:
 if [ -f "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log" ]; then
-  tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
-  
+
+  if [ -n "$NOEXIT" ]; then
+    # tail log forever if NOEXIT set to anything
+    tail --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+  else
+    tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+  fi
   # Related:
   #  - https://bigfix.me/fixlet/details/24646
   #  - https://bigfix.me/relevance/details/3020387
