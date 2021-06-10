@@ -290,8 +290,9 @@ if [ -f /etc/init.d/besclient ]; then
   fi
 fi
 
-# pause 5 seconds to wait for bigfix to get going a bit
-sleep 15
+# pause 30 seconds to wait for bigfix to get going a bit
+echo "sleep for 30 seconds"
+sleep 30
 
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
 # TODO: add mac support to the following:
