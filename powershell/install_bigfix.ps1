@@ -45,8 +45,8 @@ if ( -not (Test-Path "$BASEFOLDER\actionsite.afxm") )
     Exit -2
 }
 
-Write-Host "Downloading: http://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.2.52.exe" 
-(New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.2.52.exe', "$BASEFOLDER\BESClient.exe")
+Write-Host "Downloading: https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.4.32.exe" 
+(New-Object Net.WebClient).DownloadFile('https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.4.32.exe', "$BASEFOLDER\BESClient.exe")
 
 # only continue if BESClient.exe file exists
 if ( -not (Test-Path "$BASEFOLDER\BESClient.exe") )
