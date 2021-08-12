@@ -81,8 +81,8 @@ ECHO _BESClient_Download_FastHashVerify=1 >>$BASEFOLDER\clientsettings.cfg
 Write-Host "Installing BigFix now."
 .\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
 
-Write-Host "Waiting 45 Seconds"
-Start-Sleep -Seconds 45
+Write-Host "Waiting 15 Seconds"
+Start-Sleep -Seconds 15
 
 Write-Host "Last 20 lines of newest log file:"
 Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue | select -Last 20
