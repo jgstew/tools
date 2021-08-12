@@ -69,7 +69,14 @@ ECHO _BESClient_Log_Days=35 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Log_MaxSize=1536000 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_UtilitiesCacheLimitMB=500 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_DownloadsCacheLimitMB=5000 >>$BASEFOLDER\clientsettings.cfg
-ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_PreCacheStageDiskLimitMB=2000 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_PreCacheStageContinueWhenDiskLimited=1 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_MinimumDiskFreeMB=1000 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Comm_EnableConnectionTriggers=1 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Resource_AccelerateForPendingMessage=1 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_ActionManager_HistoryKeepDays=1095 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_ActionManager_HistoryDisplayDaysTech=90 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_FastHashVerify=1 >>$BASEFOLDER\clientsettings.cfg
 
 Write-Host "Installing BigFix now."
 .\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
