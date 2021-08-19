@@ -45,8 +45,8 @@ if ( -not (Test-Path "$BASEFOLDER\actionsite.afxm") )
     Exit -2
 }
 
-Write-Host "Downloading: http://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.2.52.exe" 
-(New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.2.52.exe', "$BASEFOLDER\BESClient.exe")
+Write-Host "Downloading: https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.4.32.exe" 
+(New-Object Net.WebClient).DownloadFile('https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.4.32.exe', "$BASEFOLDER\BESClient.exe")
 
 # only continue if BESClient.exe file exists
 if ( -not (Test-Path "$BASEFOLDER\BESClient.exe") )
@@ -69,10 +69,20 @@ ECHO _BESClient_Log_Days=35 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Log_MaxSize=1536000 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_UtilitiesCacheLimitMB=500 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_DownloadsCacheLimitMB=5000 >>$BASEFOLDER\clientsettings.cfg
-ECHO _BESClient_Download_MinimumDiskFreeMB=2000 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_PreCacheStageDiskLimitMB=2000 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_PreCacheStageContinueWhenDiskLimited=1 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_MinimumDiskFreeMB=1000 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Comm_EnableConnectionTriggers=1 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Resource_AccelerateForPendingMessage=1 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_ActionManager_HistoryKeepDays=1095 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_ActionManager_HistoryDisplayDaysTech=90 >>$BASEFOLDER\clientsettings.cfg
+ECHO _BESClient_Download_FastHashVerify=1 >>$BASEFOLDER\clientsettings.cfg
 
 Write-Host "Installing BigFix now."
 .\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
+
+Write-Host "Waiting 15 Seconds"
+Start-Sleep -Seconds 15
 
 Write-Host "Last 20 lines of newest log file:"
 Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue | select -Last 20
