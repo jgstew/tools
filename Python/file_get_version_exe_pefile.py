@@ -1,6 +1,15 @@
+"""
+Get info from pe files (EXE, DLL)
 
-# https://stackoverflow.com/questions/580924/how-to-access-a-files-properties-on-windows
-# https://stackoverflow.com/a/58241294/861745
+This is cross platform
+
+requires: `pip install -U pefile`
+
+From:
+- https://stackoverflow.com/questions/580924/how-to-access-a-files-properties-on-windows
+- https://stackoverflow.com/a/58241294/861745
+"""
+
 
 import pefile
 

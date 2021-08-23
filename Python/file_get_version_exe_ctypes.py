@@ -1,4 +1,11 @@
+"""
+Get info from pe files (EXE, DLL)
 
+This is cross platform
+
+From:
+- https://stackoverflow.com/questions/580924/how-to-access-a-files-properties-on-windows
+"""
 from ctypes import *
 
 # returns the requested version information from the given file
