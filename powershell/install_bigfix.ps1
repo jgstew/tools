@@ -78,7 +78,7 @@ ECHO _BESClient_ActionManager_HistoryKeepDays=1095 >>$BASEFOLDER\clientsettings.
 ECHO _BESClient_ActionManager_HistoryDisplayDaysTech=90 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_FastHashVerify=1 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_PreCacheStageContinueWhenDiskLimited=1 >>$BASEFOLDER\clientsettings.cfg
-
+# ECHO _BESClient_Comm_ForceHttpsOnRelay=1 >>$BASEFOLDER\clientsettings.cfg
 
 Write-Host "Installing BigFix now."
 .\BESClient.exe /s /v"/l*voicewarmup $BASEFOLDER\install_bigfix.log /qn"
