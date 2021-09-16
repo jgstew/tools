@@ -77,7 +77,7 @@ fi
 if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   # create clientsettings.cfg file
   echo -n > $INSTALLDIR/clientsettings.cfg
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=https://$RELAYFQDN:52311/bfmirror/downloads/
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=https://$RELAYFQDN/bfmirror/downloads/
   >> $INSTALLDIR/clientsettings.cfg echo __RelaySelect_Automatic=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
@@ -239,11 +239,13 @@ fi
 # open up linux firewall to accept UDP 52311 - firewall-cmd
 if command_exists firewall-cmd ; then
   firewall-cmd --zone=public --add-port=52311/udp --permanent
+  firewall-cmd --reload
 fi
 # open up linux firewall to accept UDP 52311 - firewall-offline-cmd
 if command_exists firewall-offline-cmd ; then
   # this applies in anaconda at install time in particular
   firewall-offline-cmd --add-port=52311/udp
+  firewall-offline-cmd --reload
 fi
 
 # install BigFix client
