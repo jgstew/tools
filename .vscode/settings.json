@@ -1,0 +1,12 @@
+{
+  "python.linting.pylintEnabled": true,
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "information"
+  },
+  "python.formatting.provider": "black",
+  "python.autoComplete.addBrackets": true,
+  "editor.formatOnSave": true,
+  "git.autofetch": true,
+  "python.linting.flake8Enabled": true,
+  "python.analysis.completeFunctionParens": true
+}
