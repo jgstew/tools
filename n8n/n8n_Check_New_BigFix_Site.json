@@ -1,0 +1,158 @@
+{
+  "name": "Check New BigFix Site",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        240,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "interval": 24,
+        "unit": "hours"
+      },
+      "name": "Once A Day",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        240,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://localhost:52311/cgi-bin/bfgather.exe/CustomSite_SITENAME",
+        "allowUnauthorizedCerts": true,
+        "responseFormat": "string",
+        "options": {}
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        400,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Code here will run once per input item.\n// More info and help: https://docs.n8n.io/nodes/n8n-nodes-base.functionItem\n\nreGetSite = /^Version: (\\d+)$/gm\nitem.data = reGetSite.exec(item.data)[1]\n\nreturn item;"
+      },
+      "name": "Get Site Version",
+      "type": "n8n-nodes-base.functionItem",
+      "typeVersion": 1,
+      "position": [
+        560,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Code here will run only once, no matter how many input items there are.\n// More info and help: https://docs.n8n.io/nodes/n8n-nodes-base.function\n\nconst new_items = [];\n\n// Get static data stored with the workflow\nconst data = this.getWorkflowStaticData(\"node\");\n\ndata.ids = data.ids || [];\n\nfor (item of items) {\n  // Check if data is already present\n\tif (data.ids.includes(item.json.data)) {\n\t\tbreak;\n\t} else {\n\n\t\t// if new data then add it to an array\n\t\tnew_items.push({\n\t\t\tjson: {\n\t\t\t\tdata: item.json.data,\n\t\t\t},\n\t\t});\n\t}\n}\n\ndata.ids = items.map((item) => item.json.data);\n\n// You can write logs to the browser console\nconsole.log('Done!');\n\nreturn new_items;"
+      },
+      "name": "Continue If New Result",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        720,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Continue If New Result\"].json[\"data\"]}}",
+              "operation": "notEqual"
+            }
+          ]
+        }
+      },
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        940,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "command": "=echo \"new site {{$node[\"Continue If New Result\"].json[\"data\"]}}\" > \\tmp\\testn8n.txt"
+      },
+      "name": "Execute Command",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Once A Day": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Get Site Version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Site Version": {
+      "main": [
+        [
+          {
+            "node": "Continue If New Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue If New Result": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": 1
+}
