@@ -12,3 +12,5 @@ Location where shortcuts are stored for non-steam games:
 - https://steamcommunity.com/discussions/forum/0/2924479876995702892/
 - https://developer.valvesoftware.com/wiki/Add_Non-Steam_Game
 - https://developer.valvesoftware.com/wiki/SteamCMD
+- https://github.com/noriah/vdfedit
+- https://github.com/jaydenmilne/steamsync
