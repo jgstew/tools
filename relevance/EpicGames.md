@@ -6,4 +6,4 @@ Get data needed for shortcuts:
 
 ## References:
 - https://steamcommunity.com/discussions/forum/0/2924479876995702892/
-- 
+- https://developer.valvesoftware.com/wiki/SteamCMD
