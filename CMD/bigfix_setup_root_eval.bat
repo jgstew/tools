@@ -20,11 +20,11 @@ start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('https
 
 
 REM Download BigFix Root Server:
-start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/100/BigFix-BES-10.0.0.133.exe', '%BASEFOLDER%\BigFix-BES.exe') }" -ExecutionPolicy Bypass
+start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://software.bigfix.com/download/bes/100/BigFix-BES-10.0.5.50.exe', '%BASEFOLDER%\BigFix-BES.exe') }" -ExecutionPolicy Bypass
 
 REM Download BigFix Fixlet Debugger:
 REM http://software.bigfix.com/download/bes/100/util/QNA10.0.0.133.zip
-start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/100/util/QNA10.0.0.133.zip', '%BASEFOLDER%\BigFix-FixletDebugger.zip') }" -ExecutionPolicy Bypass
+start "" powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://software.bigfix.com/download/bes/100/util/QNA10.0.5.50.zip', '%BASEFOLDER%\BigFix-FixletDebugger.zip') }" -ExecutionPolicy Bypass
 
 REM Download SQLServer Developer Edition:
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/5/A/7/5A7065A2-C81C-4A31-9972-8A31AC9388C1/SQLServer2017-SSEI-Dev.exe', '%BASEFOLDER%\SQLServer-SSEI-Dev.exe') }" -ExecutionPolicy Bypass
