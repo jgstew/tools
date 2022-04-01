@@ -14,7 +14,7 @@ cd "$BASEFOLDER"
 
 if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
 {
-    Write-Host "ERROR: BigFix is already installed!"
+    Write-Host "INFO: BigFix is already installed!"
     Write-Host "Last 20 lines of newest log file:"
     Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue | select -Last 20
     # Number of errors in log:  (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\"+ (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue) -like "*error*" | measure | % { $_.Count }
@@ -25,6 +25,10 @@ if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
     {
         Write-Host "Downloading: https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1" 
         (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1', "$BASEFOLDER\bigfix_uninstall_clean.ps1")
+    }
+    else
+    {
+        Write-Host "If needed, you can uninstall BigFix with: " "$BASEFOLDER\bigfix_uninstall_clean.ps1"
     }
     Exit 1
 }
