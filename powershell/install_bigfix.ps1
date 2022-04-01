@@ -20,9 +20,12 @@ if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
     # Number of errors in log:  (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\"+ (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue) -like "*error*" | measure | % { $_.Count }
     # Lines with errors in ALL bigfix client logs:  (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\*.log") -ErrorAction SilentlyContinue) -like "*error*" | measure | % { $_.Count }
     
-    # TODO: only download if file doesn't already exist:
-    Write-Host "Downloading: https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1" 
-    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1', "$BASEFOLDER\bigfix_uninstall_clean.ps1")
+    # only download if file doesn't already exist:
+    if(-not(Test-path "$BASEFOLDER\bigfix_uninstall_clean.ps1" -PathType leaf))
+    {
+        Write-Host "Downloading: https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1" 
+        (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1', "$BASEFOLDER\bigfix_uninstall_clean.ps1")
+    }
     Exit 1
 }
 
