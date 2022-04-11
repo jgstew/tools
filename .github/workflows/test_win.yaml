@@ -1,0 +1,42 @@
+---
+name: test_win
+
+# only run this job when this job itself is modified
+on:
+  push:
+    paths:
+      - ".github/workflows/test_win.yaml"
+    branches:
+      - "**"
+
+jobs:
+  test_win:
+    runs-on: [windows-latest]
+    steps:
+      - name: Test run bash command
+        # `shell: bash` requires WSL on a windows runner
+        shell: bash
+        run: |
+          echo "Hellow World! Bash"
+      - name: test default shell command
+        # default shell for windows is PowerShell
+        # this requires local script execution to be enabled
+        # `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine`
+        run: |
+          echo "Hello World! PowerShell" > test.txt
+          cat test.txt
+      - name: test CMD command
+        shell: cmd
+        run: |
+          echo "Hello World! CMD" > test.txt
+          type test.txt
+      # - name: checkout git repo
+      #   uses: actions/checkout@v3
+      - name: get user name
+        # net user $env:USERNAME | findstr "Local Group Memberships"
+        # https://docs.microsoft.com/en-us/windows/win32/services/localservice-account
+        # https://github.com/shivammathur/setup-php/wiki/Requirements-for-self-hosted-runners
+        run: |
+          echo $env:USERNAME
+      - name: find file
+        run: Get-ChildItem -Path "C:/Program Files (x86)/Windows Kits" -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue -Force
