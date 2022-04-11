@@ -41,6 +41,3 @@ jobs:
       - name: find file x86
         # https://stackoverflow.com/questions/8677628/recursive-file-search-using-powershell
         run: Get-ChildItem -Path "C:/Program Files (x86)/Windows Kits" -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue -Force
-      - name: find file x64
-        # https://stackoverflow.com/questions/8677628/recursive-file-search-using-powershell
-        run: Get-ChildItem -Path "C:/Program Files/Windows Kits" -Filter signtool.exe -Recurse -ErrorAction SilentlyContinue -Force
