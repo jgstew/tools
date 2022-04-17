@@ -9,7 +9,7 @@ import Swift
 // Example: C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build
 
 // Powershell get build tools dir:
-// Get-ItemProperty -Path HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Select DisplayName,InstallLocation | Where-Object { $_.DisplayName -match "Visual Studio Build Tools" } | Select InstallLocation
+// Get-ItemProperty -Path HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Select DisplayName,InstallLocation | Where-Object { $_.DisplayName -match "Visual Studio Build Tools" } | Select InstallLocation | Select-Object -first 1 | Select -ExpandProperty "InstallLocation"
 
 // Example: call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
