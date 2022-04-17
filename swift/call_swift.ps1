@@ -12,7 +12,7 @@ ForEach-Object {
 Pop-Location
 
 # output all env vars:
-Get-ChildItem env:
+# Get-ChildItem env:
 
 $env:INSTALLATION_DIR = "C:"
 $env:OS = "windows"
