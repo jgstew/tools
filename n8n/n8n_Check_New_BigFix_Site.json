@@ -6,10 +6,7 @@
       "name": "Start",
       "type": "n8n-nodes-base.start",
       "typeVersion": 1,
-      "position": [
-        240,
-        420
-      ]
+      "position": [240, 420]
     },
     {
       "parameters": {
@@ -19,14 +16,11 @@
       "name": "Once A Day",
       "type": "n8n-nodes-base.interval",
       "typeVersion": 1,
-      "position": [
-        240,
-        160
-      ]
+      "position": [240, 160]
     },
     {
       "parameters": {
-        "url": "https://localhost:52311/cgi-bin/bfgather.exe/CustomSite_SITENAME",
+        "url": "https://bigfixrelay:52311/cgi-bin/bfgather.exe/CustomSite_SITENAME",
         "allowUnauthorizedCerts": true,
         "responseFormat": "string",
         "options": {}
@@ -34,10 +28,7 @@
       "name": "HTTP Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [
-        400,
-        160
-      ]
+      "position": [400, 160]
     },
     {
       "parameters": {
@@ -46,10 +37,7 @@
       "name": "Get Site Version",
       "type": "n8n-nodes-base.functionItem",
       "typeVersion": 1,
-      "position": [
-        560,
-        160
-      ]
+      "position": [560, 160]
     },
     {
       "parameters": {
@@ -58,10 +46,7 @@
       "name": "Continue If New Result",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [
-        720,
-        160
-      ]
+      "position": [720, 160]
     },
     {
       "parameters": {
@@ -77,22 +62,16 @@
       "name": "IF",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [
-        940,
-        160
-      ]
+      "position": [940, 160]
     },
     {
       "parameters": {
-        "command": "=echo \"new site {{$node[\"Continue If New Result\"].json[\"data\"]}}\" > \\tmp\\testn8n.txt"
+        "command": "=echo \"new site {{$node[\"Continue If New Result\"].json[\"data\"]}}\" > \\tmp\\testn8n_siteversion.txt"
       },
       "name": "Execute Command",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [
-        1160,
-        180
-      ]
+      "position": [1160, 180]
     }
   ],
   "connections": {
@@ -145,6 +124,17 @@
         [
           {
             "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
