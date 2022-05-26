@@ -29,6 +29,7 @@ if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
     else
     {
         Write-Host "If needed, you can uninstall BigFix with: " "$BASEFOLDER\bigfix_uninstall_clean.ps1"
+        Write-Host 'Tail the newest BigFix Client Log with: Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue -Tail 25 -Wait'
     }
     Exit 1
 }
