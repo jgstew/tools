@@ -4,6 +4,7 @@
 # PlistBuddy does not work correctly on MacOS due to CFPrefs caching without stopping the agent first
 
 start_bigfix=false
+# if BigFix was running when script started, then start it at the end
 if sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status | grep -q 'Running'; then
   start_bigfix=true
   echo stopping the bigfix client so the edit will work:
@@ -38,6 +39,7 @@ sudo /usr/libexec/plistbuddy -c "Set :Settings:Client:$1:Date `date +"%a %b %d %
 echo Settings is now:
 sudo /usr/libexec/plistbuddy -c "Print :Settings:Client:$1:Value" /Library/Preferences/com.bigfix.BESAgent.plist
 
+# start bigfix client again if it was running at the start
 if [ "$start_bigfix" = true ] ; then
   echo starting bigfix:
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -start
