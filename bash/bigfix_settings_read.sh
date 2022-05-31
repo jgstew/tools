@@ -5,6 +5,7 @@
 
 # defaults read /Library/Preferences/com.bigfix.BESAgent Settings
 
+# https://www.marcosantadev.com/manage-plist-files-plistbuddy/
 /usr/libexec/PlistBuddy -c "print Settings:Client" /Library/Preferences/com.bigfix.BESAgent.plist
 
 # Linux/Unix ? TODO
