@@ -1,8 +1,12 @@
 
 # TODO: come up with a solution in python or similar
 #    - https://gist.github.com/gregneagle/01c99322cf985e771827
-echo PlistBuddy does not work correctly on MacOS due to CFPrefs caching.
-exit 999
+# PlistBuddy does not work correctly on MacOS due to CFPrefs caching without stopping the agent first
+
+echo stopping the bigfix client so the edit will work.
+
+sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -stop
+sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
 
 # Make sure values are provided:
 if [ -n "$1" ]; then
@@ -23,4 +27,6 @@ fi
 sudo /usr/libexec/plistbuddy -c "Set :Settings:Client:$1:Value $2" /Library/Preferences/com.bigfix.BESAgent.plist
 sudo /usr/libexec/plistbuddy -c "Print :Settings:Client:$1:Value" /Library/Preferences/com.bigfix.BESAgent.plist
 
-# Linux/Unix ? TODO
+echo starting bigfix:
+sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -start
+sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
