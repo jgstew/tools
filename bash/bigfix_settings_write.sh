@@ -26,9 +26,8 @@ fi
 # NOTE: the following is only valid if working with plain files not in use by BigFix/CFPrefs
 #        see here: https://macmule.com/2014/02/07/mavericks-preference-caching/
 sudo /usr/libexec/plistbuddy -c "Add :Settings:Client:$1:Value string $2" /Library/Preferences/com.bigfix.BESAgent.plist
-
-# TODO: set Date (this is not strictly required in most cases)
-# Add :Settings:Client:$1:Date date "Sat Jun 27 18:51:00 EST 2022"
+# Related: https://github.com/jgstew/tools/blob/master/bash/date_plistbuddy.sh
+sudo /usr/libexec/plistbuddy -c "Add :Settings:Client:$1:Date date `date +"%a %b %d %T %Z %Y"`" /Library/Preferences/com.bigfix.BESAgent.plist
 
 echo Settings is now:
 sudo /usr/libexec/plistbuddy -c "Print :Settings:Client:$1:Value" /Library/Preferences/com.bigfix.BESAgent.plist
