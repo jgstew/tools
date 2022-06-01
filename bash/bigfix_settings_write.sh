@@ -12,6 +12,7 @@ if sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -s
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -stop
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
   echo ""
+  # must stop cfprefsd to allow plistbuddy's changes to take effect.
   sudo launchctl stop com.apple.cfprefsd.xpc.daemon
 fi
 
@@ -42,6 +43,7 @@ sudo /usr/libexec/plistbuddy -c "Print :Settings:Client:$1:Value" /Library/Prefe
 
 # start bigfix client again if it was running at the start
 if [ "$start_bigfix" = true ] ; then
+  # restart cfprefsd
   sudo launchctl start com.apple.cfprefsd.xpc.daemon
   echo starting bigfix:
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -start
