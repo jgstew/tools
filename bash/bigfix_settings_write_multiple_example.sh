@@ -12,6 +12,7 @@ if sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -s
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -stop
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
   echo ""
+  sudo launchctl stop com.apple.cfprefsd.xpc.daemon
 fi
 
 bash bigfix_settings_write.sh _BESClient_Download_UtilitiesCacheLimitMB 500
@@ -19,8 +20,15 @@ bash bigfix_settings_write.sh _BESClient_Log_Days 35
 bash bigfix_settings_write.sh _BESClient_Log_MaxSize 1536000
 bash bigfix_settings_write.sh _BESClient_ActionManager_HistoryKeepDays 1825
 
+# https://github.com/mathiasbynens/dotfiles/issues/330
+# sudo killall cfprefsd
+
+echo Show Settings:
+/usr/libexec/PlistBuddy -c "print Settings:Client" /Library/Preferences/com.bigfix.BESAgent.plist
+
 # start bigfix client again if it was running at the start
 if [ "$start_bigfix" = true ] ; then
+  sudo launchctl start com.apple.cfprefsd.xpc.daemon
   echo starting bigfix:
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -start
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status

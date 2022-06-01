@@ -12,6 +12,7 @@ if sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -s
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -stop
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
   echo ""
+  sudo launchctl stop com.apple.cfprefsd.xpc.daemon
 fi
 
 # Make sure values are provided:
@@ -41,6 +42,7 @@ sudo /usr/libexec/plistbuddy -c "Print :Settings:Client:$1:Value" /Library/Prefe
 
 # start bigfix client again if it was running at the start
 if [ "$start_bigfix" = true ] ; then
+  sudo launchctl start com.apple.cfprefsd.xpc.daemon
   echo starting bigfix:
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -start
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
