@@ -15,7 +15,6 @@ def main(pathname):
     # print("main()")
     with open(pathname, "rb") as f:
         pefile = SignedPEFile(f)
-        print(list(pefile.signed_datas)[0].signer_infos[0].countersigner.signing_time)
         print(pefile.explain_verify())
         # print(pefile.signed_datas)
         signed_datas = list(pefile.signed_datas)
