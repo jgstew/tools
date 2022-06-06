@@ -2,7 +2,7 @@
 Check if file is authenticode signed and valid
 
 Related:
-- https://stackoverflow.com/questions/34951975/digital-signature-signing-time
+- https://stackoverflow.com/a/72520692/861745
 """
 
 import sys
