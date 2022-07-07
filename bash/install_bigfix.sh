@@ -47,7 +47,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=10.0.3.66
+URLVERSION=10.0.7.52
 URLMAJORMINOR=`echo $URLVERSION | awk '/./ {gsub(/\./, " "); print $1 $2}'`
 
 # check for x32bit or x64bit OS
@@ -106,7 +106,8 @@ fi
 
 if [[ $OSTYPE == darwin* ]]; then
   # Mac OS X
-  INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOSX10.14.pkg"
+  # https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52-BigFix_MacOS11.0.pkg
+  INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOS11.0.pkg"
   INSTALLER="/tmp/BESAgent.pkg"
 else
   # For most Linux:
