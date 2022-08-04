@@ -3,5 +3,10 @@
 
 import magic
 
-print(magic.from_file(r"C:\Windows\explorer.exe"))
+file_path = r"C:\Windows\explorer.exe"
+
+print(magic.from_file(file_path))
 # Example Output: `PE32+ executable (GUI) x86-64, for MS Windows`
+
+print(magic.from_file(file_path, mime=True))
+# Example Output: `application/x-dosexec`
