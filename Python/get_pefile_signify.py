@@ -2,6 +2,7 @@
 Check if file is authenticode signed and valid
 
 Related:
+- https://github.com/jgstew/jgstew-recipes/blob/main/SharedProcessors/FileExeVerifySignature.py
 - https://stackoverflow.com/a/72520692/861745
 - https://unix.stackexchange.com/a/269918/171387
 - https://github.com/sassoftware/relic
