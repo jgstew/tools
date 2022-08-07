@@ -24,12 +24,17 @@ def main(pathname):
         value = getattr(meta, prop)
         print((prop, value))
 
+    # get raw info:
+    # other_props = ole.getproperties("\x05SummaryInformation")
+    # for item in other_props.values():
+    #     print(item)
+
     if not ole.exists("\x05DigitalSignature"):
         print("WARNING: File not signed!")
     else:
         with ole.openstream("\x05DigitalSignature") as fh:
             b_data = fh.read()
-            # print(b_data)
+            print(f"DigitalSignature: {len(b_data)} bytes")
 
     # end:
     ole.close()
