@@ -8,7 +8,10 @@ Related:
 """
 import olefile
 import os
+
+# import signify.authenticode.structures
 import sys
+from signify.authenticode.signed_pe import SignedPEFile
 
 
 def main(pathname):
@@ -33,8 +36,16 @@ def main(pathname):
         print("WARNING: File not signed!")
     else:
         with ole.openstream("\x05DigitalSignature") as fh:
-            b_data = fh.read()
-            print(f"DigitalSignature: {len(b_data)} bytes")
+            # b_data = fh.read()
+            # print(f"DigitalSignature: {len(b_data)} bytes")
+            # signed_data = (
+            #     signify.authenticode.structures.AuthenticodeSignedData.from_envelope(
+            #         b_data
+            #     )
+            # )
+            # print(signed_data.explain_verify())
+            pefile = SignedPEFile(fh)
+            print(pefile.explain_verify())
 
     # end:
     ole.close()
