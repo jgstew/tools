@@ -6,14 +6,10 @@ Related:
 - https://github.com/decalage2/oletools/blob/master/oletools/olemeta.py
 - https://github.com/ralphje/signify/issues/24#issuecomment-1148320566
 """
+
 import olefile
 import os
-
-import signify.authenticode.structures
-import signify.pkcs7.signeddata
 import sys
-
-# from signify.authenticode.signed_pe import SignedPEFile
 
 
 def main(pathname):
@@ -28,6 +24,17 @@ def main(pathname):
     for prop in meta.SUMMARY_ATTRIBS:
         value = getattr(meta, prop)
         print((prop, value))
+    # print(meta.dump())
+
+    create_time = getattr(meta, "create_time")
+    last_saved_time = getattr(meta, "last_saved_time")
+    dates_to_compare = []
+    dates_to_compare.append(create_time)
+    dates_to_compare.append(last_saved_time)
+    max_time = max(dates_to_compare)
+    # print(max_time)
+    max_time_yyyymmdd = max_time.strftime("%Y-%m-%d")
+    print(f"Max Mod Time: {max_time_yyyymmdd}")
 
     # get raw info:
     # other_props = ole.getproperties("\x05SummaryInformation")
@@ -38,16 +45,8 @@ def main(pathname):
         print("WARNING: File not signed!")
     else:
         with ole.openstream("\x05DigitalSignature") as fh:
-            b_data = fh.read()
-            # print(f"DigitalSignature: {len(b_data)} bytes")
-            # signed_data = (
-            #     signify.authenticode.structures.AuthenticodeSignedData.from_envelope(
-            #         b_data
-            #     )
-            # )
-            signed_data_pkcs7 = signify.pkcs7.signeddata.SignedData(b_data)
-            print(signed_data_pkcs7)
-            # print(signed_data.explain_verify())
+            sig_data = fh.read()
+            print(f"Digital Signature: {len(sig_data)} bytes")
 
     # end:
     ole.close()
