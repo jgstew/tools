@@ -233,6 +233,7 @@ if [ $DLEXITCODE -ne 0 ]; then
   exit $DLEXITCODE
 fi
 
+# See here: https://github.com/jgstew/tools/blob/master/bash/enable_incoming_port.sh
 # open up linux firewall to accept UDP 52311 - iptables
 if command_exists iptables ; then
   iptables -A INPUT -p udp --dport 52311 -j ACCEPT
