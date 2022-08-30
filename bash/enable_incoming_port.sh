@@ -40,3 +40,22 @@ fi
 if command_exists genfilt ; then
   genfilt -n 2 -a P -c $PORTPROTOCOL -P $PORTNUM -D "allow bigfix incoming notification"
 fi
+
+# https://man.cx/lokkit
+if command_exists lokkit ; then
+  lokkit --port=$PORTNUM:$PORTPROTOCOL --nostart --quiet
+fi
+
+# SUSE:
+if command_exists SuSEfirewall2 ; then
+  SuSEfirewall2 open EXT $PORTPROTOCOL $PORTNUM
+fi
+
+# Windows: (only works if run in elevated bash)
+if command_exists netsh.exe ; then
+  # this should work in elevated CMD or bash:
+  # netsh.exe advfirewall firewall add rule name="BigFix incoming notifications" program="C:\Program Files (x86)\BigFix Enterprise\BES Client\BESClient.exe" dir=in action=allow protocol=udp localport=52311 enable=yes profile=private,domain,public
+  # this should work in elevated bash when run through the whole script:
+  netsh.exe advfirewall firewall add rule name="BigFix incoming notifications" program="C:\Program Files (x86)\BigFix Enterprise\BES Client\BESClient.exe" dir=in action=allow protocol=$PORTPROTOCOL localport=$PORTNUM enable=yes profile=private,domain,public
+fi
+
