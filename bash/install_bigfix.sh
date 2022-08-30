@@ -248,6 +248,10 @@ if command_exists firewall-offline-cmd ; then
   firewall-offline-cmd --add-port=52311/udp
   firewall-offline-cmd --reload
 fi
+# open Debian/Ubuntu firewall:
+if command_exists ufw ; then
+  ufw allow 52311/udp
+fi
 
 # install BigFix client
 if [[ $INSTALLER == *.deb ]]; then
