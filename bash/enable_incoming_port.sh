@@ -41,12 +41,13 @@ if command_exists genfilt ; then
   genfilt -n 2 -a P -c $PORTPROTOCOL -P $PORTNUM -D "allow bigfix incoming notification"
 fi
 
+# older RHEL family: (untested)
 # https://man.cx/lokkit
 if command_exists lokkit ; then
   lokkit --port=$PORTNUM:$PORTPROTOCOL --nostart --quiet
 fi
 
-# SUSE:
+# older SUSE: (untested)
 if command_exists SuSEfirewall2 ; then
   SuSEfirewall2 open EXT $PORTPROTOCOL $PORTNUM
 fi
