@@ -59,3 +59,7 @@ if command_exists netsh.exe ; then
   netsh.exe advfirewall firewall add rule name="BigFix incoming notifications" program="C:\Program Files (x86)\BigFix Enterprise\BES Client\BESClient.exe" dir=in action=allow protocol=$PORTPROTOCOL localport=$PORTNUM enable=yes profile=private,domain,public
 fi
 
+# if BSD pf is in use:
+# need to check if the file `/etc/pf.conf` exists and if pf is currently enabled and running.
+# echo pass in on $int_if proto $PORTPROTOCOL from any to $int_if port $PORTNUM >> /etc/pf.conf
+# pfctl -vf /etc/pf.conf
