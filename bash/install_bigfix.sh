@@ -157,7 +157,12 @@ else
       # TODO: could add support for SUSE 10, but 11+ should work with the above.
     fi # END_IF not-RHEL-family
   fi # END_IF exists rpm
-  
+
+  if command_exists pkgadd ; then
+      # TODO: test case for Solaris
+      INSTALLER="BESAgent.pkg"
+      INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION.x86_sol11.pkg
+  fi # END_IF pkgadd
 fi # END_IF darwin
 ############################################################
 
