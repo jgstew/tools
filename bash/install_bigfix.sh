@@ -160,8 +160,12 @@ else
 
   if command_exists pkgadd ; then
       # TODO: test case for Solaris
+      echo "Solaris Detected"
       INSTALLER="BESAgent.pkg"
+      # example:   https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52.x86_sol11.pkg
       INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION.x86_sol11.pkg
+      echo $INSTALLERURL
+      INSTALLERURL=https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52.x86_sol11.pkg
   fi # END_IF pkgadd
 fi # END_IF darwin
 ############################################################
