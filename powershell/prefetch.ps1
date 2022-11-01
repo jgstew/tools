@@ -14,12 +14,24 @@ $prefetch_sha256 = ( select-string "(?:sha256:|sha256=)([a-zA-Z0-9]+)(?: |$)" -i
 
 $prefetch_url = ( select-string "(?: |url=)(http[-:/.a-zA-Z0-9]+)(?: |$)" -inputobject $prefetch ).Matches.groups[1].value
 
+$prefetch_size = ( select-string "(?:size:|size=)([0-9]+)(?: |$)" -inputobject $prefetch ).Matches.groups[1].value
+
+# Write-Host $prefetch_size
+
 (New-Object Net.WebClient).DownloadFile($prefetch_url, $prefetch_name)
 
-if ( (Get-FileHash $prefetch_name).Hash -eq $prefetch_sha256 ) {
-    Write-Host "prefetch succeeded, hashes match!"
+if ( (Get-Item $prefetch_name).length -eq $prefetch_size ) {
+    # Write-Host "prefetch size matches file size!"
+
+    if ( (Get-FileHash $prefetch_name).Hash -eq $prefetch_sha256 ) {
+        Write-Host "prefetch succeeded, hashes match!"
+    }
+    else {
+        Write-Host "prefetch failed! hashes do not match! deleting file."
+        Remove-Item $prefetch_name
+    }
 }
 else {
-    Write-Host "prefetch failed! hashes do not match! deleting file."
+    Write-Host "prefetch failed! sizes do not match! deleting file."
     Remove-Item $prefetch_name
 }
