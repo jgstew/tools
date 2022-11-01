@@ -3,6 +3,9 @@
 # powershell -ExecutionPolicy Bypass .\prefetch.ps1 "'prefetch string.txt sha1:? size:? url sha256:?'"
 # prefetch block item:
 # powershell -ExecutionPolicy Bypass .\prefetch.ps1 "'add prefetch item name=string.txt sha1=? size=? url=? sha256=?'"
+
+# NOTE: this is the powershell equivalent of this: https://github.com/jgstew/bigfix_prefetch/blob/master/src/bigfix_prefetch/prefetch.py
+
 $prefetch = $args[0]
 
 if (!$prefetch) { 
