@@ -1,6 +1,10 @@
 
 # Example Usage:
+# prefetch statement:
 # bash prefetch.sh "prefetch unzip.exe sha1:84debf12767785cd9b43811022407de7413beb6f size:204800 http://software.bigfix.com/download/redist/unzip-6.0.exe sha256:2122557d350fd1c59fb0ef32125330bde673e9331eb9371b454c2ad2d82091ac"
+# prefetch block:
+# bash prefetch.sh "add prefetch item name=string.txt sha1=? size=? url=? sha256=?"
+
 prefetch="$1"
 # echo $prefetch
 
@@ -13,11 +17,13 @@ prefetch_name="`echo $prefetch | sed -E 's/.*(name=|prefetch )([a-zA-Z0-9\.]+)( 
 prefetch_sha256="`echo $prefetch | sed -E 's/.+ (sha256:|sha256=)([a-zA-Z0-9]+)( .+|$)/\2/'`"
 prefetch_url="`echo $prefetch | sed -E 's/.+ (|url=)(http[-:/.a-zA-Z0-9]+)( .+|$)/\2/'`"
 
-echo $prefetch_name
-echo $prefetch_sha256
-echo $prefetch_url
+# echo $prefetch_name
+# echo $prefetch_sha256
+# echo $prefetch_url
 
 #### Downloads #############################################
+echo
+echo Downloading file $prefetch_name from: $prefetch_url
 DLEXITCODE=0
 if command_exists curl ; then
   # Download the file
@@ -47,6 +53,8 @@ if [ $DLEXITCODE -ne 0 ]; then
   exit $DLEXITCODE
 fi
 
+echo
+echo "Validating file sha256 hash:"
 echo "$prefetch_sha256 $prefetch_name" | sha256sum --check
 
 if [ $? -ne 0 ]; then
