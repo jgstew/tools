@@ -22,9 +22,9 @@ if __name__ == "__main__":
 
     # if no url, use a default for demo purposes:
     if not prefetch_string:
-        prefetch_string = "prefetch unzip.exe sha1:84debf12767785cd9b43811022407de7413beb6f size:204800 http://software.bigfix.com/download/redist/unzip-6.0.exe sha256:2122557d350fd1c59fb0ef32125330bde673e9331eb9371b454c2ad2d82091ac"
+        prefetch_string = "prefetch unzip.exe sha1:84debf12767785cd9b43811022407de7413beb6f size:204800 https://software.bigfix.com/download/redist/unzip-6.0.exe sha256:2122557d350fd1c59fb0ef32125330bde673e9331eb9371b454c2ad2d82091ac"
 
-    if "http" not in prefetch_string or "://" not in prefetch_string:
+    if "http://" not in prefetch_string and "https://" not in prefetch_string:
         print("ERROR: invalid prefetch: ", prefetch_string)
         sys.exit(1)
 
