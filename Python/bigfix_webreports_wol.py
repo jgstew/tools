@@ -1,5 +1,9 @@
 """
 Example using the BigFix Web Reports SOAP API
+
+References:
+- https://developer.bigfix.com/other/soap-api/soap_url.html
+- https://developer.bigfix.com/other/soap-api/methods/GetRelevanceResult.html
 """
 import re
 
