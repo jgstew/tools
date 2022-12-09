@@ -53,7 +53,7 @@ def bfwr_session_relevance_array(
         username, password, server_url, session_relevance
     )
 
-    regex = "<a>(.+?)</a>"
+    regex = "\s<a>(.+?)</a>\W"
     return re.findall(regex, result_raw)
 
 
