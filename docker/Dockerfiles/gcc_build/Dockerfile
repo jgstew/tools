@@ -8,6 +8,7 @@ RUN dnf -y install bzip2 wget gcc gcc-c++ gmp-devel mpfr-devel libmpc-devel make
 
 WORKDIR /tmp
 
+# find newest source here: https://ftp.gnu.org/gnu/gcc/
 RUN curl -O https://ftp.gnu.org/gnu/gcc/gcc-12.2.0/gcc-12.2.0.tar.gz
 
 RUN tar --extract --file=gcc-12.2.0.tar.gz
