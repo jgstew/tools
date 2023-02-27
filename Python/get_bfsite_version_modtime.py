@@ -54,17 +54,19 @@ def get_bessite_modification(bes_site_html):
 
 
 def main(bes_site_url):
-    print(f"BES Site URL:           {bes_site_url}")
+    print(f"BES Site URL:      {bes_site_url}")
     # if run through main, disable SSL verification
     bes_site_html = get_bessite_info(bes_site_url, False)
     site_version = get_bessite_version(bes_site_html)
-    print(f"BES Site Version Found: {site_version}")
+    print(f"BES Site Version:  {site_version}")
     site_mod = get_bessite_modification(bes_site_html)
-    print(f"BES Site Modification Found: {site_mod.astimezone()}")
+    print(f"BES Site Mod Time: {site_mod.astimezone()}")
 
     time_delta = datetime.datetime.now(datetime.timezone.utc) - site_mod
     time_hours = time_delta.total_seconds() / 3600
-    print(f"Last changed: {int(time_hours)} hours ago.")
+    print(
+        f"Last changed:      {int(time_hours)} hours ago. ({time_delta.days} days ago)"
+    )
 
 
 if __name__ == "__main__":
