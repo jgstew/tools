@@ -15,4 +15,4 @@ if [ -f /Library/BESAgent/BESAgent.app/Contents/MacOS/QnA ]; then
   QNAPATH="/Library/BESAgent/BESAgent.app/Contents/MacOS/QnA"
 fi
 
-$QNAPATH -showtypes
+sudo $QNAPATH -showtypes
