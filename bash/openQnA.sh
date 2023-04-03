@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/openQnA.sh
+
 # https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli+Endpoint+Manager/page/Common+File+Locations
 QNAPATH="./qna"
 
