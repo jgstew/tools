@@ -8,6 +8,7 @@ QNAPATH="./qna"
 if [ -f '/c/Program Files (x86)/BigFix Enterprise/BES Client/qna' ]; then
   QNAPATH="/c/Program Files (x86)/BigFix Enterprise/BES Client/qna"
   "$QNAPATH" -showtypes
+  exit 0
 fi
 
 if [ -f /opt/BESClient/bin/qna ]; then
