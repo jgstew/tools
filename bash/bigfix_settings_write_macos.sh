@@ -38,10 +38,11 @@ if sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -s
 fi
 
 # set setting:
-"/Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgent" -setSettings "$jsonFile"
+sudo "/Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgent" -setSettings "$jsonFile"
 
 # start bigfix client again if it was running at the start
 if [ "$start_bigfix" = true ] ; then
+  echo ""
   echo starting bigfix:
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -start
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
