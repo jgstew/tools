@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 # use bigfix agent to write client settings
+# since this method uses the agent itself, stopping cfprefsd is not required!
+# this is meant to be used after the agent is already installed.
 
 # Make sure values are provided:
 if [ -n "$1" ]; then
@@ -48,3 +50,7 @@ if [ "$start_bigfix" = true ] ; then
   sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
   echo ""
 fi
+
+# cleanup temp files:
+rm "$clientSettingsFile"
+rm "$jsonFile"
