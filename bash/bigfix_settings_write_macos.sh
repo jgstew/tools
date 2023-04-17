@@ -27,4 +27,23 @@ echo $1=$2 > "$clientSettingsFile"
 
 "$scriptConvert" "$clientSettingsFile" "$jsonFile"
 
+start_bigfix=false
+# if BigFix was running when script started, then start it at the end
+if sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status | grep -q 'Running'; then
+  start_bigfix=true
+  echo stopping the bigfix client so the edit will work:
+
+  sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -stop
+  sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
+fi
+
+# set setting:
 "/Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgent" -setSettings "$jsonFile"
+
+# start bigfix client again if it was running at the start
+if [ "$start_bigfix" = true ] ; then
+  echo starting bigfix:
+  sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -start
+  sudo /Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgentControlPanel.sh -status
+  echo ""
+fi
