@@ -17,9 +17,14 @@ fi
 
 jsonFile="bigfix_client_settings_temp.json"
 clientSettingsFile="bigfix_client_settings_temp.cfg"
+scriptConvert="/Library/BESAgent/BESAgent.app/Contents/MacOS/CfgToJSON.pl"
+
+if [ -f "/Library/BESAgent/BESAgent.app/Contents/MacOS/CfgToPList.pl" ]; then
+  scriptConvert="/Library/BESAgent/BESAgent.app/Contents/MacOS/CfgToPList.pl"
+fi
 
 echo $1=$2 > "$clientSettingsFile"
 
-"/Library/BESAgent/BESAgent.app/Contents/MacOS/CfgToJSON.pl" "$clientSettingsFile" "$jsonFile"
+"$scriptConvert" "$clientSettingsFile" "$jsonFile"
 
 "/Library/BESAgent/BESAgent.app/Contents/MacOS/BESAgent" -setSettings "$jsonFile"
