@@ -3,10 +3,13 @@
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingImports": "information"
   },
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.autoComplete.addBrackets": true,
   "editor.formatOnSave": true,
   "git.autofetch": true,
   "python.linting.flake8Enabled": true,
-  "python.analysis.completeFunctionParens": true
+  "python.analysis.completeFunctionParens": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }
