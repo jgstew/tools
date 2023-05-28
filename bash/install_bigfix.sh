@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Short link: http://bit.ly/installbigfix
 #
-#   Work In Progresss:  curl http://bit.ly/installbigfix | grep -o '".*"' | sed 's/"//g'
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
@@ -47,7 +46,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=10.0.7.52
+URLVERSION=10.0.9.21
 URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 
 # check for x32bit or x64bit OS

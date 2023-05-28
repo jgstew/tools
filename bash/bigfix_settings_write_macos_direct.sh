@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+echo "See this method instead: https://github.com/jgstew/tools/blob/master/bash/bigfix_settings_write_macos.sh"
+exit 9
 
 # TODO: come up with a solution in python or similar
 #    - https://gist.github.com/gregneagle/01c99322cf985e771827
