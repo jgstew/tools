@@ -5,6 +5,6 @@ fi
 # https://www.cyberciti.biz/faq/how-to-extract-a-deb-file-without-opening-it-on-debian-or-ubuntu-linux/
 ar x /tmp/BESAgent-debian.deb --output=/tmp
 
-tar --overwrite --extract --file=/tmp/data.tar.gz --directory=/tmp --exclude=var* --exclude=etc* --exclude=lib*
+tar --overwrite --extract --file=/tmp/data.tar.gz --directory=/tmp --exclude=var* --exclude=etc* --exclude=lib/*
 
 /tmp/opt/BESClient/bin/qna -showtypes
