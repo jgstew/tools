@@ -1,3 +1,6 @@
+
+args=$*
+
 if ! [ -f /tmp/BESAgent-debian.deb ]; then
 curl -o /tmp/BESAgent-debian.deb https://software.bigfix.com/download/bes/100/BESAgent-10.0.9.21-debian6.amd64.deb
 fi
@@ -13,9 +16,9 @@ rm /tmp/debian-binary
 rm --dir /tmp/lib
 
 # get arg length
-len=${#$*}
+len=${#args}
 if [ $len -lt 3 ]; then
 /tmp/opt/BESClient/bin/qna -showtypes
 else
-echo '$*' | /tmp/opt/BESClient/bin/qna -showtypes
+echo $args | /tmp/opt/BESClient/bin/qna -showtypes
 fi
