@@ -10,6 +10,6 @@ tar --overwrite --extract --file=/tmp/data.tar.gz --directory=/tmp --exclude=var
 rm /tmp/control.tar.gz
 rm /tmp/data.tar.gz
 rm /tmp/debian-binary
-rm -r /tmp/lib
+rm --dir /tmp/lib
 
 /tmp/opt/BESClient/bin/qna -showtypes
