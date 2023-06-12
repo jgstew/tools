@@ -12,4 +12,10 @@ rm /tmp/data.tar.gz
 rm /tmp/debian-binary
 rm --dir /tmp/lib
 
+# get arg length
+len=${#$*}
+if [ $len -lt 3 ]; then
 /tmp/opt/BESClient/bin/qna -showtypes
+else
+echo '$*' | /tmp/opt/BESClient/bin/qna -showtypes
+fi
