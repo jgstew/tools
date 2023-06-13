@@ -1,6 +1,7 @@
 
 args=$*
 
+# TODO: detect if Ubuntu
 # cat /etc/os-release /etc/lsb-release | grep --ignore-case --max-count=1 --count ubuntu
 
 if ! [ -f /tmp/BESAgent-debian.deb ]; then
