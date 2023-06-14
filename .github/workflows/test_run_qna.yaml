@@ -12,7 +12,7 @@ on:
       - "**"
 
 env:
-  relevance: names of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  relevance: pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
 jobs:
   test_run_qna:
@@ -22,14 +22,16 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
+      # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
       - name: run qna windows
         if: runner.os == 'Windows'
-        # run: cmd /C call CMD/bigfix_run_qna_win.bat ${{ env.relevance }}
+        # https://github.com/jgstew/tools/blob/master/CMD/bigfix_run_qna_win.bat
         run: echo '${{ env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat
       - name: run qna linux
         if: runner.os == 'Linux'
+        # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
         run: bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}'
-      # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
       - name: run qna mac
         if: runner.os == 'macOS'
+        # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_macos.sh
         run: bash bash/bigfix_run_qna_macos.sh '${{ env.relevance }}'
