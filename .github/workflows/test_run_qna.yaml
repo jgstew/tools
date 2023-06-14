@@ -12,7 +12,7 @@ on:
       - "**"
 
 env:
-  relevance: pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  relevance: pathname of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
 jobs:
   test_run_qna:
@@ -30,10 +30,17 @@ jobs:
           echo '${{ env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | Select-String -Pattern "A: (.+)" | % { $_.Matches } | % { "" + $_.Groups[1].Value } > qna_markdown.txt
-          echo "## Windows QNA Answers:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          echo "## Windows QNA:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          echo "### Result Type:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          cat qna_output.txt | Select-String -Pattern "I: (.+)" | % { $_.Matches } | % { "" + $_.Groups[1].Value } | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          echo "### Time Taken:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          cat qna_output.txt | Select-String -Pattern "T: (.+)" | % { $_.Matches } | % { "" + $_.Groups[1].Value } | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          echo "### Answers:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "``````" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           cat qna_markdown.txt | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "``````" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          echo "### Errors:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          cat qna_output.txt | Select-String -Pattern "E: (.+)" | % { $_.Matches } | % { "" + $_.Groups[1].Value } | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       - name: run qna linux
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
@@ -41,10 +48,17 @@ jobs:
           bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
-          echo "## Linux QNA Answers:" >> $GITHUB_STEP_SUMMARY
+          echo "## Linux QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
       - name: run qna mac
         if: runner.os == 'macOS'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_macos.sh
@@ -52,10 +66,17 @@ jobs:
           bash bash/bigfix_run_qna_macos.sh '${{ env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
-          echo "## MacOS QNA Answers:" >> $GITHUB_STEP_SUMMARY
+          echo "## MacOS QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
 
 # References:
 # - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
