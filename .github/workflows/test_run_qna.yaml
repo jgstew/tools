@@ -28,8 +28,8 @@ jobs:
         run: CMD/bigfix_run_qna_win.bat ${{ env.relevance }}
       - name: run qna linux
         if: runner.os == 'Linux'
-        run: bash bash/bigfix_run_qna_debian.sh ${{ env.relevance }}
+        run: bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}'
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
       - name: run qna mac
         if: runner.os == 'macOS'
-        run: bash bash/bigfix_run_qna_macos.sh ${{ env.relevance }}
+        run: bash bash/bigfix_run_qna_macos.sh '${{ env.relevance }}'
