@@ -29,6 +29,9 @@ jobs:
         run: |
           echo '${{ env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat > qna_output.txt
           cat qna_output.txt
+          cat qna_output.txt | Select-String -Pattern "A: (.+)" | % { $_.Matches } | % { "- " + $_.Groups[1].Value } > qna_markdown.txt
+          echo "## Windows QNA Answers:" >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
       - name: run qna linux
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
@@ -47,3 +50,6 @@ jobs:
           cat qna_output.txt | grep "A: " | sed 's/^.*: /- /' > qna_markdown.txt
           echo "## MacOS QNA Answers:" >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+
+# References:
+# - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
