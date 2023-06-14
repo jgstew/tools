@@ -35,9 +35,15 @@ jobs:
         run: |
           bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}' > qna_output.txt
           cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: /- /' > qna_markdown.txt
+          echo "## Linux QNA Answers:" >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
       - name: run qna mac
         if: runner.os == 'macOS'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_macos.sh
         run: |
           bash bash/bigfix_run_qna_macos.sh '${{ env.relevance }}' > qna_output.txt
           cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: /- /' > qna_markdown.txt
+          echo "## MacOS QNA Answers:" >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
