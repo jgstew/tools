@@ -25,7 +25,7 @@ jobs:
       - name: run qna windows
         if: runner.os == 'Windows'
         shell: cmd
-        run: CMD/bigfix_run_qna_win.bat ${{ env.relevance }}
+        run: cmd /C call CMD/bigfix_run_qna_win.bat ${{ env.relevance }}
       - name: run qna linux
         if: runner.os == 'Linux'
         run: bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}'
