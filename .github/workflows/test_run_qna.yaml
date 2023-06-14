@@ -32,6 +32,7 @@ jobs:
           cat qna_output.txt | Select-String -Pattern "A: (.+)" | % { $_.Matches } | % { "- " + $_.Groups[1].Value } > qna_markdown.txt
           echo "## Windows QNA Answers:" >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt
       - name: run qna linux
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
@@ -53,3 +54,5 @@ jobs:
 
 # References:
 # - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
+# - https://stackoverflow.com/questions/61326842/powershell-how-to-capture-a-string-of-text-after-a-certain-pattern-but-without-i
+# - https://stackoverflow.com/questions/10358547/how-to-grep-for-contents-after-pattern
