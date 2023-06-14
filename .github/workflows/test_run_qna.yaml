@@ -30,8 +30,8 @@ jobs:
           echo '${{ env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | Select-String -Pattern "A: (.+)" | % { $_.Matches } | % { "- " + $_.Groups[1].Value } > qna_markdown.txt
-          echo "## Windows QNA Answers:" >> $GITHUB_STEP_SUMMARY
-          cat qna_markdown.txt | % { echo $_ >> $GITHUB_STEP_SUMMARY }
+          echo "## Windows QNA Answers:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          cat qna_markdown.txt | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       - name: run qna linux
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
