@@ -118,6 +118,7 @@ else
     INSTALLER="BESAgent.deb"
     
     # check distribution
+    # cat /etc/os-release /etc/lsb-release | grep --ignore-case --max-count=1 --count ubuntu
     DEBDIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
     
     if [[ $OSBIT == x64 ]]; then
