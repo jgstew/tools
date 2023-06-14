@@ -26,12 +26,18 @@ jobs:
       - name: run qna windows
         if: runner.os == 'Windows'
         # https://github.com/jgstew/tools/blob/master/CMD/bigfix_run_qna_win.bat
-        run: echo '${{ env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat
+        run: |
+          echo '${{ env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat > qna_output.txt
+          cat qna_output.txt
       - name: run qna linux
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
-        run: bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}'
+        run: |
+          bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}' > qna_output.txt
+          cat qna_output.txt
       - name: run qna mac
         if: runner.os == 'macOS'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_macos.sh
-        run: bash bash/bigfix_run_qna_macos.sh '${{ env.relevance }}'
+        run: |
+          bash bash/bigfix_run_qna_macos.sh '${{ env.relevance }}' > qna_output.txt
+          cat qna_output.txt
