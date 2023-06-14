@@ -46,7 +46,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=10.0.9.21
+URLVERSION=10.0.7.52
 URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 
 # check for x32bit or x64bit OS
