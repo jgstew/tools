@@ -38,7 +38,7 @@ jobs:
           echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Answers:" >> $GITHUB_STEP_SUMMARY
-          echo 'Q: ${{ env.relevance }}' >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -57,7 +57,7 @@ jobs:
           echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Answers:" >> $GITHUB_STEP_SUMMARY
-          echo 'Q: ${{ env.relevance }}' >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -76,7 +76,7 @@ jobs:
           echo "### Time Taken:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           cat qna_output.txt | Select-String -Pattern "T: (.+)" | % { $_.Matches } | % { "" + $_.Groups[1].Value } | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "### Answers:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
-          echo "Q: ${{ env.relevance }}" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          echo 'Q: ``${{ env.relevance }}``' | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "``````" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           cat qna_markdown.txt | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "``````" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
