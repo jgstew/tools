@@ -29,7 +29,7 @@ where /q powershell || ECHO Cound not find powershell. && EXIT /B
 @ECHO ON
 REM this following line will need to ignore SSL errors if HTTPS is used instead of HTTP
 powershell -command "& { (New-Object Net.WebClient).DownloadFile('%MASTHEADURL%', '%BASEFOLDER%\actionsite.afxm') }" -ExecutionPolicy Bypass
-powershell -command "& { (New-Object Net.WebClient).DownloadFile('http://software.bigfix.com/download/bes/95/BigFix-BES-Client-9.5.14.73.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
+powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.7.52.exe', '%BASEFOLDER%\BESClient.exe') }" -ExecutionPolicy Bypass
 @ECHO OFF
 
 REM https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/Tivoli%20Endpoint%20Manager/page/Configuration%20Settings
