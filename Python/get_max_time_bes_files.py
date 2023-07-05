@@ -56,8 +56,11 @@ async def find_maximum_time(filenames):
 async def main():
     filenames = list(pathlib.Path(BASE_FOLDER).rglob("*.bes"))
     # print(filenames)
-    maximum_time = await find_maximum_time(filenames)
-    print("Maximum time:", maximum_time)
+    if filenames:
+        maximum_time = await find_maximum_time(filenames)
+        print("Maximum time:", maximum_time)
+    else:
+        print("no files found!")
 
 
 # if called directly, then run this example:
