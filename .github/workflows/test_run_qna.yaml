@@ -12,7 +12,7 @@ on:
       - "**"
 
 env:
-  relevance: number of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  relevance: ("BigFix User Group"; it) of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
 jobs:
   test_run_qna:
