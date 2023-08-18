@@ -1,3 +1,6 @@
+# usage:
+# curl -O https://raw.githubusercontent.com/jgstew/tools/master/bash/bigfix_run_qna_macos.sh
+# sudo bash bigfix_run_qna_macos.sh
 
 args=$*
 
