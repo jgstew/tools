@@ -1,0 +1,12 @@
+{
+	"client_settings": [
+		{
+			"key":"TestSettingName",
+			"value":"TestSettingValue"
+		},
+		{
+			"key":"ExampleSettingName2",
+			"value":"ExampleSettingValue2"
+		}
+	]
+}
