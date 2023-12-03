@@ -44,6 +44,7 @@ def main(audio_file_path="podcast_episode.mp3"):
     print(f"INFO: Is CUDA available? {torch.cuda.is_available()}")
 
     if torch.cuda.is_available():
+        # not sure this is required:
         torch.cuda.init()
 
     print("INFO: Loading Model, will take longer if not already cached.")
