@@ -1,6 +1,9 @@
 # transcribe audio example
 
+import errno
 import time
+import os.path
+import sys
 
 # install ffmpeg using OS package manager (choco install ffmpeg)
 # pip install -U setuptools-rust
@@ -25,30 +28,49 @@ import torch
 # whisper "podcast_episode.mp3" --model small.en --device cuda
 
 
-def main():
+def main(audio_file_path="podcast_episode.mp3"):
     """execution starts here"""
     print("main()")
 
-    print(f"PyTorch version: {torch.__version__}")
-    print(f"Is CUDA available? {torch.cuda.is_available()}")
+    if not os.path.exists(audio_file_path):
+        raise FileNotFoundError(
+            errno.ENOENT, os.strerror(errno.ENOENT), audio_file_path
+        )
+
+    # PyTorch version should contain +cu### and not +cpu for CUDA
+    print(
+        f"INFO: PyTorch version: {torch.__version__} (should contain +cu### and not +cpu for CUDA)"
+    )
+    print(f"INFO: Is CUDA available? {torch.cuda.is_available()}")
 
     if torch.cuda.is_available():
         torch.cuda.init()
 
+    print("INFO: Loading Model, will take longer if not already cached.")
+
     # tiny.en, base.en, small.en, medium.en
     model = whisper.load_model("tiny.en")
+
+    print("INFO: Starting transcription, could take minutes or hours!")
 
     start_time = time.time()
 
     result = model.transcribe(
-        r"podcast_episode.mp3",
-        word_timestamps=True,
+        audio_file_path,
+        # word_timestamps=True,
     )
 
     print(result["text"])
 
-    print(f"--- {time.time() - start_time} seconds ---")
+    print(f"--- Transcription Time: {time.time() - start_time} seconds ---")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        # get first arg as file path to audio:
+        audio_file = sys.argv[1]
+        main(audio_file)
+    except IndexError:
+        # use default path:
+        print("INFO: using default path `podcast_episode.mp3`")
+        main()
