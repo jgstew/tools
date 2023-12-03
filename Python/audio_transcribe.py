@@ -41,7 +41,8 @@ def main():
     start_time = time.time()
 
     result = model.transcribe(
-        r"C:\Users\james\Library\AutoPkg\Cache\com.github.jgstew.download.BigFix-Podcast\downloads\podcast_episode.mp3"
+        r"podcast_episode.mp3",
+        word_timestamps=True,
     )
 
     print(result["text"])
