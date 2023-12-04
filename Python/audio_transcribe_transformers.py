@@ -52,7 +52,10 @@ def main(audio_file_path="podcast_episode.mp3"):
         # not sure this is required:
         torch.cuda.init()
 
+    # use GPU if available:
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+    # this will improve performance on GPUs:
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
     # "openai/whisper-large-v2", "distil-whisper/distil-large-v2"
@@ -74,6 +77,8 @@ def main(audio_file_path="podcast_episode.mp3"):
     transcription = whisper(
         audio_file_path, chunk_length_s=30, stride_length_s=10, batch_size=10
     )
+
+    # print the first 500 characters:
     print(transcription["text"][:500])
 
     print(f"--- Transcription Time: {time.time() - start_time} seconds ---")

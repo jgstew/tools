@@ -31,6 +31,7 @@ import torch
 def main(audio_file_path="podcast_episode.mp3"):
     """execution starts here"""
     print("main()")
+    print("WARNING: This is much slower than using audio_transcribe_transformers.py")
 
     if not os.path.exists(audio_file_path):
         raise FileNotFoundError(
@@ -49,7 +50,7 @@ def main(audio_file_path="podcast_episode.mp3"):
 
     print("INFO: Loading Model, will take longer if not already cached.")
 
-    # tiny.en, base.en, small.en, medium.en
+    # tiny.en, base.en, small.en, medium.en, large-v2, large-v3
     model = whisper.load_model("tiny.en")
 
     print("INFO: Starting transcription, could take minutes or hours!")
@@ -61,7 +62,8 @@ def main(audio_file_path="podcast_episode.mp3"):
         # word_timestamps=True,
     )
 
-    print(result["text"])
+    # print the first 500 characters:
+    print(result["text"][:500])
 
     print(f"--- Transcription Time: {time.time() - start_time} seconds ---")
 
