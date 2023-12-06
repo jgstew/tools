@@ -10,10 +10,15 @@ import torch
 # pip install pyannote.audio
 # pip install transformers
 
+# save huggingface token to /Users/USER/.cache/huggingface/token
+# accept model at: https://hf.co/pyannote/speaker-diarization
+# accept model at: https://hf.co/pyannote/segmentation
+
 # using HuggingFace speechbox:
 # https://billtcheng2013.medium.com/faster-audio-transcribing-with-openai-whisper-and-huggingface-transformers-dc088243803d
 # Install: pip install speechbox
-from speechbox import ASRDiarizationPipeline
+# Install: pip install git+https://github.com/huggingface/speechbox.git
+import speechbox
 
 # Install: pip install optimum
 # https://github.com/huggingface/optimum
@@ -62,9 +67,9 @@ def main(audio_file_path="podcast_episode.mp3"):
     # this will improve performance on GPUs:
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-    # "openai/whisper-large-v2", "distil-whisper/distil-large-v2"
+    # "openai/whisper-tiny", "openai/whisper-large-v2", "distil-whisper/distil-large-v2"
     model_id = "distil-whisper/distil-large-v2"
-    whisper = ASRDiarizationPipeline.from_pretrained(
+    whisper = speechbox.ASRDiarizationPipeline.from_pretrained(
         model_id,
         torch_dtype=torch_dtype,
         device=device,
@@ -77,12 +82,16 @@ def main(audio_file_path="podcast_episode.mp3"):
 
     start_time = time.time()
 
-    transcription = whisper(
-        audio_file_path, chunk_length_s=30, stride_length_s=10, batch_size=10
-    )
+    try:
+        transcription = whisper(
+            audio_file_path, chunk_length_s=30, stride_length_s=10, batch_size=10
+        )
 
-    # print the first 500 characters:
-    print(transcription["text"][:500])
+        # print the first 500 characters:
+        print(transcription["text"][:500])
+    except BaseException as err:
+        print(f"--- Transcription Time: {time.time() - start_time} seconds ---")
+        raise err
 
     print(f"--- Transcription Time: {time.time() - start_time} seconds ---")
 
