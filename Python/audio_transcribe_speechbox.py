@@ -90,7 +90,9 @@ def main(audio_file_path="podcast_episode.mp3"):
         # print the first 500 characters:
         print(transcription["text"][:500])
     except BaseException as err:
+        # print the time taken even if error is raised!
         print(f"--- Transcription Time: {time.time() - start_time} seconds ---")
+        # reraise error as is:
         raise err
 
     print(f"--- Transcription Time: {time.time() - start_time} seconds ---")
