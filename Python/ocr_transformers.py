@@ -2,12 +2,13 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 import requests
 from PIL import Image
 
-processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
-model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten")
+# "microsoft/trocr-base-handwritten", "microsoft/trocr-base-printed"
+model_id = "microsoft/trocr-base-printed"
 
-# load image from the IAM dataset
-url = "https://fki.tic.heia-fr.ch/static/img/a01-122-02.jpg"
-image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
+processor = TrOCRProcessor.from_pretrained(model_id)
+model = VisionEncoderDecoderModel.from_pretrained(model_id)
+
+image = Image.open("text.jpg").convert("RGB")
 
 pixel_values = processor(image, return_tensors="pt").pixel_values
 generated_ids = model.generate(pixel_values)
