@@ -72,6 +72,7 @@
         document.getElementById("copyButton").style.display = "none";
 
         const file = event.target.files[0];
+        // const filePath = event.target.value;
         const fileName = file.name.replace(/\s/g, "_"); // Replace spaces with underscores
         const fileSize = file.size;
         const fileReader = new FileReader();
