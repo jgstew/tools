@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Information</title>
+    <script>
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        const fileSize = file.size;
+        const fileReader = new FileReader();
+
+        fileReader.onload = function () {
+          const fileBuffer = fileReader.result;
+          const sha1Promise = crypto.subtle.digest("SHA-1", fileBuffer);
+          const sha256Promise = crypto.subtle.digest("SHA-256", fileBuffer);
+
+          Promise.all([sha1Promise, sha256Promise]).then(function (hashes) {
+            const sha1ArrayBuffer = hashes[0];
+            const sha256ArrayBuffer = hashes[1];
+
+            const sha1Bytes = new Uint8Array(sha1ArrayBuffer);
+            const sha256Bytes = new Uint8Array(sha256ArrayBuffer);
+
+            const sha1Hex = Array.prototype.map
+              .call(sha1Bytes, function (byte) {
+                return ("00" + byte.toString(16)).slice(-2);
+              })
+              .join("");
+
+            const sha256Hex = Array.prototype.map
+              .call(sha256Bytes, function (byte) {
+                return ("00" + byte.toString(16)).slice(-2);
+              })
+              .join("");
+
+            document.getElementById("fileSize").innerText =
+              "File Size: " + fileSize + " bytes";
+            document.getElementById("sha1").innerText = "SHA-1: " + sha1Hex;
+            document.getElementById("sha256").innerText =
+              "SHA-256: " + sha256Hex;
+          });
+        };
+
+        fileReader.readAsArrayBuffer(file);
+      }
+    </script>
+  </head>
+  <body>
+    <input type="file" id="fileInput" onchange="handleFileSelect(event)" />
+    <div id="fileSize"></div>
+    <div id="sha1"></div>
+    <div id="sha256"></div>
+  </body>
+</html>
