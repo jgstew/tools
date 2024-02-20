@@ -63,6 +63,14 @@
       function handleFileSelect(event) {
         document.getElementById("spinner").style.display = "inline-block"; // Show spinner
 
+        // Hide the elements
+        document.getElementById("fileName").style.display = "none";
+        document.getElementById("fileSize").style.display = "none";
+        document.getElementById("sha1").style.display = "none";
+        document.getElementById("sha256").style.display = "none";
+        document.getElementById("prefetch").style.display = "none";
+        document.getElementById("copyButton").style.display = "none";
+
         const file = event.target.files[0];
         const fileName = file.name.replace(/\s/g, "_"); // Replace spaces with underscores
         const fileSize = file.size;
