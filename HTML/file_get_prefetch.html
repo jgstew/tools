@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>File Information</title>
     <style>
+      #fileName,
+      #fileSize,
+      #sha1,
+      #sha256,
+      #copyButton {
+        display: none; /* Initially hide the elements */
+      }
+
       #prefetch {
+        display: none; /* Initially hide the element */
         white-space: pre-wrap; /* Allow wrapping */
         font-family: monospace;
         background-color: #f4f4f4;
@@ -14,9 +23,31 @@
         border-radius: 5px;
         margin-top: 10px;
       }
+
+      #spinner {
+        display: none;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 2s linear infinite;
+        margin-bottom: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
     <script>
       function handleFileSelect(event) {
+        document.getElementById("spinner").style.display = "inline-block"; // Show spinner
+
         const file = event.target.files[0];
         const fileName = file.name.replace(/\s/g, "_"); // Replace spaces with underscores
         const fileSize = file.size;
@@ -57,6 +88,18 @@
             // Prefetch information
             const prefetchInfo = `prefetch ${fileName} sha1:${sha1Hex} size:${fileSize} https://localhost:52311/Uploads/${sha1Hex}/${fileName} sha256:${sha256Hex}`;
             document.getElementById("prefetch").innerText = prefetchInfo;
+
+            // Show the elements
+            document.getElementById("fileName").style.display = "block";
+            document.getElementById("fileSize").style.display = "block";
+            document.getElementById("sha1").style.display = "block";
+            document.getElementById("sha256").style.display = "block";
+            document.getElementById("prefetch").style.display = "block";
+            document.getElementById("copyButton").style.display =
+              "inline-block";
+
+            // Hide spinner
+            document.getElementById("spinner").style.display = "none";
           });
         };
 
@@ -77,12 +120,17 @@
     </script>
   </head>
   <body>
+    <h1>Get BigFix Prefetch from File</h1>
     <input type="file" id="fileInput" onchange="handleFileSelect(event)" />
+    <div id="spinner"></div>
+    <!-- Spinner -->
     <div id="fileName"></div>
     <div id="fileSize"></div>
     <div id="sha1"></div>
     <div id="sha256"></div>
     <div id="prefetch"></div>
-    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+    <button id="copyButton" onclick="copyToClipboard()">
+      Copy to Clipboard
+    </button>
   </body>
 </html>
