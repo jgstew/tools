@@ -7,6 +7,7 @@
     <script>
       function handleFileSelect(event) {
         const file = event.target.files[0];
+        const fileName = file.name.replace(/\s/g, "_"); // Replace spaces with underscores
         const fileSize = file.size;
         const fileReader = new FileReader();
 
@@ -34,6 +35,8 @@
               })
               .join("");
 
+            document.getElementById("fileName").innerText =
+              "File Name: " + fileName;
             document.getElementById("fileSize").innerText =
               "File Size: " + fileSize + " bytes";
             document.getElementById("sha1").innerText = "SHA-1: " + sha1Hex;
@@ -48,6 +51,7 @@
   </head>
   <body>
     <input type="file" id="fileInput" onchange="handleFileSelect(event)" />
+    <div id="fileName"></div>
     <div id="fileSize"></div>
     <div id="sha1"></div>
     <div id="sha256"></div>
