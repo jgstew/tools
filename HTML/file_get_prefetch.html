@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>File Information</title>
+    <style>
+      #prefetch {
+        white-space: pre;
+        font-family: monospace;
+        background-color: #f4f4f4;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+    </style>
     <script>
       function handleFileSelect(event) {
         const file = event.target.files[0];
@@ -42,6 +53,10 @@
             document.getElementById("sha1").innerText = "SHA-1: " + sha1Hex;
             document.getElementById("sha256").innerText =
               "SHA-256: " + sha256Hex;
+
+            // Prefetch information
+            const prefetchInfo = `prefetch ${fileName} sha1:${sha1Hex} size:${fileSize} https://localhost:52311/Uploads/${sha1Hex}/${fileName} sha256:${sha256Hex}`;
+            document.getElementById("prefetch").innerText = prefetchInfo;
           });
         };
 
@@ -55,5 +70,6 @@
     <div id="fileSize"></div>
     <div id="sha1"></div>
     <div id="sha256"></div>
+    <div id="prefetch"></div>
   </body>
 </html>
