@@ -6,7 +6,7 @@
     <title>File Information</title>
     <style>
       #prefetch {
-        white-space: pre;
+        white-space: pre-wrap; /* Allow wrapping */
         font-family: monospace;
         background-color: #f4f4f4;
         padding: 10px;
@@ -62,6 +62,18 @@
 
         fileReader.readAsArrayBuffer(file);
       }
+
+      function copyToClipboard() {
+        const prefetchText = document.getElementById("prefetch").innerText;
+        navigator.clipboard.writeText(prefetchText).then(
+          function () {
+            // alert("Copied to clipboard");
+          },
+          function (err) {
+            console.error("Failed to copy: ", err);
+          }
+        );
+      }
     </script>
   </head>
   <body>
@@ -71,5 +83,6 @@
     <div id="sha1"></div>
     <div id="sha256"></div>
     <div id="prefetch"></div>
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
   </body>
 </html>
