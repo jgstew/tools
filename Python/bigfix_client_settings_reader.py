@@ -1,5 +1,10 @@
 """
 Read BigFix Client Settings
+
+Currently windows only
+
+References:
+- https://docs.python.org/3/library/winreg.html
 """
 
 import sys
