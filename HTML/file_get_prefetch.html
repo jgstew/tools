@@ -3,7 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>File Information</title>
+    <title>Get BigFix Prefetch from File</title>
+  </head>
+  <body>
+    <h1>Get BigFix Prefetch from File</h1>
+    <input type="file" id="fileInput" onchange="handleFileSelect(event)" />
+    <div id="spinner"></div>
+    <!-- Spinner -->
+    <div id="fileName"></div>
+    <div id="fileSize"></div>
+    <div id="sha1"></div>
+    <div id="sha256"></div>
+    <div id="prefetch"></div>
+    <button id="copyButton" onclick="copyToClipboard()">
+      Copy to Clipboard
+    </button>
+
     <style>
       #fileName,
       #fileSize,
@@ -118,19 +133,5 @@
         );
       }
     </script>
-  </head>
-  <body>
-    <h1>Get BigFix Prefetch from File</h1>
-    <input type="file" id="fileInput" onchange="handleFileSelect(event)" />
-    <div id="spinner"></div>
-    <!-- Spinner -->
-    <div id="fileName"></div>
-    <div id="fileSize"></div>
-    <div id="sha1"></div>
-    <div id="sha256"></div>
-    <div id="prefetch"></div>
-    <button id="copyButton" onclick="copyToClipboard()">
-      Copy to Clipboard
-    </button>
   </body>
 </html>
