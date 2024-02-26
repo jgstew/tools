@@ -1,0 +1,225 @@
+_type: export
+__export_format: 4
+__export_date: 2024-02-26T16:13:22.776Z
+__export_source: insomnia.desktop.app:v8.6.1
+resources:
+  - _id: req_4cc1847cf95d4b289914052a9e27839c
+    parentId: wrk_06fec61e0feb4e81828dee2a4819f3b8
+    modified: 1708727140872
+    created: 1708707408083
+    url: https://{{ _.bigfix_host }}:52311/api/query
+    name: Session Relevance Query JSON
+    description: ""
+    method: POST
+    body:
+      mimeType: application/x-www-form-urlencoded
+      params:
+        - id: pair_8f563661ea3c4966a1acbafb5dd432d3
+          name: output
+          value: json
+          description: ""
+        - id: pair_6da343b64d684a6f8f17ceb8756526fa
+          name: relevance
+          value:
+            unique values of (it as string) of (status of it, detailed status of it)
+            of results of bes actions
+          description: ""
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/x-www-form-urlencoded
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: "{{ _.bigfix_user }}"
+      password: "{{ _.bigfix_password }}"
+    metaSortKey: -1708706902168
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_06fec61e0feb4e81828dee2a4819f3b8
+    parentId: null
+    modified: 1708706706249
+    created: 1708706706249
+    name: BigFix
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_6b34175149e147b78cf1ba4550247dd1
+    parentId: wrk_06fec61e0feb4e81828dee2a4819f3b8
+    modified: 1708963275568
+    created: 1708708089505
+    url: https://{{ _.bigfix_host }}:52311/api/query
+    name: Session Relevance Query
+    description: ""
+    method: POST
+    body:
+      mimeType: application/x-www-form-urlencoded
+      params:
+        - id: pair_6da343b64d684a6f8f17ceb8756526fa
+          name: relevance
+          value: (name of it & " - " & operating system of it) of bes computers
+          description: ""
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/x-www-form-urlencoded
+      - name: User-Agent
+        value: insomnia/8.6.1
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: "{{ _.bigfix_user }}"
+      password: "{{ _.bigfix_password }}"
+    metaSortKey: -1708706840338
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_3188fe370f944544a66ba3d0b809ed08
+    parentId: wrk_06fec61e0feb4e81828dee2a4819f3b8
+    modified: 1708709123975
+    created: 1708708390592
+    url: https://{{ _.bigfix_host }}:52311/api/upload
+    name: Upload File
+    description: https://developer.bigfix.com/rest-api/api/upload.html
+    method: POST
+    body:
+      mimeType: application/octet-stream
+      fileName: ""
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/octet-stream
+        id: pair_192a4cd6be8f4b9eb75700d2f531eec0
+      - name: User-Agent
+        value: insomnia/8.6.1
+        id: pair_e8ab231dbb6b4ad193058b0654057bef
+      - id: pair_00286f7a3954447b895b7dd7693f1ec6
+        name: Content-Disposition
+        value: attachment; filename="file_test.txt"
+        description: ""
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: "{{ _.bigfix_user }}"
+      password: "{{ _.bigfix_password }}"
+    metaSortKey: -1708706809423
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_afa7085a4f6742789afd3d2f7d933e3f
+    parentId: wrk_06fec61e0feb4e81828dee2a4819f3b8
+    modified: 1708727419033
+    created: 1708706778508
+    url: https://{{ _.bigfix_host }}:52311/api/sites
+    name: Get Sites
+    description: ""
+    method: GET
+    body:
+      mimeType: application/x-www-form-urlencoded
+      params: []
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+        id: pair_78f2f83ed6f94c9195da9eff89535350
+    authentication:
+      type: basic
+      useISO88591: true
+      disabled: false
+      username: "{{ _.bigfix_user }}"
+      password: "{{ _.bigfix_password }}"
+    metaSortKey: -1708706778508
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_dc508effc90c498494d8f2104c4a9082
+    parentId: wrk_06fec61e0feb4e81828dee2a4819f3b8
+    modified: 1708963236860
+    created: 1708727401135
+    url: https://{{ _.bigfix_host }}:52311/api/uploads
+    name: Get Uploads
+    description: ""
+    method: GET
+    body:
+      mimeType: application/x-www-form-urlencoded
+      params: []
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/8.6.1
+        id: pair_9a4f37f86db7471db2e7644add7ba076
+    authentication:
+      type: basic
+      useISO88591: true
+      disabled: false
+      username: "{{ _.bigfix_user }}"
+      password: "{{ _.bigfix_password }}"
+    metaSortKey: -1708706778458
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: env_054f26a805a426287e19ac0c9266192ed4b450b6
+    parentId: wrk_06fec61e0feb4e81828dee2a4819f3b8
+    modified: 1708706706253
+    created: 1708706706253
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1708706706253
+    _type: environment
+  - _id: env_8559966854d0427a945e52fd876d990b
+    parentId: env_054f26a805a426287e19ac0c9266192ed4b450b6
+    modified: 1708707827662
+    created: 1708707721378
+    name: BigFix Root
+    data:
+      bigfix_host: BigFixRootIPorFQDN
+      bigfix_user: API_User
+      bigfix_password: API_Password
+    dataPropertyOrder:
+      "&":
+        - bigfix_host
+        - bigfix_user
+        - bigfix_password
+    color: null
+    isPrivate: true
+    metaSortKey: 1708707721378
+    _type: environment
