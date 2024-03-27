@@ -8,7 +8,8 @@ but the functionality is not quite the same
 """
 
 import base64
-import binascii
+
+# import binascii
 
 import asn1crypto.cms
 
