@@ -7,8 +7,6 @@ References:
 
 import argparse
 import getpass
-import logging
-import logging.handlers
 
 import pymssql
 
@@ -18,7 +16,7 @@ def main():
     print("main() start")
 
     parser = argparse.ArgumentParser(
-        description="Provde command line arguments for server, username, and password"
+        description="Provde command line arguments for server, username, db, and query"
     )
     parser.add_argument(
         "-v",
@@ -31,22 +29,31 @@ def main():
     parser.add_argument(
         "-s", "--server", help="Specify the MSSQL Server", required=True
     )
-    parser.add_argument("-u", "--user", help="Specify the username", required=True)
+    parser.add_argument(
+        "-u", "--user", help="Specify the username", required=False, default="sa"
+    )
+    parser.add_argument(
+        "--db", help="Specify the db", required=False, default="BFEnterprise"
+    )
+    parser.add_argument(
+        "--query",
+        help="Specify the query",
+        required=False,
+        default="SELECT [Sitename],[Version] FROM [BFEnterprise].[dbo].[BES_SITEVERSIONS]",
+    )
     # allow unknown args to be parsed instead of throwing an error:
     args, _unknown = parser.parse_known_args()
 
     print("Enter Password for MSSQL:")
     password = getpass.getpass()
 
-    mssql_conn = pymssql.connect(args.server, args.user, password, "BFEnterprise")
+    mssql_conn = pymssql.connect(args.server, args.user, password, args.db)
     cursor = mssql_conn.cursor(as_dict=True)
 
-    cursor.execute(
-        "SELECT [Sitename],[Version] FROM [BFEnterprise].[dbo].[BES_SITEVERSIONS]"
-    )
+    cursor.execute(args.query)
 
     for row in cursor:
-        print("Sitename=%s, Version=%s" % (row["Sitename"], row["Version"]))
+        print(row)
 
     mssql_conn.close()
 
