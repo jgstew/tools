@@ -1,4 +1,4 @@
-
+# set variables here:
 RELAYFQDN="RELAYFQDN"
 RELAYPORT="52311"
 RELAYREGISTRATION="OneTimeRegistration"
