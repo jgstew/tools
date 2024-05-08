@@ -293,19 +293,22 @@ if [[ $INSTALLER == *.rpm ]]; then
   fi
 fi
 
+# if missing, create besclient.config file based upon /tmp/clientsettings.cfg
+if [ ! -f /var/opt/BESClient/besclient.config ]; then
+  cat /tmp/clientsettings.cfg | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
+  chmod 600 /var/opt/BESClient/besclient.config
+fi
+
 ### start the BigFix client (required for most linux dist)
 # if file `/etc/init.d/besclient` exists
 if [ -f /etc/init.d/besclient ]; then
-  # if missing, create besclient.config file based upon /tmp/clientsettings.cfg
-  if [ ! -f /var/opt/BESClient/besclient.config ]; then
-    cat /tmp/clientsettings.cfg | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
-    chmod 600 /var/opt/BESClient/besclient.config
-  fi
-
   # Do not start bigfix if: StartBigFix=false
   if [[ "$StartBigFix" != "false" ]]; then
     /etc/init.d/besclient start
   fi
+else
+  # start using systemd
+  systemctl start besclient
 fi
 
 # pause 30 seconds to wait for bigfix to get going a bit
