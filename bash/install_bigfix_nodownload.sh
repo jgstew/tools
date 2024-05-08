@@ -60,6 +60,7 @@ command_exists () {
 }
 
 # install BigFix client
+# https://support.bigfix.com/bes/install/besclients-nonwindows.html
 if [[ $INSTALLER == *.deb ]]; then
   #  debian (DEB)
   set -e
