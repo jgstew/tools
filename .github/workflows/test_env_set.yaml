@@ -10,7 +10,8 @@ on:
       - "**"
 
 env:
-  EXAMPLESUFFIX: replaceme
+  # intentionally blank:
+  EXAMPLESUFFIX:
 
 jobs:
   test_env_set:
