@@ -1,0 +1,21 @@
+---
+name: test_env_set
+
+# only run this job when this job itself is modified
+on:
+  push:
+    paths:
+      - ".github/workflows/test_env_set.yaml"
+    branches:
+      - "**"
+
+jobs:
+  test_env_set:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: set env var
+        run: echo "EXAMPLESUFFIX=_dev" >> "$GITHUB_ENV"
+      - name: get env var
+        run: echo "$EXAMPLESUFFIX"
+      - name: get env var
+        run: echo "${{ env.EXAMPLESUFFIX }}"
