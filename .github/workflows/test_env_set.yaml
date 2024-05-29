@@ -9,10 +9,15 @@ on:
     branches:
       - "**"
 
+env:
+  EXAMPLESUFFIX: replaceme
+
 jobs:
   test_env_set:
     runs-on: [ubuntu-latest]
     steps:
+      - name: get env var
+        run: echo "$EXAMPLESUFFIX"
       - name: set env var
         run: echo "EXAMPLESUFFIX=_dev" >> "$GITHUB_ENV"
       - name: get env var
