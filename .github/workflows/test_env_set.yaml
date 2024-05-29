@@ -13,8 +13,7 @@ on:
       - ".github/workflows/test_env_set.yaml"
 
 env:
-  # intentionally blank:
-  EXAMPLESUFFIX:
+  EXAMPLESUFFIX: _initialvalue
 
 jobs:
   test_env_set:
@@ -24,7 +23,7 @@ jobs:
         run: echo "$EXAMPLESUFFIX"
       - name: set env var
         if: github.event_name != 'pull_request'
-        run: echo "EXAMPLESUFFIX=_testvalue" >> "$GITHUB_ENV"
+        run: echo "EXAMPLESUFFIX=_pushvalue" >> "$GITHUB_ENV"
       - name: set env var
         if: github.event_name == 'pull_request'
         run: echo "EXAMPLESUFFIX=_pullrequestvalue" >> "$GITHUB_ENV"
