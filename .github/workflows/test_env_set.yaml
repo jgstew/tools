@@ -8,6 +8,9 @@ on:
       - ".github/workflows/test_env_set.yaml"
     branches:
       - "**"
+  pull_request:
+    paths:
+      - ".github/workflows/test_env_set.yaml"
 
 env:
   # intentionally blank:
@@ -20,7 +23,11 @@ jobs:
       - name: get env var
         run: echo "$EXAMPLESUFFIX"
       - name: set env var
-        run: echo "EXAMPLESUFFIX=_dev" >> "$GITHUB_ENV"
+        if: github.event_name != 'pull_request'
+        run: echo "EXAMPLESUFFIX=_testvalue" >> "$GITHUB_ENV"
+      - name: set env var
+        if: github.event_name == 'pull_request'
+        run: echo "EXAMPLESUFFIX=_pullrequestvalue" >> "$GITHUB_ENV"
       - name: get env var
         run: echo "$EXAMPLESUFFIX"
       - name: get env var
