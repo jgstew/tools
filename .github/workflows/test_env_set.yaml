@@ -31,3 +31,17 @@ jobs:
         run: echo "$EXAMPLESUFFIX"
       - name: get env var
         run: echo "${{ env.EXAMPLESUFFIX }}"
+      - name: set env var
+        if: github.event_name == 'pull_request'
+        run: echo "just setting value"
+        env:
+          EXAMPLESUFFIX: "set through step only for pull request"
+      - name: get env var
+        run: echo "$EXAMPLESUFFIX"
+      - name: set env var
+        if: github.event_name != 'pull_request'
+        run: echo "just setting value"
+        env:
+          EXAMPLESUFFIX: "set through step NOT for pull request"
+      - name: get env var
+        run: echo "$EXAMPLESUFFIX"
