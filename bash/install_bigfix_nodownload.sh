@@ -37,8 +37,8 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_OverrideTimeoutSeconds=21600
 fi
 
-if [ ! -f $INSTALLDIR/masthead.afxm ] ; then
-    echo ERROR: need masthead file in same folder
+if [ ! -f $INSTALLDIR/actionsite.afxm ] ; then
+    echo ERROR: need actionsite file in same folder
     exit 2
 fi
 
