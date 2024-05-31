@@ -38,7 +38,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
 fi
 
 if [ ! -f $INSTALLDIR/actionsite.afxm ] ; then
-    echo ERROR: need actionsite file in same folder
+    echo ERROR: need actionsite.afxm file in same folder
     exit 2
 fi
 
