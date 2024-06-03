@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
+# This script was tested on MacOS, but should work on any bash.
 
 # get first argument as filepath, must enclose filepath in quotes.
 File=$1
-
-# This script was tested on MacOS, but should work on any bash.
 
 # get string following last `/` character:
 FileName=`echo "$File" | rev | cut -d "/" -f1 | rev`
