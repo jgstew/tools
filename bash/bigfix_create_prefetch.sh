@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+# get first argument as filepath, must enclose filepath in quotes.
 File=$1
 
 # This script was tested on MacOS, but should work on any bash.
