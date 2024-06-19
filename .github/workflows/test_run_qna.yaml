@@ -14,7 +14,7 @@ on:
       - "**"
 
 env:
-  relevance: ( (it as string) of operating system ; version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  relevance: ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
 jobs:
   test_run_qna_docker:
