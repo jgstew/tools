@@ -180,7 +180,7 @@ jobs:
       - name: install prereqs
         # https://software.opensuse.org/download.html?project=Base%3ASystem&package=tar
         run: |
-          zypper -n --gpg-auto-import-keys addrepo https://download.opensuse.org/repositories/Base:System/openSUSE_Tumbleweed/Base:System.repo
+          zypper -n --gpg-auto-import-keys addrepo -y https://download.opensuse.org/repositories/Base:System/openSUSE_Tumbleweed/Base:System.repo
           zypper install -y tar
 
       - uses: actions/checkout@v4
