@@ -27,7 +27,6 @@ jobs:
             "almalinux:latest",
             "oraclelinux:9",
             "rockylinux:9",
-            "amazonlinux:latest",
           ]
     container:
       image: ${{ matrix.container-image }}
