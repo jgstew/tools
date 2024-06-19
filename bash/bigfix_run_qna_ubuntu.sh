@@ -13,10 +13,10 @@ ar x /tmp/BESAgent-ubuntu.deb --output=/tmp
 
 ls /tmp
 
-tar --overwrite --extract --file=/tmp/data.tar.gz --directory=/tmp --exclude=var* --exclude=etc* --exclude=lib/*
+tar --overwrite --extract --file=/tmp/data.tar.xz --directory=/tmp --exclude=var* --exclude=etc* --exclude=lib/*
 
-rm /tmp/control.tar.gz
-rm /tmp/data.tar.gz
+rm /tmp/control.tar.xz
+rm /tmp/data.tar.xz
 rm /tmp/debian-binary
 rm --dir /tmp/lib
 
