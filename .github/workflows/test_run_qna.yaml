@@ -184,10 +184,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: install prereqs
-      #   run: |
-      #     apt-get -y update
-      #     apt-get install -y curl binutils
+      - name: install prereqs
+        run: |
+          zypper install -y tar
 
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
       - name: run qna linux suse
