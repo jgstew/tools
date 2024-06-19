@@ -173,17 +173,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        container-image:
-          [
-            "opensuse/leap:15",
-            "opensuse/tumbleweed:latest",
-            "registry.suse.com/suse/sles12sp5:latest",
-          ]
+        container-image: ["opensuse/tumbleweed:latest"]
     container:
       image: ${{ matrix.container-image }}
     steps:
       - name: install prereqs
         run: |
+          zypper -n addrepo https://download.opensuse.org/repositories/Base:System/openSUSE_Tumbleweed/Base:System.repo
           zypper install -y tar
 
       - uses: actions/checkout@v4
