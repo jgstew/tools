@@ -178,8 +178,9 @@ jobs:
       image: ${{ matrix.container-image }}
     steps:
       - name: install prereqs
+        # https://software.opensuse.org/download.html?project=Base%3ASystem&package=tar
         run: |
-          zypper -n addrepo https://download.opensuse.org/repositories/Base:System/openSUSE_Tumbleweed/Base:System.repo
+          zypper -n --gpg-auto-import-keys addrepo https://download.opensuse.org/repositories/Base:System/openSUSE_Tumbleweed/Base:System.repo
           zypper install -y tar
 
       - uses: actions/checkout@v4
