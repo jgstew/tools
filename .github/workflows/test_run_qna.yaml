@@ -135,7 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        container-image: ["debian:trixie", "debian:stable", "debian:latest"]
+        container-image: ["debian:latest", "debian:11", "debian:10"]
     container:
       image: ${{ matrix.container-image }}
     steps:
