@@ -182,11 +182,11 @@ jobs:
     container:
       image: ${{ matrix.container-image }}
     steps:
-      - uses: actions/checkout@v4
-
       - name: install prereqs
         run: |
           zypper install -y tar
+
+      - uses: actions/checkout@v4
 
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
       - name: run qna linux suse
