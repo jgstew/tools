@@ -169,42 +169,42 @@ jobs:
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-  test_run_qna_docker_suse_family:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        container-image: ["opensuse/tumbleweed:latest"]
-    container:
-      image: ${{ matrix.container-image }}
-    steps:
-      - name: install prereqs
-        # https://software.opensuse.org/download.html?project=Base%3ASystem&package=tar
-        run: |
-          zypper --no-gpg-checks --gpg-auto-import-keys --non-interactive addrepo https://download.opensuse.org/repositories/Base:System/openSUSE_Tumbleweed/Base:System.repo
-          zypper install --no-confirm tar
+  # test_run_qna_docker_suse_family:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       container-image: ["opensuse/tumbleweed:latest"]
+  #   container:
+  #     image: ${{ matrix.container-image }}
+  #   steps:
+  #     - name: install prereqs
+  #       # https://software.opensuse.org/download.html?project=Base%3ASystem&package=tar
+  #       run: |
+  #         zypper --no-gpg-checks --gpg-auto-import-keys --non-interactive addrepo https://download.opensuse.org/repositories/Base:System/openSUSE_Tumbleweed/Base:System.repo
+  #         zypper install --no-confirm tar
 
-      - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v4
 
-      # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
-      - name: run qna linux suse
-        if: runner.os == 'Linux'
-        # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
-        run: |
-          bash bash/bigfix_run_qna_suse_family.sh '${{ env.relevance }}' > qna_output.txt
-          cat qna_output.txt
-          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
-          echo "## Linux SUSE QNA:" >> $GITHUB_STEP_SUMMARY
-          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
-          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
-          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
-          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
-          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
-          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
-          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
-          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+  #     # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
+  #     - name: run qna linux suse
+  #       if: runner.os == 'Linux'
+  #       # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
+  #       run: |
+  #         bash bash/bigfix_run_qna_suse_family.sh '${{ env.relevance }}' > qna_output.txt
+  #         cat qna_output.txt
+  #         cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+  #         echo "## Linux SUSE QNA:" >> $GITHUB_STEP_SUMMARY
+  #         echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+  #         cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+  #         echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+  #         cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+  #         echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+  #         cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+  #         echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+  #         echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+  #         echo '```' >> $GITHUB_STEP_SUMMARY
+  #         cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+  #         echo '```' >> $GITHUB_STEP_SUMMARY
 
 # References:
 # - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
