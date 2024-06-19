@@ -8,6 +8,7 @@ on:
       - "CMD/bigfix_run_qna_win.bat"
       - "bash/bigfix_run_qna_debian.sh"
       - "bash/bigfix_run_qna_macos.sh"
+      - "bash/bigfix_run_qna_rhel_family.sh"
     branches:
       - "**"
 
@@ -15,6 +16,32 @@ env:
   relevance: ("Team Demo"; it) of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
 jobs:
+  test_run_qna_docker:
+    runs-on: ubuntu-latest
+    container:
+      image: redhat/ubi8:latest
+    steps:
+      - uses: actions/checkout@v3
+      # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
+      - name: run qna linux rhel
+        if: runner.os == 'Linux'
+        # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
+        run: |
+          bash bash/bigfix_run_qna_rhel_family.sh '${{ env.relevance }}' > qna_output.txt
+          cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+          echo "## Linux QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
   test_run_qna:
     runs-on: ${{ matrix.os }}
     strategy:
