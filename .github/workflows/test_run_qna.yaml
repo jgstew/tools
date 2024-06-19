@@ -19,8 +19,11 @@ env:
 jobs:
   test_run_qna_docker:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container-image: ["redhat/ubi8:latest", "almalinux:latest"]
     container:
-      image: redhat/ubi8:latest
+      image: ${{ matrix.container-image }}
     steps:
       - uses: actions/checkout@v4
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
@@ -33,7 +36,7 @@ jobs:
           bash bash/bigfix_run_qna_rhel_family.sh '${{ env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
-          echo "## Linux RHEL QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "## Linux RHEL Family QNA:" >> $GITHUB_STEP_SUMMARY
           echo "### Errors:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
