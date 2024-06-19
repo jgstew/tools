@@ -16,7 +16,9 @@ on:
 env:
   relevance: ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
-# TODO: add OSes: Debian, Raspbian, Amazon Linux, SUSE Linux Enterprise, OpenSUSE Leap
+# TODO: add OSes: Raspbian, Amazon Linux, SUSE Linux Enterprise, OpenSUSE Leap
+# https://github.com/pguyot/arm-runner-action
+
 jobs:
   test_run_qna:
     runs-on: ${{ matrix.os }}
@@ -135,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        container-image: ["debian:latest", "debian:11", "debian:10"]
+        container-image: ["debian:latest", "debian:11"]
     container:
       image: ${{ matrix.container-image }}
     steps:
@@ -147,7 +149,7 @@ jobs:
           apt-get install -y curl binutils
 
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
-      - name: run qna linux
+      - name: run qna linux debian
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
         run: |
@@ -155,6 +157,47 @@ jobs:
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## Linux Debian QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  test_run_qna_docker_suse_family:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container-image:
+          [
+            "opensuse/leap:15",
+            "opensuse/tumbleweed:latest",
+            "registry.suse.com/suse/sles12sp5:latest",
+          ]
+    container:
+      image: ${{ matrix.container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # - name: install prereqs
+      #   run: |
+      #     apt-get -y update
+      #     apt-get install -y curl binutils
+
+      # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
+      - name: run qna linux suse
+        if: runner.os == 'Linux'
+        # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
+        run: |
+          bash bash/bigfix_run_qna_suse_family.sh '${{ env.relevance }}' > qna_output.txt
+          cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+          echo "## Linux SUSE QNA:" >> $GITHUB_STEP_SUMMARY
           echo "### Errors:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
