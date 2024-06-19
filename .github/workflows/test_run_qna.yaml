@@ -9,11 +9,12 @@ on:
       - "bash/bigfix_run_qna_debian.sh"
       - "bash/bigfix_run_qna_macos.sh"
       - "bash/bigfix_run_qna_rhel_family.sh"
+      - "bash/bigfix_run_qna_ubuntu.sh"
     branches:
       - "**"
 
 env:
-  relevance: ("Team Demo"; it) of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  relevance: ( (it as string) of operating system ; version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
 jobs:
   test_run_qna_docker:
@@ -32,7 +33,7 @@ jobs:
           bash bash/bigfix_run_qna_rhel_family.sh '${{ env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
-          echo "## Linux QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "## Linux RHEL QNA:" >> $GITHUB_STEP_SUMMARY
           echo "### Errors:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
@@ -56,10 +57,10 @@ jobs:
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
         run: |
-          bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}' > qna_output.txt
+          bash bash/bigfix_run_qna_ubuntu.sh '${{ env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
-          echo "## Linux QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "## Linux Ubuntu QNA:" >> $GITHUB_STEP_SUMMARY
           echo "### Errors:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
