@@ -144,7 +144,7 @@ jobs:
       - name: install prereqs
         run: |
           apt-get -y update
-          apt-get install -y curl ar
+          apt-get install -y curl binutils
 
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
       - name: run qna linux
