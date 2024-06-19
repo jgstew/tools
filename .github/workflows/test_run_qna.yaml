@@ -21,7 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        container-image: ["redhat/ubi8:latest", "almalinux:latest"]
+        container-image:
+          [
+            "redhat/ubi8:latest",
+            "almalinux:latest",
+            "oraclelinux:9",
+            "rockylinux:9",
+            "amazonlinux:latest",
+          ]
     container:
       image: ${{ matrix.container-image }}
     steps:
