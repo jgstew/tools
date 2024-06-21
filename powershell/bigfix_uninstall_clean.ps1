@@ -1,7 +1,7 @@
 
-# This script is intended to remove an existing installation of BigFix so that a new install can be preformed pointing to a new server or with other changes.
+# This script is intended to remove an existing installation of BigFix so that a new install can be performed pointing to a new server or with other changes.
 # This script will uninstall BigFix, then delete the BigFix client folder if present, then delete the BigFix client registry entries if present.
-#  - Realted: http://software.bigfix.com/download/bes/100/util/BESRemove-10.0.2.52.exe
+#  - Related: http://software.bigfix.com/download/bes/100/util/BESRemove-10.0.2.52.exe
 
 # To download and run:
 <#

@@ -53,7 +53,7 @@ def main():
         write_to="svg2png_output_default.png",
     )
     max_dim = 512
-    # of the following, take the smallest size to achieve maximum dimention:
+    # of the following, take the smallest size to achieve maximum dimension:
     svg2png(
         url="https://raw.githubusercontent.com/jgstew/jgstew.github.io/master/images/BigFix/BigFix_logo.svg",
         write_to=f"svg2png_output_w{max_dim}.png",

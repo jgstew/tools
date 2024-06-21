@@ -3,7 +3,7 @@
 // http://www.w3schools.com/js/js_function_definition.asp
 
 // `this` contains all objects/functions/etc...
-// if( this[i] ) checks for existance
+// if( this[i] ) checks for existence
 // if( "function"==(typeof this[i]).toString() ) checks that it is a function
 // this[i].toString() returns the function declaration
 // ~this[i].toString().indexOf("[native code]") this returns 0 (false) if `[native code]` is not within the declaration

@@ -66,7 +66,7 @@ EXIT /B
 #!/usr/bin/env bash
 # Short link: http://bit.ly/installbigfix
 #
-#   Work In Progresss:  curl http://bit.ly/installbigfix | grep -o '".*"' | sed 's/"//g'
+#   Work In Progress:  curl http://bit.ly/installbigfix | grep -o '".*"' | sed 's/"//g'
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 # 
@@ -362,7 +362,7 @@ if [ -f "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log" ]; then
   #  - https://bigfix.me/relevance/details/3020387
 fi
 
-### Referenes:
+### References:
 # - http://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
 # - http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
 # - http://wiki.bash-hackers.org/scripting/posparams

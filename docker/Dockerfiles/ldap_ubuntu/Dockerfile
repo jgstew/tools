@@ -12,7 +12,7 @@ FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -qq ldap-utils
 
-# install ldap deamon
+# install ldap daemon
 RUN bash -c "echo 'slapd slapd/password2 password thisisabadpassword' | debconf-set-selections && echo 'slapd slapd/password1 password thisisabadpassword' | debconf-set-selections && apt-get install -qq slapd"
 #TODO: https://www.ldap-account-manager.org/static/doc/manual-onePage/index.html#a_installation
 # RUN apt-get install -qq ldap-account-manager

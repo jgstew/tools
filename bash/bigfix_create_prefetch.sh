@@ -7,7 +7,7 @@ File=$1
 # get string following last `/` character:
 FileName=`echo "$File" | rev | cut -d "/" -f1 | rev`
 
-# subtitute spaces for underscores:
+# substitute spaces for underscores:
 FileName=`tr -s ' ' '_' <<< "$FileName"`
 
 echo "prefetch $FileName sha1:`shasum "$File" | awk '{print $1}'` size:`ls -l "$File" | awk '{print $5}'` https://localhost:52311/Uploads/`shasum "$File" | awk '{print $1}'`/$FileName sha256:`shasum -a 256 "$File" | awk '{print $1}'`"

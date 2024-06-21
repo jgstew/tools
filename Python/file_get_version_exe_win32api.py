@@ -20,7 +20,7 @@ def getFileProperties(fname):
     props = {'FixedFileInfo': None, 'StringFileInfo': None, 'FileVersion': None}
 
     try:
-        # backslash as parm returns dictionary of numeric info corresponding to VS_FIXEDFILEINFO struc
+        # backslash as parm returns dictionary of numeric info corresponding to VS_FIXEDFILEINFO struct
         fixedInfo = win32api.GetFileVersionInfo(fname, '\\')
         props['FixedFileInfo'] = fixedInfo
         props['FileVersion'] = "%d.%d.%d.%d" % (fixedInfo['FileVersionMS'] / 65536,
@@ -28,7 +28,7 @@ def getFileProperties(fname):
                 fixedInfo['FileVersionLS'] % 65536)
 
         # \VarFileInfo\Translation returns list of available (language, codepage)
-        # pairs that can be used to retreive string info. We are using only the first pair.
+        # pairs that can be used to retrieve string info. We are using only the first pair.
         lang, codepage = win32api.GetFileVersionInfo(fname, '\\VarFileInfo\\Translation')[0]
 
         # any other must be of the form \StringfileInfo\%04X%04X\parm_name, middle

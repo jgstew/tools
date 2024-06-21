@@ -26,7 +26,7 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
-# install ldap deamon
+# install ldap daemon
 RUN bash -c "echo 'slapd slapd/password2 password thisisabadpassword' | debconf-set-selections && echo 'slapd slapd/password1 password thisisabadpassword' | debconf-set-selections && apt-get install -qq slapd"
 #TODO: https://www.ldap-account-manager.org/static/doc/manual-onePage/index.html#a_installation
 # RUN apt-get install -qq ldap-account-manager

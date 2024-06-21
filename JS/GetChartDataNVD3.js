@@ -3,7 +3,7 @@
 
 // Helper function designed to take jquery array result as input from a table and put it in the format NVD3 expects
 //  - example values:  $("#results > tr > td:nth-child(2)")
-//  - example lables:  $("#results > tr > td:nth-child(4)")
+//  - example labels:  $("#results > tr > td:nth-child(4)")
 //  - usage: getChartData( $("#results > tr > td:nth-child(2)") , $("#results > tr > td:nth-child(4)") );
 function getChartData(values, labels) {
     var arrKeyValuePairs = [];

@@ -1,7 +1,7 @@
 
 ## Python Utility Scripts
 
-This location is for various short independant Python Utility Scripts.
+This location is for various short independent Python Utility Scripts.
 
 ### Related:
 
