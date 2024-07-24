@@ -46,7 +46,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=10.0.7.52
+URLVERSION=11.0.2.125
 URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 
 # check for x32bit or x64bit OS
@@ -107,7 +107,7 @@ fi
 if [[ $OSTYPE == darwin* ]]; then
   # Mac OS X
   # https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52-BigFix_MacOS11.0.pkg
-  INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOS11.0.pkg"
+  INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOS11.0.pkg"
   INSTALLER="/tmp/BESAgent.pkg"
 else
   # For most Linux:
@@ -130,10 +130,10 @@ else
 
     if [[ $DEBDIST == Ubuntu* ]]; then
       # Ubuntu
-      INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu10.$URLBITS.deb"
+      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu10.$URLBITS.deb"
     else
       # Debian
-      INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-debian6.$URLBITS.deb"
+      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-debian6.$URLBITS.deb"
     fi
   fi # END_IF Debian (dpkg)
 
@@ -148,13 +148,13 @@ else
       URLBITS=i686
     fi
     
-    INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe6.$URLBITS.rpm"
+    INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe6.$URLBITS.rpm"
     
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
       # Assume SUSE
       #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
-      INSTALLERURL=http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle11.$URLBITS.rpm
+      INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle11.$URLBITS.rpm
       # TODO: could add support for SUSE 10, but 11+ should work with the above.
     fi # END_IF not-RHEL-family
   fi # END_IF exists rpm
