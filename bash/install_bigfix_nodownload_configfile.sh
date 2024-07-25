@@ -1,16 +1,14 @@
-# set variables here:
-INSTALLER="BESAgent.rpm"
 
 # Set base folder
-INSTALLDIR="."
+INSTALLERDIR="."
 
-if [ ! -f $INSTALLDIR/actionsite.afxm ] ; then
-    echo ERROR: need actionsite.afxm file in same folder
-    exit 2
+if [ ! -f $INSTALLERDIR/actionsite.afxm ] ; then
+  echo ERROR: need actionsite.afxm file in same folder
+  exit 2
 fi
 
 
-if [ ! -f $INSTALLDIR/besclient.config ] ; then
+if [ ! -f $INSTALLERDIR/besclient.config ] ; then
   echo
   echo "ERROR: the besclient.config file is missing."
   echo
@@ -31,13 +29,36 @@ fi
 
 # copy config file:
 mkdir -p /var/opt/BESClient
-cp $INSTALLDIR/besclient.config /var/opt/BESClient/besclient.config
+cp $INSTALLERDIR/besclient.config /var/opt/BESClient/besclient.config
 chmod 600 /var/opt/BESClient/besclient.config
 
 # define function to check for commands:
 command_exists () {
   type "$1" &> /dev/null ;
 }
+
+# figure out installer file:
+if [[ $OSTYPE == darwin* ]]; then
+  # Mac OS X
+  INSTALLER="BESAgent*.pkg"
+else
+  # if dpkg exists (Debian family)
+  if command_exists dpkg ; then
+    # Debian based
+    INSTALLER="BESAgent*.deb"
+  fi # END_IF Debian (dpkg)
+
+  # if rpm exists
+  if command_exists rpm ; then
+    # rpm - Currently assuming RedHat based
+    INSTALLER="BESAgent*.rpm"
+  fi # END_IF exists rpm
+
+  if command_exists pkgadd ; then
+    echo "Solaris Detected"
+    INSTALLER="BESAgent*.pkg"
+  fi # END_IF pkgadd
+fi # END_IF darwin
 
 # install BigFix client
 # https://support.bigfix.com/bes/install/besclients-nonwindows.html
@@ -55,9 +76,9 @@ if [[ $INSTALLER == *.pkg ]]; then
     installer -pkg $INSTALLER -target /
   else
     if command_exists pkgadd ; then
-        #  Solaris
-        set -e
-        echo y | pkgadd -d $INSTALLER BESagent
+      #  Solaris
+      set -e
+      echo y | pkgadd -d $INSTALLER BESagent
     fi # pkgadd
   fi # installer
 fi # *.pkg install file
