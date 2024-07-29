@@ -90,6 +90,7 @@ if [[ $INSTALLER == *.pkg ]]; then
 
   if command_exists installp ; then
     echo "Installing AIX agent"
+    # https://help.hcltechsw.com/bigfix/11.0/platform/Platform/Installation/c_aix_installation_instructions.html
     installp -agqYXd $INSTALLER BESClient
   fi # installp
 
