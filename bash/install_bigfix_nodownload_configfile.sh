@@ -58,6 +58,11 @@ else
     echo "Solaris Detected"
     INSTALLER="BESAgent*.pkg"
   fi # END_IF pkgadd
+
+  if command_exists installp ; then
+    echo "AIX Detected"
+    INSTALLER="BESAgent*.pkg"
+  fi # END_IF installp
 fi # END_IF darwin
 
 # install BigFix client
@@ -67,6 +72,7 @@ if [[ $INSTALLER == *.deb ]]; then
   set -e
   dpkg -i $INSTALLER
 fi
+
 if [[ $INSTALLER == *.pkg ]]; then
   # PKG type
   #   Could be Mac OS X, Solaris, or AIX
@@ -81,7 +87,14 @@ if [[ $INSTALLER == *.pkg ]]; then
       echo y | pkgadd -d $INSTALLER BESagent
     fi # pkgadd
   fi # installer
+
+  if command_exists installp ; then
+    echo "Installing AIX agent"
+    installp -agqYXd $INSTALLER BESClient
+  fi # installp
+
 fi # *.pkg install file
+
 if [[ $INSTALLER == *.rpm ]]; then
   #  linux (RPM)
   set -e
@@ -92,20 +105,28 @@ if [[ $INSTALLER == *.rpm ]]; then
   else
     rpm -ivh $INSTALLER
   fi
-fi
+fi # *.rpm install file
 
 
 ### start the BigFix client (required for most linux dist)
+
+# Do not start bigfix if: StartBigFix=false
+if [[ "$StartBigFix" != "false" ]]; then
+
 # if file `/etc/init.d/besclient` exists
 if [ -f /etc/init.d/besclient ]; then
-  # Do not start bigfix if: StartBigFix=false
-  if [[ "$StartBigFix" != "false" ]]; then
-    /etc/init.d/besclient start
-  fi
+  /etc/init.d/besclient start
 else
-  # start using systemd
-  systemctl start besclient
-fi
+  if [ -f /etc/rc.d/rc2.d/SBESClientd ]; then
+    echo "starting AIX client"
+    /etc/rc.d/rc2.d/SBESClientd start
+  else
+    # start using systemd
+    systemctl start besclient
+  fi # /etc/rc.d/rc2.d/SBESClientd
+fi # /etc/init.d/besclient
+
+fi # "$StartBigFix" != "false"
 
 echo BigFix should be installed and started:
 echo use the following command to examine logs:
