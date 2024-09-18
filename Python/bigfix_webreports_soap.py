@@ -1,5 +1,7 @@
 """
 Example using the BigFix Web Reports SOAP API
+
+Docs: https://developer.bigfix.com/other/soap-api/methods/GetRelevanceResult.html
 """
 import requests
 
