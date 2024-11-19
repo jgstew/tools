@@ -14,7 +14,7 @@ on:
       - "**"
 
 env:
-  relevance: ("Demo!", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  relevance: ("Another Demo!", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
 # TODO: add OSes: Raspbian, Amazon Linux, SUSE Linux Enterprise, OpenSUSE Leap
 # https://github.com/pguyot/arm-runner-action
