@@ -21,8 +21,8 @@ on:
       - "**"
 
 env:
-  # relevance_direct: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
-  relevance: ${{ inputs.relevance || inputs.relevance.default }}
+  relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  #relevance: ${{ inputs.relevance || env.relevance }}
 
 # TODO: add OSes: Raspbian, Amazon Linux, SUSE Linux Enterprise, OpenSUSE Leap
 # https://github.com/pguyot/arm-runner-action
@@ -48,7 +48,7 @@ jobs:
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
         run: |
-          bash bash/bigfix_run_qna_ubuntu.sh '${{ env.relevance }}' > qna_output.txt
+          bash bash/bigfix_run_qna_ubuntu.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## Linux Ubuntu QNA:" >> $GITHUB_STEP_SUMMARY
@@ -59,7 +59,7 @@ jobs:
           echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Answers:" >> $GITHUB_STEP_SUMMARY
-          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -67,7 +67,7 @@ jobs:
         if: runner.os == 'macOS'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_macos.sh
         run: |
-          bash bash/bigfix_run_qna_macos.sh '${{ env.relevance }}' > qna_output.txt
+          bash bash/bigfix_run_qna_macos.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## MacOS QNA:" >> $GITHUB_STEP_SUMMARY
@@ -78,7 +78,7 @@ jobs:
           echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Answers:" >> $GITHUB_STEP_SUMMARY
-          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -86,7 +86,7 @@ jobs:
         if: runner.os == 'Windows'
         # https://github.com/jgstew/tools/blob/master/CMD/bigfix_run_qna_win.bat
         run: |
-          echo '${{ env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat > qna_output.txt
+          echo '${{ inputs.relevance || env.relevance }}' | CMD /C CMD\bigfix_run_qna_win.bat > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | Select-String -Pattern "A: (.+)" | % { $_.Matches } | % { "" + $_.Groups[1].Value } > qna_markdown.txt
           echo "## Windows QNA:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
@@ -97,7 +97,7 @@ jobs:
           echo "### Time Taken:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           cat qna_output.txt | Select-String -Pattern "T: (.+)" | % { $_.Matches } | % { "" + $_.Groups[1].Value } | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "### Answers:" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
-          echo 'Q: ``${{ env.relevance }}``' | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          echo 'Q: ``${{ inputs.relevance || env.relevance }}``' | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "``````" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           cat qna_markdown.txt | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
           echo "``````" | Out-File -FilePath $Env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
@@ -125,7 +125,7 @@ jobs:
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
         run: |
-          bash bash/bigfix_run_qna_rhel_family.sh '${{ env.relevance }}' > qna_output.txt
+          bash bash/bigfix_run_qna_rhel_family.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## Linux RHEL Family QNA:" >> $GITHUB_STEP_SUMMARY
@@ -136,7 +136,7 @@ jobs:
           echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Answers:" >> $GITHUB_STEP_SUMMARY
-          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -161,7 +161,7 @@ jobs:
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
         run: |
-          bash bash/bigfix_run_qna_debian.sh '${{ env.relevance }}' > qna_output.txt
+          bash bash/bigfix_run_qna_debian.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## Linux Debian QNA:" >> $GITHUB_STEP_SUMMARY
@@ -172,7 +172,7 @@ jobs:
           echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Answers:" >> $GITHUB_STEP_SUMMARY
-          echo 'Q: `${{ env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
