@@ -20,8 +20,8 @@ on:
       - "**"
 
 env:
-  # relevance: ("Another Demo!", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
-  relevance: ${{ inputs.relevance }}
+  relevance_direct: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+  relevance: ${{ inputs.relevance || env.relevance_direct }}
 
 # TODO: add OSes: Raspbian, Amazon Linux, SUSE Linux Enterprise, OpenSUSE Leap
 # https://github.com/pguyot/arm-runner-action
