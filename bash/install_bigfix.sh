@@ -148,7 +148,7 @@ else
       URLBITS=i686
     fi
     
-    INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe6.$URLBITS.rpm"
+    INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe7.$URLBITS.rpm"
     
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
