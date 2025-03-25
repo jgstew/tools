@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<BESPluginRegistration>
+	<Name>example_plugin_name</Name>
+	<Command>/usr/bin/python3 /var/opt/BESServer/Applications/example_plugin_name/example_plugin_name.py -besserver %BESHTTP% -r %RESTURL% -u %MOUSERNAME% -p %MOPASSWORD% -v -d</Command>
+	<Schedule>
+		<WaitPeriodSeconds>43200</WaitPeriodSeconds>
+	</Schedule>
+	<ForceKill>true</ForceKill>
+</BESPluginRegistration>
