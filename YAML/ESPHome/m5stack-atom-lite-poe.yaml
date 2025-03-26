@@ -11,12 +11,14 @@ esp32:
     type: esp-idf
 
 # https://community.home-assistant.io/t/m5stack-atompoe-with-atom-lite-attached-basic-esphome-setup/746611/4
+# https://esphome.io/components/ethernet.html#configuration-variables
 ethernet:
-  type: W5500
-  clk_pin: GPIO22
-  mosi_pin: GPIO33
-  miso_pin: GPIO23
-  cs_pin: GPIO19
+  type: IP101
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 1
+  power_pin: GPIO5
   clock_speed: 20Mhz
 
 # Enable logging
