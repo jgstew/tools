@@ -12,6 +12,7 @@ esp32:
 
 # https://community.home-assistant.io/t/m5stack-atompoe-with-atom-lite-attached-basic-esphome-setup/746611/4
 # https://esphome.io/components/ethernet.html#configuration-variables
+# https://docs.m5stack.com/en/atom/Atomic%20PoE%20Base
 ethernet:
   type: IP101
   mdc_pin: GPIO23
