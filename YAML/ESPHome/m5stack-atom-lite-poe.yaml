@@ -19,9 +19,6 @@ ethernet:
   cs_pin: GPIO19
   clock_speed: 20Mhz
 
-# Enable Home Assistant API
-api:
-
 # Enable logging
 logger:
 
