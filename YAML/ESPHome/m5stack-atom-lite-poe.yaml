@@ -1,0 +1,49 @@
+# https://github.com/esphome/bluetooth-proxies/blob/main/m5stack/m5stack-atom-lite.yaml
+esphome:
+  name: m5stack-atom-lite-poe
+  friendly_name: Bluetooth Proxy PoE
+  min_version: 2025.2.1
+  name_add_mac_suffix: true
+
+esp32:
+  board: m5stack-atom
+  framework:
+    type: esp-idf
+
+# https://community.home-assistant.io/t/m5stack-atompoe-with-atom-lite-attached-basic-esphome-setup/746611/4
+ethernet:
+  type: W5500
+  clk_pin: GPIO22
+  mosi_pin: GPIO33
+  miso_pin: GPIO23
+  cs_pin: GPIO19
+  clock_speed: 20Mhz
+
+# Enable Home Assistant API
+api:
+
+# Enable logging
+logger:
+
+# Allow Over-The-Air updates
+ota:
+  - platform: esphome
+    id: ota_esphome
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+    active: true
+
+bluetooth_proxy:
+  active: true
+
+button:
+  - platform: safe_mode
+    id: button_safe_mode
+    name: Safe Mode Boot
+
+  - platform: factory_reset
+    id: factory_reset_btn
+    name: Factory reset
