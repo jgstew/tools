@@ -46,7 +46,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=11.0.2.125
+URLVERSION=11.0.3.82
 URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 
 # check for x32bit or x64bit OS
@@ -130,10 +130,10 @@ else
 
     if [[ $DEBDIST == Ubuntu* ]]; then
       # Ubuntu
-      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu10.$URLBITS.deb"
+      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu18.$URLBITS.deb"
     else
       # Debian
-      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-debian6.$URLBITS.deb"
+      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-debian10.$URLBITS.deb"
     fi
   fi # END_IF Debian (dpkg)
 
@@ -199,7 +199,7 @@ fi
 # Create $INSTALLDIR folder if missing
 if [ ! -d "$INSTALLDIR" ]; then
   # Control will enter here if $INSTALLDIR doesn't exist.
-  mkdir $INSTALLDIR
+  mkdir -p $INSTALLDIR
 fi
 
 
@@ -207,14 +207,14 @@ fi
 DLEXITCODE=0
 if command_exists curl ; then
   # Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
-  curl -o $INSTALLER $INSTALLERURL
+  curl -S -f -o $INSTALLER $INSTALLERURL
   # http://stackoverflow.com/questions/6348902/how-can-i-add-numbers-in-a-bash-script
   DLEXITCODE=$(( DLEXITCODE + $? ))
   # Download the masthead, renamed, into the correct location
   # TODO: get masthead from CWD instead if present
   # http://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
   #  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
-  curl --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
+  curl -S -f --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
   DLEXITCODE=$(( DLEXITCODE + $? ))
 else
   if command_exists wget ; then
