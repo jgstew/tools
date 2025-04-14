@@ -11,5 +11,8 @@
   "python.analysis.completeFunctionParens": true,
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "files.associations": {
+        "*.lab": "json"
   }
 }
