@@ -1,0 +1,19 @@
+---
+name: test_repo_dispatch
+# https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#repository_dispatch
+
+# trigger this with:
+# { "event_type": "test_repo_dispatch", "client_payload": { "message": "Put Status Message Here!" } }
+on:
+  repository_dispatch:
+    types: [test_repo_dispatch]
+
+jobs:
+  test_repo_dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo Input to Summary
+        run: |
+          echo ${{ github.event.client_payload }} >> $GITHUB_STEP_SUMMARY
+          echo ${{ github.event.client_payload.message }} >> $GITHUB_STEP_SUMMARY
+          cat $GITHUB_STEP_SUMMARY
