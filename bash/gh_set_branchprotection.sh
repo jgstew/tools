@@ -14,3 +14,5 @@ mutation($repositoryId:ID!,$branch:String!,$requiredReviews:Int!) {
     requiredApprovingReviewCount: $requiredReviews
   }) { clientMutationId }
 }' -f repositoryId="$repositoryId" -f branch="main" -F requiredReviews=1
+
+# Related: https://github.com/twelvelabs/gh-repo-config
