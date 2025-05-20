@@ -117,10 +117,10 @@ jobs:
     container:
       image: ${{ matrix.container-image }}
     steps:
+      - name: install cpio
+        run: dnf --assumeyes install cpio tar gzip curl
       - uses: actions/checkout@v4
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
-      - name: install cpio
-        run: dnf --assumeyes install cpio
       - name: run qna linux rhel
         if: runner.os == 'Linux'
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
