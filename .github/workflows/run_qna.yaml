@@ -118,7 +118,7 @@ jobs:
       image: ${{ matrix.container-image }}
     steps:
       - name: install cpio
-        run: dnf --assumeyes install cpio tar gzip curl
+        run: dnf --assumeyes install cpio tar gzip
       - uses: actions/checkout@v4
       # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
       - name: run qna linux rhel
