@@ -1,5 +1,5 @@
 ---
-name: test_run_qna
+name: run_qna
 
 on:
   workflow_dispatch:
@@ -39,7 +39,6 @@ jobs:
             windows-2019,
             ubuntu-24.04,
             ubuntu-22.04,
-            ubuntu-20.04,
           ]
     steps:
       - uses: actions/checkout@v4
@@ -145,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        container-image: ["debian:latest", "debian:11"]
+        container-image: ["debian:latest", "debian:11", "ubuntu:20.04", "ubuntu:25.04"]
     container:
       image: ${{ matrix.container-image }}
     steps:
