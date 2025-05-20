@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       relevance:
-        description: 'Relevance to test'
+        description: "Relevance to test"
         default: ("default relevance", it) of now
         required: true
         type: string
@@ -128,6 +128,42 @@ jobs:
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## Linux RHEL Family QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  test_run_qna_docker_ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container-image: ["ubuntu:latest", "ubuntu:20.04"]
+    container:
+      image: ${{ matrix.container-image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install prereqs
+        run: |
+          apt-get -y update
+          apt-get install -y curl binutils
+
+      # https://stackoverflow.com/questions/57946173/github-actions-run-step-on-specific-os
+      - name: run qna linux ubuntu
+        if: runner.os == 'Linux'
+        # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_debian.sh
+        run: |
+          bash bash/bigfix_run_qna_ubuntu.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
+          cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+          echo "## Linux Debian QNA:" >> $GITHUB_STEP_SUMMARY
           echo "### Errors:" >> $GITHUB_STEP_SUMMARY
           cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
           echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
