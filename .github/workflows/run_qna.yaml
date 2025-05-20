@@ -11,7 +11,7 @@ on:
         type: string
   push:
     paths:
-      - ".github/workflows/test_run_qna.yaml"
+      - ".github/workflows/run_qna.yaml"
       - "CMD/bigfix_run_qna_win.bat"
       - "bash/bigfix_run_qna_debian.sh"
       - "bash/bigfix_run_qna_macos.sh"
