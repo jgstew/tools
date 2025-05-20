@@ -24,7 +24,7 @@ env:
   relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
   #relevance: ${{ inputs.relevance || env.relevance }}
 
-# TODO: add OSes: Raspbian, Amazon Linux, SUSE Linux Enterprise, OpenSUSE Leap
+# TODO: add OSes: Raspbian, SUSE Linux Enterprise, OpenSUSE Leap
 # https://github.com/pguyot/arm-runner-action
 
 jobs:
@@ -112,6 +112,7 @@ jobs:
             "almalinux:latest",
             "oraclelinux:9",
             "rockylinux:9",
+            "amazonlinux:2023",
           ]
     container:
       image: ${{ matrix.container-image }}
