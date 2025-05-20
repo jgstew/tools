@@ -45,4 +45,6 @@ jobs:
             echo "Running on $(cat /etc/os-release)" >> hello_output.txt
             echo "Running on $(cat /proc/cpuinfo)" >> hello_output.txt
             cat hello_output.txt
+            # fix error: /tmp/commands.sh: 9: cannot create /home/runner/work/_temp/_runner_file_commands/step_summary_??: Directory nonexistent
+            mkdir -p /home/runner/work/_temp/_runner_file_commands
             cat hello_output.txt >> $GITHUB_STEP_SUMMARY
