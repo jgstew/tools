@@ -17,7 +17,7 @@ env:
 
 jobs:
   test_env_set:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
       - name: get env var
         run: echo "$EXAMPLESUFFIX"

@@ -1,0 +1,26 @@
+---
+name: test_raspbian
+
+# only run this job when this job itself is modified
+on:
+  push:
+    paths:
+      - ".github/workflows/test_raspbian.yaml"
+    branches:
+      - "**"
+  pull_request:
+    paths:
+      - ".github/workflows/test_raspbian.yaml"
+
+jobs:
+  test_raspbian:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pguyot/arm-runner-action@v2
+        with:
+          commands: |
+            echo "Hello from Raspbian!"
+            echo "This is a test for the Raspbian runner."
+            echo "Running on $(uname -a)"
+            echo "Running on $(cat /etc/os-release)"
