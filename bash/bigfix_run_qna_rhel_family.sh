@@ -6,7 +6,7 @@ mkdir /tmp/qna
 fi
 
 if ! [ -f /tmp/qna/BESAgent-rhe6.x86_64.rpm ]; then
-curl -o /tmp/qna/BESAgent-rhe6.x86_64.rpm https://software.bigfix.com/download/bes/110/BESAgent-11.0.4.60-rhe7.x86_64.rpm
+curl -o /tmp/qna/BESAgent-rhe6.x86_64.rpm https://software.bigfix.com/download/bes/100/BESAgent-10.0.13.93-rhe6.x86_64.rpm
 fi
 
 cd /tmp/qna
