@@ -38,13 +38,24 @@ jobs:
           # base_image: ${{ matrix.base_image }}
           # cpu: ${{ matrix.cpu }}
           # cpu_info: ${{ matrix.cpu_info }}
+          copy_artifact_path: hello_output.txt
+          copy_artifacts_on_fail: yes
+          # export_github_env: yes
           commands: |
             echo "Hello from Raspbian!" > hello_output.txt
             echo "This is a test for the Raspbian runner." >> hello_output.txt
             echo "Running on $(uname -a)" >> hello_output.txt
             echo "Running on $(cat /etc/os-release)" >> hello_output.txt
             echo "Running on $(cat /proc/cpuinfo)" >> hello_output.txt
+            echo "Goodbye from Raspbian!" >> hello_output.txt
             cat hello_output.txt
+
+            # the following should only work if export_github_env is set to yes:
             # fix error: /tmp/commands.sh: 9: cannot create /home/runner/work/_temp/_runner_file_commands/step_summary_??: Directory nonexistent
-            mkdir -p /home/runner/work/_temp/_runner_file_commands
-            cat hello_output.txt >> $GITHUB_STEP_SUMMARY
+            # mkdir -p /home/runner/work/_temp/_runner_file_commands
+            # cat hello_output.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: Set summary
+        if: always()
+        run: |
+          cat hello_output.txt >> $GITHUB_STEP_SUMMARY
