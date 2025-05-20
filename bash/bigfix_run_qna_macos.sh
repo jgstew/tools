@@ -7,7 +7,7 @@ args=$*
 mkdir -p /tmp/bigfix_qna
 
 if ! [ -f /tmp/bigfix_qna/BigFix_MacOS.pkg ]; then
-curl -o /tmp/bigfix_qna/BigFix_MacOS.pkg https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52-BigFix_MacOS11.0.pkg
+curl -o /tmp/bigfix_qna/BigFix_MacOS.pkg https://software.bigfix.com/download/bes/110/BESAgent-11.0.4.60-BigFix_MacOS11.0.pkg
 fi
 
 # extract pkg file
