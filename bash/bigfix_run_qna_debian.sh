@@ -5,7 +5,7 @@ args=$*
 #   apt-get install -y curl binutils
 
 if ! [ -f /tmp/BESAgent-debian.deb ]; then
-curl -o /tmp/BESAgent-debian.deb https://software.bigfix.com/download/bes/110/BESAgent-11.0.4.60-debian10.amd64.deb
+curl -o /tmp/BESAgent-debian.deb https://software.bigfix.com/download/bes/100/BESAgent-10.0.13.93-debian6.amd64.deb
 fi
 
 # https://www.cyberciti.biz/faq/how-to-extract-a-deb-file-without-opening-it-on-debian-or-ubuntu-linux/
