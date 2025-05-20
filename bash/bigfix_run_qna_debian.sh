@@ -1,8 +1,8 @@
 
 args=$*
 
-# TODO: detect if Ubuntu
-# cat /etc/os-release /etc/lsb-release | grep --ignore-case --max-count=1 --count ubuntu
+# prereqs: (needed on docker)
+#   apt-get install -y curl binutils
 
 if ! [ -f /tmp/BESAgent-debian.deb ]; then
 curl -o /tmp/BESAgent-debian.deb https://software.bigfix.com/download/bes/100/BESAgent-10.0.9.21-debian6.amd64.deb
