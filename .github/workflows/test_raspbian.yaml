@@ -42,7 +42,10 @@ jobs:
           copy_artifacts_on_fail: yes
           # export_github_env: yes
           commands: |
-            echo "## Hello from Raspbian! ${{ matrix.cpu }} ${{ matrix.arch }}" > hello_output.txt
+            echo "## Hello from Raspbian! ${{ matrix.arch }}" > hello_output.txt
+            echo "CPU: ${{ matrix.cpu }}" >> hello_output.txt
+            echo "Pi Min Type: ${{ matrix.cpu_info }}" >> hello_output.txt
+            echo "Arch: ${{ matrix.arch }}" >> hello_output.txt
             echo "This is a test for the Raspbian runner." >> hello_output.txt
             echo "Running on $(uname -a)" >> hello_output.txt
             echo "Running on $(cat /etc/os-release)" >> hello_output.txt
@@ -59,3 +62,4 @@ jobs:
         if: always()
         run: |
           cat hello_output.txt >> $GITHUB_STEP_SUMMARY
+          cat hello_output.txt
