@@ -101,7 +101,7 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PersistentConnection_Enabled=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_OverrideTimeoutSeconds=21600
   # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_User=`echo $SUDO_USER`
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_SudoUser=`echo $SUDO_USER`
 fi
 
 if [[ $OSTYPE == darwin* ]]; then
