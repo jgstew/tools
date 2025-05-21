@@ -37,7 +37,7 @@ jobs:
         with:
           base_image: ${{ matrix.base_image }}
           cpu: ${{ matrix.cpu }}
-          cpu_info: ${{ matrix.cpu_info }}
+          # cpu_info: ${{ matrix.cpu_info }}
           copy_artifact_path: hello_output.txt
           copy_artifacts_on_fail: yes
           # export_github_env: yes
