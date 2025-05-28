@@ -7,7 +7,7 @@ if not exist "\Windows\Temp\bigfix_qna" (
 )
 
 if not exist "\Windows\Temp\bigfix_qna\QNA.zip" (
-    curl -o "\Windows\Temp\bigfix_qna\QNA.zip" https://software.bigfix.com/download/bes/110/util/QNA11.0.4.60.zip
+    curl -o "\Windows\Temp\bigfix_qna\QNA.zip" http://software.bigfix.com/download/bes/92/util/QNA9.2.5.130.zip
 )
 
 tar -xf "\Windows\Temp\bigfix_qna\QNA.zip" -C "\Windows\Temp\bigfix_qna"
