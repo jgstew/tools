@@ -6,7 +6,7 @@ info:
     This is the OpenAPI definition for the HCL BigFix REST API.
     The BigFix REST API allows you to interact with the BigFix server programmatically to automate tasks,
     retrieve information about endpoints, and manage content.
-  version: "0.1.0"
+  version: "0.1.2"
   contact:
     name: HCL BigFix Support
     url: https://www.hcltech.com/bigfix/support
@@ -144,12 +144,79 @@ paths:
                 $ref: '#/components/schemas/BESAPI'
         '404':
           description: Computer not found.
-  /fixlets/master:
+  /sites:
     get:
-      summary: Get Fixlets from the master action site
-      description: Retrieves a list of all Fixlets in the master action site.
+      summary: Get a list of sites
+      description: Retrieves a list of all available sites.
+      tags:
+        - Sites
+      responses:
+        '200':
+          description: A list of sites.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BESAPI'
+  /baselines/{site_type}/{site_name}:
+    get:
+      summary: Get a list of baselines
+      description: Retrieves a list of baselines from a specific site.
+      tags:
+        - Baselines
+      parameters:
+        - $ref: '#/components/parameters/SiteType'
+        - $ref: '#/components/parameters/SiteName'
+      responses:
+        '200':
+          description: A list of baselines.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BESAPI'
+  /baseline/{site_type}/{site_name}/{id}:
+    get:
+      summary: Get a specific baseline
+      description: Retrieves a specific baseline by its ID from a given site.
+      tags:
+        - Baselines
+      parameters:
+        - $ref: '#/components/parameters/SiteType'
+        - $ref: '#/components/parameters/SiteName'
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: The requested baseline.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BESAPI'
+        '404':
+          description: Baseline not found.
+  /tasks/{site_type}/{site_name}:
+    get:
+      summary: Get a list of tasks
+      description: Retrieves a list of tasks from a specific site.
+      tags:
+        - Tasks
+      parameters:
+        - $ref: '#/components/parameters/SiteType'
+        - $ref: '#/components/parameters/SiteName'
+      responses:
+        '200':
+          description: A list of tasks.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/BESAPI'
+  /fixlets/{site_type}/{site_name}:
+    get:
+      summary: Get Fixlets from a site
+      description: Retrieves a list of all Fixlets in a specific site.
       tags:
         - Fixlets
+      parameters:
+        - $ref: '#/components/parameters/SiteType'
+        - $ref: '#/components/parameters/SiteName'
       responses:
         '200':
           description: A list of Fixlets.
@@ -157,19 +224,16 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/BESAPI'
-  /fixlet/master/{id}:
+  /fixlet/{site_type}/{site_name}/{id}:
     get:
       summary: Get a Fixlet
-      description: Retrieves a specific Fixlet from the master action site by its ID.
+      description: Retrieves a specific Fixlet from a site by its ID.
       tags:
         - Fixlets
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: The ID of the Fixlet to retrieve.
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/SiteType'
+        - $ref: '#/components/parameters/SiteName'
+        - $ref: '#/components/parameters/Id'
       responses:
         '200':
           description: The requested Fixlet.
@@ -186,18 +250,8 @@ paths:
       tags:
         - Analyses
       parameters:
-        - name: site_type
-          in: path
-          required: true
-          description: The type of the site (e.g., master, custom, operator).
-          schema:
-            type: string
-        - name: site_name
-          in: path
-          required: true
-          description: The name of the site.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/SiteType'
+        - $ref: '#/components/parameters/SiteName'
       responses:
         '200':
           description: A list of analyses.
@@ -225,11 +279,53 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/BESAPI'
+  /upload:
+    post:
+      summary: Upload a file
+      description: Uploads a file to the BigFix server.
+      tags:
+        - Utilities
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded successfully.
+        '400':
+          description: Bad request.
 components:
   securitySchemes:
     basicAuth:
       type: http
       scheme: basic
+  parameters:
+    SiteType:
+      name: site_type
+      in: path
+      required: true
+      description: The type of the site (e.g., master, custom, operator, external).
+      schema:
+        type: string
+    SiteName:
+      name: site_name
+      in: path
+      required: true
+      description: The name of the site.
+      schema:
+        type: string
+    Id:
+      name: id
+      in: path
+      required: true
+      description: The ID of the resource.
+      schema:
+        type: integer
   schemas:
     BES:
       type: object
@@ -242,6 +338,12 @@ components:
           $ref: '#/components/schemas/Fixlet'
         Analysis:
           $ref: '#/components/schemas/Analysis'
+        Baseline:
+          $ref: '#/components/schemas/Baseline'
+        Task:
+          $ref: '#/components/schemas/Task'
+        ComputerGroup:
+          $ref: '#/components/schemas/ComputerGroup'
     BESAPI:
       type: object
       xml:
@@ -257,6 +359,14 @@ components:
           $ref: '#/components/schemas/Analysis'
         Query:
           $ref: '#/components/schemas/Query'
+        Site:
+          $ref: '#/components/schemas/Site'
+        Baseline:
+          $ref: '#/components/schemas/Baseline'
+        Task:
+          $ref: '#/components/schemas/Task'
+        ComputerGroup:
+          $ref: '#/components/schemas/ComputerGroup'
     Action:
       type: object
       properties:
@@ -288,6 +398,36 @@ components:
         Category:
           type: string
         Source:
+          type: string
+    Task:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Name:
+          type: string
+    Baseline:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Name:
+          type: string
+    ComputerGroup:
+      type: object
+      properties:
+        ID:
+          type: integer
+        Name:
+          type: string
+    Site:
+      type: object
+      properties:
+        Name:
+          type: string
+        Type:
+          type: string
+        URL:
           type: string
     Analysis:
       type: object
