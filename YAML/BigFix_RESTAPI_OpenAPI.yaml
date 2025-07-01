@@ -6,6 +6,9 @@ info:
     This is the OpenAPI definition for the HCL BigFix REST API.
     The BigFix REST API allows you to interact with the BigFix server programmatically to automate tasks,
     retrieve information about endpoints, and manage content.
+
+    The BigFix REST API documentation is here:
+      [https://developer.bigfix.com/rest-api/api/](https://developer.bigfix.com/rest-api/api/)
   version: "0.1.2"
   contact:
     name: HCL BigFix Support
