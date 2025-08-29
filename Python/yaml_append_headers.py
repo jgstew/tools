@@ -36,12 +36,20 @@ def append_header(file_path, new_header):
 
 
 def main():
-    new_header = {
-        'headerName': 'X-Content-Type-Options',
-        'headerValue': 'nosniff',
-        'replace': True
-    }
-    append_header('Python/url-map-config.yaml', new_header)
+    new_headers = [
+        {
+            'headerName': 'X-Content-Type-Options',
+            'headerValue': 'nosniff',
+            'replace': True
+        },
+        {
+            'headerName': 'Strict-Transport-Security',
+            'headerValue': 'max-age=31536000; includeSubDomains; preload',
+            'replace': True
+        }
+    ]
+    for header in new_headers:
+        append_header('Python/url-map-config.yaml', header)
 
 
 if __name__ == "__main__":
