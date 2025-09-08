@@ -13,6 +13,8 @@ jobs:
   run_kbupdate:
     runs-on: [windows-latest]
     steps:
+      - uses: actions/checkout@v4
+
       - name: Test run pwsh script
         shell: pwsh
         run: |
