@@ -1,13 +1,9 @@
 ---
 name: run_kbupdate
 
-# only run this job when this job itself is modified
+# this doesn't work, so only run when triggered manually.
 on:
-  push:
-    paths:
-      - ".github/workflows/run_kbupdate_win.yaml"
-    branches:
-      - "**"
+  workflow_dispatch:
 
 jobs:
   run_kbupdate:
