@@ -3,6 +3,10 @@
 
 Write-Output "--- Start of script ---"
 
+Write-Output "ERROR: This does not seem to work! The kbupdate module seems to be abandoned."
+Write-Output "Exiting script."
+Exit 1
+
 # Ensure required modules are installed
 $requiredModules = @('PSFramework', 'PSSQLite', 'kbupdate', 'kbupdate-library')
 foreach ($module in $requiredModules) {
