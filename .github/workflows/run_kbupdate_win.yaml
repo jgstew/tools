@@ -1,0 +1,31 @@
+---
+name: run_kbupdate
+
+# only run this job when this job itself is modified
+on:
+  push:
+    paths:
+      - ".github/workflows/run_kbupdate_win.yaml"
+    branches:
+      - "**"
+
+jobs:
+  run_kbupdate:
+    runs-on: [windows-latest]
+    steps:
+      - name: Test run pwsh script
+        shell: pwsh
+        run: |
+          echo "Starting kbupdate script"
+          ./powershell/kbupdate_Update-KbDatabase.ps1
+
+      - name: List database file
+        shell: pwsh
+        run: |
+          echo "Listing database file"
+          echo "Database path: $env:KBDATABASE"
+          if (Test-Path $env:KBDATABASE) {
+            Get-Item $env:KBDATABASE | Format-List
+          } else {
+            echo "Database file not found"
+          }
