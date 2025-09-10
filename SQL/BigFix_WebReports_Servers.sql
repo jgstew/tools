@@ -11,7 +11,7 @@ Consult these if you get this 503 Error:
 This error means either the BigFix Web Reports or BigFix Explorer server is down, or is unreachable by the root server.
 
 The result from these queries can change back and forth rapidly between different results if you
- have 2 different Web Reports servers sharing the same BFReporitingDB which is not supported.
+ have 2 different Web Reports servers sharing the same BFReporiting DB which is not supported.
 ******/
 SELECT [WebReportsURL]
       ,[LastAggregatedTime]
