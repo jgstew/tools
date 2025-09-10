@@ -1,0 +1,8 @@
+SELECT [WebReportsURL]
+      ,[LastAggregatedTime]
+      ,[SessionToken]
+      ,[SSLCert]
+      ,[WebReportsServerID]
+      ,[Priority]
+      ,[IsDeleted]
+  FROM [BFEnterprise].[dbo].[AGGREGATEDBY]
