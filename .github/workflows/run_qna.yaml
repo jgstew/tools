@@ -18,7 +18,15 @@ on:
       - "bash/bigfix_run_qna_rhel_family.sh"
       - "bash/bigfix_run_qna_ubuntu.sh"
     branches:
-      - "**"
+      - master
+  pull_request:
+    paths:
+      - ".github/workflows/run_qna.yaml"
+      - "CMD/bigfix_run_qna_win.bat"
+      - "bash/bigfix_run_qna_debian.sh"
+      - "bash/bigfix_run_qna_macos.sh"
+      - "bash/bigfix_run_qna_rhel_family.sh"
+      - "bash/bigfix_run_qna_ubuntu.sh"
 
 env:
   relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")

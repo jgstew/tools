@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/test_raspbian.yaml"
     branches:
-      - "**"
+      - master
   pull_request:
     paths:
       - ".github/workflows/test_raspbian.yaml"
