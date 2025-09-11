@@ -28,6 +28,12 @@ repos:
       # - id: no-commit-to-branch
       #   args: [--branch, main]
 
+  - repo: https://github.com/sirwart/ripsecrets
+    rev: v0.1.11
+    hooks:
+      - id: ripsecrets
+        exclude: powershell/SimpleFormsGUI.ps1|Python/peinfo.txt
+
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.36.0
     hooks:
