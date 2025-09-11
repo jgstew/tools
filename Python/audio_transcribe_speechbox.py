@@ -1,10 +1,15 @@
 # transcribe audio example
 
 import errno
-import time
 import os.path
 import sys
+import time
 
+# using HuggingFace speechbox:
+# https://billtcheng2013.medium.com/faster-audio-transcribing-with-openai-whisper-and-huggingface-transformers-dc088243803d
+# Install: pip install speechbox
+# Install: pip install git+https://github.com/huggingface/speechbox.git
+import speechbox
 import torch
 
 # pip install pyannote.audio
@@ -14,11 +19,6 @@ import torch
 # accept model at: https://hf.co/pyannote/speaker-diarization
 # accept model at: https://hf.co/pyannote/segmentation
 
-# using HuggingFace speechbox:
-# https://billtcheng2013.medium.com/faster-audio-transcribing-with-openai-whisper-and-huggingface-transformers-dc088243803d
-# Install: pip install speechbox
-# Install: pip install git+https://github.com/huggingface/speechbox.git
-import speechbox
 
 # Install: pip install optimum
 # https://github.com/huggingface/optimum

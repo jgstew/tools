@@ -16,12 +16,12 @@ Else
 	For Each objFile in objCurrentFolder.Files
 		If UCase( CreateObject("Scripting.FileSystemObject").GetExtensionName(objFile.name)) = "ZIP" Then
 			strZipFilePath = objFile.Path
-			
+
 			' https://blogs.technet.microsoft.com/heyscriptingguy/2005/05/04/how-can-i-exit-a-for-each-loop/
 			Exit For
 		End If
 	Next
-	
+
 	If IsEmpty( strZipFilePath ) Then
 		Wscript.Echo
 		Wscript.Echo "-ERROR-"

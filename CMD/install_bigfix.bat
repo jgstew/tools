@@ -1,7 +1,7 @@
 :<<"::CMDLITERAL"
 @ECHO OFF
 REM Short link: http://bit.ly/installbigfix
-REM  Usage: 
+REM  Usage:
 REM powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/CMD/install_bigfix_universal.bat', 'install_bigfix.bat') }" -ExecutionPolicy Bypass
 REM install_bigfix.bat __FQDN_OF_ROOT_OR_RELAY__
 
@@ -24,7 +24,7 @@ REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already
 REM  TODO: check for admin rights http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
 
 REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exists-in-the-path-from-a-windows-batch-file
-where /q powershell || ECHO Cound not find powershell. && EXIT /B
+where /q powershell || ECHO Could not find powershell. && EXIT /B
 
 @ECHO ON
 REM this following line will need to ignore SSL errors if HTTPS is used instead of HTTP

@@ -7,6 +7,7 @@ Make sure to install the pyserial library if you haven't already:
 Related:
 - https://github.com/pvvx/THB2/tree/master
 """
+
 import serial.tools.list_ports
 
 for com in serial.tools.list_ports.comports():

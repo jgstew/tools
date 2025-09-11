@@ -3,7 +3,7 @@
 #
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
-# 
+#
 # Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
 #          (Itanium, Power, and others are not common, but could be added)
 #
@@ -117,11 +117,11 @@ else
   if command_exists dpkg ; then
     # Debian based
     INSTALLER="BESAgent.deb"
-    
+
     # check distribution
     # cat /etc/os-release /etc/lsb-release | grep --ignore-case --max-count=1 --count ubuntu
     DEBDIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
-    
+
     if [[ $OSBIT == x64 ]]; then
       URLBITS=amd64
     else
@@ -141,15 +141,15 @@ else
   if command_exists rpm ; then
     # rpm - Currently assuming RedHat based
     INSTALLER="BESAgent.rpm"
-    
+
     if [[ $OSBIT == x64 ]]; then
       URLBITS=x86_64
     else
       URLBITS=i686
     fi
-    
+
     INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe7.$URLBITS.rpm"
-    
+
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
       # Assume SUSE
@@ -224,7 +224,7 @@ else
     # https://www.gnu.org/software/wget/manual/html_node/HTTPS-_0028SSL_002fTLS_0029-Options.html
     wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
     DLEXITCODE=$(( DLEXITCODE + $? ))
-    
+
     wget $INSTALLERURL -O $INSTALLER
     DLEXITCODE=$(( DLEXITCODE + $? ))
   else
@@ -277,7 +277,7 @@ if [[ $INSTALLER == *.pkg ]]; then
   else
     if command_exists pkgadd ; then
         # TODO: test case for Solaris
-        
+
         echo y | pkgadd -d $INSTALLER BESagent
     fi # pkgadd
   fi # installer

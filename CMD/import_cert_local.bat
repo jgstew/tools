@@ -6,4 +6,3 @@ certutil -f -p [password] -dump "cert.p12"
 REM get just expiration: https://github.com/jgstew/tools/blob/master/CMD/cert_file_expiration.bat
 
 certutil -f -p [password] -importpfx "cert.p12"
-

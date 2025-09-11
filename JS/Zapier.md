@@ -18,4 +18,3 @@ fetch('https://www.virustotal.com/en/user/jgstew/comments/')
 ```
 
 In chrome console: `JSON.parse( $('body > pre').innerText ).html`
-

@@ -1,6 +1,6 @@
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 import requests
 from PIL import Image
+from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
 # "microsoft/trocr-base-handwritten", "microsoft/trocr-base-printed"
 model_id = "microsoft/trocr-base-printed"

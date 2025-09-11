@@ -41,5 +41,5 @@ $url= $urlbase + 'query?relevance=' + [uri]::EscapeDataString($SessionRelevanceQ
 #Write-Host $response.InnerXml #Get RAW XML
 
 # https://stackoverflow.com/a/6143482/861745
-# Get Answer(s): 
+# Get Answer(s):
 Write-Host $response.BESAPI.Query.InnerXml

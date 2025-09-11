@@ -7,7 +7,7 @@
 //  - usage: getChartData( $("#results > tr > td:nth-child(2)") , $("#results > tr > td:nth-child(4)") );
 function getChartData(values, labels) {
     var arrKeyValuePairs = [];
-    for (i = 0; i < values.length; i++) { 
+    for (i = 0; i < values.length; i++) {
         arrKeyValuePairs[i] = {
             "label": labels[i].innerText,
             "value": Number( values[i].innerText )

@@ -28,7 +28,7 @@ Write-Verbose $AD_USER_OU_PATH_ADDRESS
 
 
 function New-AD-User-From-SAM {
-    # https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7 
+    # https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline)]
@@ -40,7 +40,7 @@ function New-AD-User-From-SAM {
             $new_SamAccountName = $new_SamAccountName.ToLower()
             # split SamAccountName into FirstName LastName and force first character to uppercase
             $pos = $new_SamAccountName.IndexOf(".")
-            # https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
+            # https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell
             $FirstName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring(0, $pos) )
             $LastName = (Get-Culture).TextInfo.ToTitleCase( $new_SamAccountName.Substring($pos+1) )
             $FullName = $FirstName + " " + $LastName
@@ -74,7 +74,7 @@ function New-AD-User-From-SAM {
             catch [System.ServiceModel.FaultException] {
                 # $Error[0] | fl * -Force # https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/
                 Write-Warning -Message "User already exists: $new_SamAccountName"
-                
+
                 # hard stop:
                 Exit
             }
@@ -84,19 +84,19 @@ function New-AD-User-From-SAM {
 
 
 # References:
-# - https://blog.netwrix.com/2018/06/07/how-to-create-new-active-directory-users-with-powershell/ 
-# - https://docs.microsoft.com/en-us/powershell/module/addsadministration/new-aduser?view=win10-ps 
-# - https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell 
-# - https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7 
-# - https://www.computerperformance.co.uk/powershell/functions/ 
-# - https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1 
-# - https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/ 
+# - https://blog.netwrix.com/2018/06/07/how-to-create-new-active-directory-users-with-powershell/
+# - https://docs.microsoft.com/en-us/powershell/module/addsadministration/new-aduser?view=win10-ps
+# - https://stackoverflow.com/questions/22694582/capitalize-the-first-letter-of-each-word-in-a-filename-with-powershell
+# - https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/09-functions?view=powershell-7
+# - https://www.computerperformance.co.uk/powershell/functions/
+# - https://github.com/jgstew/tools/blob/master/powershell/ReadFile_NewUsers.ps1
+# - https://devblogs.microsoft.com/scripting/weekend-scripter-using-try-catch-finally-blocks-for-powershell-error-handling/
 
-# Related: 
-# - https://stackoverflow.com/questions/55014770/how-can-i-paste-markdown-in-microsoft-teams/55014959 
+# Related:
+# - https://stackoverflow.com/questions/55014770/how-can-i-paste-markdown-in-microsoft-teams/55014959
 
 
-# from: http://witit.blog/2018/10/16/bulk-create-users-in-ad-via-powershell-with-random-passwords-part-iii/ 
+# from: http://witit.blog/2018/10/16/bulk-create-users-in-ad-via-powershell-with-random-passwords-part-iii/
 function Get-RandomPassword{
     Param(
         [Parameter(mandatory=$true)]
@@ -123,7 +123,7 @@ function Get-RandomPassword{
         $Pwd += $Numbers | Get-Random -Count $N_Count
         $Pwd += $LettersUpper | Get-Random -Count $U_Count
         $Pwd += $Special | Get-Random -Count $S_Count
-        
+
         #If the password length isn't long enough (due to rounding),
         #add X special characters, where X is the difference between
         #the desired length and the current length.

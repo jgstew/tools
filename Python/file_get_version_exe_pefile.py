@@ -10,7 +10,6 @@ From:
 - https://stackoverflow.com/a/58241294/861745
 """
 
-
 import pefile
 
 

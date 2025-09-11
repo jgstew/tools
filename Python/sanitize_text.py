@@ -1,12 +1,13 @@
 """
 Python module to sanitize text for use with file or folder names
 """
+
 import string
 
 
 def sanitize_txt(*args):
-    """ Clean arbitrary text for safe file system usage."""
-    valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+    """Clean arbitrary text for safe file system usage."""
+    valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
 
     sani_args = []
     for arg in args:
@@ -24,7 +25,7 @@ def sanitize_txt(*args):
 def main():
     """default execution starts here"""
     print("main()")
-    print(sanitize_txt("blah/blah\\blah??", "another\///\\.?_-string:"))
+    print(sanitize_txt("blah/blah\\blah??", "another\\///\\.?_-string:"))
 
 
 if __name__ == "__main__":

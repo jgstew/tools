@@ -7,9 +7,10 @@ Related:
 - https://github.com/ralphje/signify/issues/24#issuecomment-1148320566
 """
 
-import olefile
 import os
 import sys
+
+import olefile
 
 
 def main(pathname):

@@ -1,9 +1,9 @@
 # transcribe audio example
 
 import errno
-import time
 import os.path
 import sys
+import time
 
 import torch
 

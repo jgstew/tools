@@ -13,9 +13,9 @@ Date.minsBetween = function( date1, date2 ) {
 
   // Calculate the difference in milliseconds
   var difference_ms = Math.abs(date2_ms - date1_ms);
-    
+
   // Convert back to min and return
-  return Math.round(difference_ms/one_min); 
+  return Math.round(difference_ms/one_min);
 }
 
 // Used here: https://github.com/jgstew/bigfix-content/blob/master/clientui/information/_dashboard.html

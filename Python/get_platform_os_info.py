@@ -17,7 +17,6 @@ Example RegEx:
 import platform
 import sys
 
-
 # https://github.com/autopkg/autopkg/blob/8f2de997860ee591c0f0628190d0b67826fb2fec/Code/autopkglib/__init__.py#L45-L47
 print(sys.platform.lower())
 

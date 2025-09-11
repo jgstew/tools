@@ -6,7 +6,9 @@ This is cross platform
 From:
 - https://stackoverflow.com/questions/580924/how-to-access-a-files-properties-on-windows
 """
+
 from ctypes import *
+
 
 # returns the requested version information from the given file
 #
@@ -18,9 +20,7 @@ def get_version_string(filename, what, language=None):
     # VerQueryValue() returns an array of that for VarFileInfo\Translation
     #
     class LANGANDCODEPAGE(Structure):
-        _fields_ = [
-            ("wLanguage", c_uint16),
-            ("wCodePage", c_uint16)]
+        _fields_ = [("wLanguage", c_uint16), ("wCodePage", c_uint16)]
 
     wstr_file = wstring_at(filename)
 
@@ -49,8 +49,11 @@ def get_version_string(filename, what, language=None):
         # the following arbitrarily gets the first language and codepage from
         # the list
         ret = windll.version.VerQueryValueW(
-            buffer, wstring_at(r"\VarFileInfo\Translation"),
-            byref(value), byref(value_size))
+            buffer,
+            wstring_at(r"\VarFileInfo\Translation"),
+            byref(value),
+            byref(value_size),
+        )
 
         if ret == 0:
             raise WinError()
@@ -62,13 +65,15 @@ def get_version_string(filename, what, language=None):
         lcp = cast(value, POINTER(LANGANDCODEPAGE))
 
         # formatting language and codepage to something like "040904b0"
-        language = "{0:04x}{1:04x}".format(
-            lcp.contents.wLanguage, lcp.contents.wCodePage)
+        language = f"{lcp.contents.wLanguage:04x}{lcp.contents.wCodePage:04x}"
 
     # getting the actual data
     res = windll.version.VerQueryValueW(
-        buffer, wstring_at("\\StringFileInfo\\" + language + "\\" + what),
-        byref(value), byref(value_size))
+        buffer,
+        wstring_at("\\StringFileInfo\\" + language + "\\" + what),
+        byref(value),
+        byref(value_size),
+    )
 
     if res == 0:
         raise WinError()
@@ -81,8 +86,9 @@ def get_version_string(filename, what, language=None):
 def main():
     filepath = r"C:\Program Files\7-Zip\7z.exe"
     version_str = get_version_string(filepath, "FileVersion")
-    #version_str = get_version_string(filepath, "ProductVersion")
+    # version_str = get_version_string(filepath, "ProductVersion")
     print(version_str)
+
 
 if __name__ == "__main__":
     main()

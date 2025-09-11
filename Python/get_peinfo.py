@@ -29,13 +29,14 @@ Thanks to those at Facebook that provided most of the contributions for this plu
 
 """
 
-import time
-import pefile
-import struct
-import peutils
-import hashlib
 import binascii
+import hashlib
+import struct
+import time
 from typing import Any, Dict, List, Optional, Tuple, Union
+
+import pefile
+import peutils
 
 
 class PEInfo:
@@ -72,20 +73,30 @@ class PEInfo:
             results["version_info"] = version_info
         if certs:
             results["certificates"] = []
-            for (cert_data, content) in certs:
+            for cert_data, content in certs:
                 results["certificates"].append(cert_data)
                 if content:
                     cert_data["filename"] = bytes(cert_data["sha256"], "ascii")
-                    extracted.append((content, cert_data,))
+                    extracted.append(
+                        (
+                            content,
+                            cert_data,
+                        )
+                    )
         if sections:
             results["sections"] = sections
         if resources:
             results["resources"] = []
-            for (rsrc_data, content) in resources:
+            for rsrc_data, content in resources:
                 results["resources"].append(rsrc_data)
                 if content:
                     rsrc_data["filename"] = rsrc_data["name"]
-                    extracted.append((content, rsrc_data,))
+                    extracted.append(
+                        (
+                            content,
+                            rsrc_data,
+                        )
+                    )
         if rich_header:
             results["rich_header"] = rich_header
         if imphash:
@@ -119,7 +130,8 @@ class PEInfo:
 
         try:
             return peutils.is_probably_packed(pe)
-        except:
+        except Exception as e:
+            print("Error:", e)
             return None
 
     def _is_suspicious(self, pe) -> Union[bool, None]:
@@ -130,7 +142,8 @@ class PEInfo:
 
         try:
             return peutils.is_suspicious(pe)
-        except:
+        except Exception as e:
+            print("Error:", e)
             return None
 
     def _is_valid(self, pe) -> Union[bool, None]:
@@ -141,7 +154,8 @@ class PEInfo:
 
         try:
             return peutils.is_valid(pe)
-        except:
+        except Exception as e:
+            print("Error:", e)
             return None
 
     def _is_dll(self, pe) -> Union[bool, None]:
@@ -152,7 +166,8 @@ class PEInfo:
 
         try:
             return pe.is_dll()
-        except:
+        except Exception as e:
+            print("Error:", e)
             return None
 
     def _is_driver(self, pe):
@@ -163,7 +178,8 @@ class PEInfo:
 
         try:
             return pe.is_driver()
-        except:
+        except Exception as e:
+            print("Error:", e)
             return None
 
     def _is_exe(self, pe) -> Union[bool, None]:
@@ -174,7 +190,8 @@ class PEInfo:
 
         try:
             return pe.is_exe()
-        except:
+        except Exception as e:
+            print("Error:", e)
             return None
 
     def _get_imports(self, pe) -> Dict[str, List[str]]:

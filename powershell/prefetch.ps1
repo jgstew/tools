@@ -8,7 +8,7 @@
 
 $prefetch = $args[0]
 
-if (!$prefetch) { 
+if (!$prefetch) {
     $prefetch = "prefetch unzip.exe sha1:84debf12767785cd9b43811022407de7413beb6f size:204800 http://software.bigfix.com/download/redist/unzip-6.0.exe sha256:2122557d350fd1c59fb0ef32125330bde673e9331eb9371b454c2ad2d82091ac"
 }
 

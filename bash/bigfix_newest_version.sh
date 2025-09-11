@@ -32,7 +32,7 @@ download_file () {
 if [ -n "$1" ]; then
   download_file $1
   #  TODO: this currently only handles the format `>version<` but could also handle `"version"` or similar.
-  #        it is extremely difficult to build a regex that could handle all versions reliably. 
+  #        it is extremely difficult to build a regex that could handle all versions reliably.
   echo `cat $HTMLTMPFILE | grep -o -P -e '>\d{1,2}\.\d{1,2}\.?\d*\.?\d*<' | grep -o -P -e '\d{1,2}\.\d{1,2}\.?\d*\.?\d*' | sort -r -V | grep -m 1 -i "."`
 else
   download_file https://support.bigfix.com/bes/release/index.html

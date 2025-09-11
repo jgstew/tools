@@ -18,12 +18,12 @@ if (Get-Service -Name BESClient -ErrorAction SilentlyContinue)
     Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\" + (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue | select -Last 20
     # Number of errors in log:  (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\"+ (Get-Date -format "yyyyMMdd") + ".log") -ErrorAction SilentlyContinue) -like "*error*" | measure | % { $_.Count }
     # Lines with errors in ALL bigfix client logs:  (Get-Content ("C:\Program Files (x86)\BigFix Enterprise\BES Client\__BESData\__Global\Logs\*.log") -ErrorAction SilentlyContinue) -like "*error*" | measure | % { $_.Count }
-    
+
     Write-Host "INFO: BigFix is already installed!"
     # only download if file doesn't already exist:
     if(-not(Test-path "$BASEFOLDER\bigfix_uninstall_clean.ps1" -PathType leaf))
     {
-        Write-Host "Downloading: https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1" 
+        Write-Host "Downloading: https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1"
         (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/powershell/bigfix_uninstall_clean.ps1', "$BASEFOLDER\bigfix_uninstall_clean.ps1")
     }
     else
@@ -55,7 +55,7 @@ if ( -not (Test-Path "$BASEFOLDER\actionsite.afxm") )
     Exit -2
 }
 
-Write-Host "Downloading: https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.7.52.exe" 
+Write-Host "Downloading: https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.7.52.exe"
 (New-Object Net.WebClient).DownloadFile('https://software.bigfix.com/download/bes/100/BigFix-BES-Client-10.0.7.52.exe', "$BASEFOLDER\BESClient.exe")
 
 # only continue if BESClient.exe file exists
@@ -67,7 +67,7 @@ if ( -not (Test-Path "$BASEFOLDER\BESClient.exe") )
 
 ECHO "_BESClient_RelaySelect_FailoverRelay=http://$($RELAYFQDN):52311/bfmirror/downloads/" >$BASEFOLDER\clientsettings.cfg
 ECHO __RelaySelect_Automatic=1 >>$BASEFOLDER\clientsettings.cfg
-ECHO _BESClient_Resource_StartupNormalSpeed=1 >>$BASEFOLDER\clientsettings.cfg 
+ECHO _BESClient_Resource_StartupNormalSpeed=1 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_RetryMinutes=1 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Download_CheckAvailabilitySeconds=120 >>$BASEFOLDER\clientsettings.cfg
 ECHO _BESClient_Resource_WorkIdle=20 >>$BASEFOLDER\clientsettings.cfg

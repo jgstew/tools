@@ -35,5 +35,5 @@ $url= $urlbase
 
 #Write-Host $response.InnerXml #Get RAW XML
 
-# Get Answer(s): 
+# Get Answer(s):
 Write-Host $response.BESAPI.Query.Result.InnerXml

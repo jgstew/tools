@@ -15,7 +15,7 @@ if not exist "%csc%" (
 
 if not exist "%~n0.exe" (
    call %csc% /nologo /r:"Microsoft.VisualBasic.dll" /out:"%~n0.exe" "%~dpsfnx0" || (
-      exit /b %errorlevel% 
+      exit /b %errorlevel%
    )
 )
 %~n0.exe %*
@@ -23,7 +23,7 @@ endlocal & exit /b %errorlevel%
 
 */
 
-// reference  
+// reference
 // https://stackoverflow.com/questions/462270/get-file-icon-used-by-shell
 // https://www.bigfix.me/fixlet/details/21898
 // https://gallery.technet.microsoft.com/scriptcenter/eeff544a-f690-4f6b-a586-11eea6fc5eb8

@@ -21,7 +21,7 @@ Stop-Transcript
 
 # References:
 # - https://stackoverflow.com/questions/33511772/read-file-line-by-line-in-powershell
-# - https://stackoverflow.com/questions/33913878/how-to-get-the-captured-groups-from-select-string 
+# - https://stackoverflow.com/questions/33913878/how-to-get-the-captured-groups-from-select-string
 
 # Related:
 # - https://github.com/jgstew/tools/blob/master/powershell/ad_New-ADUser.ps1

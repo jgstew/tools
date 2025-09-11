@@ -63,4 +63,3 @@ CMD ["/usr/sbin/sshd", "-D"]
 
 # https://docs.docker.com/engine/admin/multi-service_container/
 # https://github.com/tianon/docker-brew-ubuntu-core/issues/59
-

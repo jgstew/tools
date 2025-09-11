@@ -5,6 +5,7 @@ References:
 - https://developer.bigfix.com/other/soap-api/soap_url.html
 - https://developer.bigfix.com/other/soap-api/methods/GetRelevanceResult.html
 """
+
 import re
 
 import requests
@@ -53,7 +54,7 @@ def bfwr_session_relevance_array(
         username, password, server_url, session_relevance
     )
 
-    regex = "\s<a>(.+?)</a>\W"
+    regex = r"\s<a>(.+?)</a>\W"
     return re.findall(regex, result_raw)
 
 
@@ -86,11 +87,11 @@ tuple string items (0;1;2) of concatenations ", " of (it as string) of ids of be
 
     session = requests.Session()
 
-    result_login = session.post(
+    _result_login = session.post(
         server_url + "/webreports", data={"Username": username, "Password": password}
     )
 
-    # print(result_login, result_login.text)
+    # print(_result_login, _result_login.text)
 
     result_wol = session.get(wr_wol_url)
 

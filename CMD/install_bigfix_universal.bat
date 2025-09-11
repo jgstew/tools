@@ -1,7 +1,7 @@
 :<<"::CMDLITERAL"
 @ECHO OFF
 REM Short link: http://bit.ly/installbigfix
-REM  Usage: 
+REM  Usage:
 REM powershell -command "& { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/jgstew/tools/master/CMD/install_bigfix_universal.bat', 'install_bigfix.bat') }" -ExecutionPolicy Bypass
 REM install_bigfix.bat __FQDN_OF_ROOT_OR_RELAY__
 
@@ -24,7 +24,7 @@ REM  TODO: handle clientsettings.cfg or masthead.afxm or actionsite.afxm already
 REM  TODO: check for admin rights http://stackoverflow.com/questions/4051883/batch-script-how-to-check-for-admin-rights
 
 REM http://stackoverflow.com/questions/4781772/how-to-test-if-an-executable-exists-in-the-path-from-a-windows-batch-file
-where /q powershell || ECHO Cound not find powershell. && EXIT /B
+where /q powershell || ECHO Could not find powershell. && EXIT /B
 
 @ECHO ON
 REM this following line will need to ignore SSL errors if HTTPS is used instead of HTTP
@@ -69,7 +69,7 @@ EXIT /B
 #   Work In Progress:  curl http://bit.ly/installbigfix | grep -o '".*"' | sed 's/"//g'
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
-# 
+#
 # Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
 #          (Itanium, Power, and others are not common, but could be added)
 #
@@ -175,10 +175,10 @@ else
   if command_exists dpkg ; then
     # Debian based
     INSTALLER="BESAgent.deb"
-    
+
     # check distribution
     DEBDIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
-    
+
     if [[ $OSBIT == x64 ]]; then
       URLBITS=amd64
     else
@@ -198,15 +198,15 @@ else
   if command_exists rpm ; then
     # rpm - Currently assuming RedHat based
     INSTALLER="BESAgent.rpm"
-    
+
     if [[ $OSBIT == x64 ]]; then
       URLBITS=x86_64
     else
       URLBITS=i686
     fi
-    
+
     INSTALLERURL="http://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe5.$URLBITS.rpm"
-    
+
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
       # Assume SUSE
@@ -215,7 +215,7 @@ else
       # TODO: could add support for SUSE 10, but 11+ should work with the above.
     fi # END_IF not-RHEL-family
   fi # END_IF exists rpm
-  
+
 fi # END_IF darwin
 ############################################################
 
@@ -273,7 +273,7 @@ else
     # https://www.gnu.org/software/wget/manual/html_node/HTTPS-_0028SSL_002fTLS_0029-Options.html
     wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
     DLEXITCODE=$(( DLEXITCODE + $? ))
-    
+
     wget $INSTALLERURL -O $INSTALLER
     DLEXITCODE=$(( DLEXITCODE + $? ))
   else
@@ -356,7 +356,7 @@ sleep 5
 # TODO: add mac support to the following:
 if [ -f "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log" ]; then
   tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
-  
+
   # Related:
   #  - https://bigfix.me/fixlet/details/24646
   #  - https://bigfix.me/relevance/details/3020387

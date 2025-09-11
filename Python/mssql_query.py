@@ -16,7 +16,7 @@ def main():
     print("main() start")
 
     parser = argparse.ArgumentParser(
-        description="Provde command line arguments for server, username, db, and query"
+        description="Provide command line arguments for server, username, db, and query"
     )
     parser.add_argument(
         "-v",

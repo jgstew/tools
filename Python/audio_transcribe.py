@@ -1,15 +1,16 @@
 # transcribe audio example
 
 import errno
-import time
 import os.path
 import sys
+import time
+
+import torch
 
 # install ffmpeg using OS package manager (choco install ffmpeg)
 # pip install -U setuptools-rust
 # pip install -U openai-whisper
 import whisper
-import torch
 
 # to get CUDA working:
 # install NVidia CUDA Toolkit: https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64&target_version=11&target_type=exe_local

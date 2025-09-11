@@ -26,7 +26,7 @@ def get_bessite_info(bes_site_url, verify_ssl=True):
 def get_bessite_version(bes_site_html):
     """get bes site version"""
     site_version = int(
-        re.search(b"(?:\n|\r\n?)Version: (\d+)(?:\n|\r\n?)", bes_site_html).group(1)
+        re.search(b"(?:\n|\r\n?)Version: (\\d+)(?:\n|\r\n?)", bes_site_html).group(1)
     )
     return site_version
 

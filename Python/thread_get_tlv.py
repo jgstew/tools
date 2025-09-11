@@ -2,7 +2,7 @@
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
-from python_otbr_api.tlv_parser import MeshcopTLVType, MeshcopTLVItem
+from python_otbr_api.tlv_parser import MeshcopTLVItem, MeshcopTLVType
 
 # Apple
 CHANNEL = 25

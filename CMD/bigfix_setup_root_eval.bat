@@ -61,6 +61,6 @@ REM  TODO: Install BES Server Plugin Service, Configure SOAP API creds, Configur
 REM  TODO: deploy actions to configure default client settings
 REM  TODO: Activate Analyses: Wake-on-LAN Analysis, Download Plug-in Versions, BES Health Checks Analysis, BES Relay Status
 REM  TODO: create custom site(s) `Shared` `Dashboards` `Private`
-REM  TODO: create roles 
+REM  TODO: create roles
 REM  TODO: install adobe flash for IE for root or console systems (DISM)
-REM  TODO: 
+REM  TODO:

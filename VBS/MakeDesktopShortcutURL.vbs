@@ -13,4 +13,3 @@ oUrlLink.Save
 ' https://ss64.com/vb/echo.html
 ' https://www.tutorialspoint.com/vbscript/vbscript_object_oriented.htm
 ' https://www.bigfix.me/fixlet/details/741
-    

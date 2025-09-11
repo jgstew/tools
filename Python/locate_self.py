@@ -23,7 +23,7 @@ def main(debug=True):
         print(f"sys.executable = {sys.executable}")
         print(f"__file__ = {__file__}")
         print(f"os.path.abspath(sys.argv[0]) = {os.path.abspath(sys.argv[0])}")
-        print(f"os.getcwd() = { os.getcwd() }")
+        print(f"os.getcwd() = {os.getcwd()}")
 
     invoke_folder = ""
 

@@ -7,7 +7,7 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 strZipFilePath = fso.GetAbsolutePathName("example.zip")
 strInputFile = fso.GetAbsolutePathName("..\LICENSE")
 
-Function FileExists(FilePath)  
+Function FileExists(FilePath)
   If fso.FileExists(FilePath) Then
     FileExists=CBool(1)
   Else

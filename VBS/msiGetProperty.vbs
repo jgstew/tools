@@ -37,7 +37,7 @@ Else
 			msiPath = objFile.Name
 		End If
 	Next
-	
+
 	If IsEmpty( msiPath ) Then
 		Wscript.Echo
 		Wscript.Echo "-ERROR-"

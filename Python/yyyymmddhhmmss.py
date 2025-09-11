@@ -1,5 +1,6 @@
 import time
 
+
 # http://stackoverflow.com/questions/2487109/python-date-time-formatting
 # https://docs.python.org/2/library/datetime.html
 def yyyymmddhhmmss(before="", after="", now=time.localtime()):

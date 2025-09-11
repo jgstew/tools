@@ -21,7 +21,7 @@ collection:
       text: |-
         {
           "requestType":"getAllProjects",
-          "userKey": "{{ _.MEND_userToken }}", 
+          "userKey": "{{ _.MEND_userToken }}",
           "productToken":"{{ _.MEND_productToken }}"
         }
     headers:
@@ -52,8 +52,8 @@ collection:
       text: |-
         {
           "requestType" : "saveProjectTag",
-          "userKey": "{{ _.MEND_userToken }}", 
-          "projectToken" : "{{ _.MEND_projectToken_example_project }}", 
+          "userKey": "{{ _.MEND_userToken }}",
+          "projectToken" : "{{ _.MEND_projectToken_example_project }}",
           "tagKey":"DockerBaseImage",
           "tagValue":"golang:1.24.0-alpine3.21"
         }
@@ -85,8 +85,8 @@ collection:
       text: |-
         {
           "requestType" : "removeProjectTag",
-          "userKey": "{{ _.MEND_userToken }}", 
-          "projectToken" : "{{ _.MEND_projectToken_example_project }}", 
+          "userKey": "{{ _.MEND_userToken }}",
+          "projectToken" : "{{ _.MEND_projectToken_example_project }}",
           "tagKey":"DockerBaseImage",
           "tagValue":"golang:1.24.0-alpine3.21"
         }
@@ -118,7 +118,7 @@ collection:
       text: |-
         {
           "requestType" : "getProjectTags",
-          "userKey": "{{ _.MEND_userToken }}", 
+          "userKey": "{{ _.MEND_userToken }}",
           "projectToken" : "{{ _.MEND_projectToken_example_project }}"
         }
     headers:

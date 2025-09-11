@@ -18,7 +18,7 @@ This seems to allow downloading of a file with the prefetch: https://stackoverfl
 
 ------
 
-Would be interesting to turn this into a Chrome Extension. 
+Would be interesting to turn this into a Chrome Extension.
 - https://developer.chrome.com/extensions/getstarted
 - https://developer.chrome.com/extensions/overview
 - https://developer.chrome.com/extensions/content_scripts

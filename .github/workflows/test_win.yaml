@@ -17,7 +17,7 @@ jobs:
         # `shell: bash` requires WSL on a windows runner
         shell: bash
         run: |
-          echo "Hellow World! Bash"
+          echo "Hello World! Bash"
       - name: test default shell command
         # default shell for windows is PowerShell
         # this requires local script execution to be enabled
