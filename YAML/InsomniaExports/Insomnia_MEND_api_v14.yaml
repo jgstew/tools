@@ -1,0 +1,148 @@
+type: collection.insomnia.rest/5.0
+name: MEND
+meta:
+  id: wrk_0adfa4beb12d448b83bf1bec31f76db9
+  created: 1757604201289
+  modified: 1757604201289
+  description: ""
+collection:
+  - url: https://{{ _.MEND_server }}/api/v1.4
+    name: getAllProjects
+    meta:
+      id: req_d705150396cf48048bf297ed9c4e8779
+      created: 1757604622614
+      modified: 1757605203208
+      isPrivate: false
+      description: ""
+      sortKey: -1757604622614
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "requestType":"getAllProjects",
+          "userKey": "{{ _.MEND_userToken }}", 
+          "productToken":"{{ _.MEND_productToken }}"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.5.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: https://{{ _.MEND_server }}/api/v1.4
+    name: saveProjectTag
+    meta:
+      id: req_e1f72712753e4f47bd5202293c3728bf
+      created: 1757605227430
+      modified: 1757606708685
+      isPrivate: false
+      description: ""
+      sortKey: -1725515493571.3125
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "requestType" : "saveProjectTag",
+          "userKey": "{{ _.MEND_userToken }}", 
+          "projectToken" : "{{ _.MEND_projectToken_example_project }}", 
+          "tagKey":"DockerBaseImage",
+          "tagValue":"golang:1.24.0-alpine3.21"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.5.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: https://{{ _.MEND_server }}/api/v1.4
+    name: removeProjectTag
+    meta:
+      id: req_829c4956501c421884ee04ade8fa6e28
+      created: 1757605701525
+      modified: 1757606672151
+      isPrivate: false
+      description: ""
+      sortKey: -1720931332279.5
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "requestType" : "removeProjectTag",
+          "userKey": "{{ _.MEND_userToken }}", 
+          "projectToken" : "{{ _.MEND_projectToken_example_project }}", 
+          "tagKey":"DockerBaseImage",
+          "tagValue":"golang:1.24.0-alpine3.21"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.5.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: https://{{ _.MEND_server }}/api/v1.4
+    name: getProjectTags
+    meta:
+      id: req_9f54d3ff9ed14f4ca1f3c97ed7e77b51
+      created: 1757606446650
+      modified: 1757606684941
+      isPrivate: false
+      description: ""
+      sortKey: -1730099654863.125
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "requestType" : "getProjectTags",
+          "userKey": "{{ _.MEND_userToken }}", 
+          "projectToken" : "{{ _.MEND_projectToken_example_project }}"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.5.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+environments:
+  name: Base Environment
+  meta:
+    id: env_e486fd2895abc0fa01add4eb26da339daf680553
+    created: 1757604201291
+    modified: 1757606662790
+    isPrivate: false
+  data:
+    MEND_server: saas.whitesourcesoftware.com
+    MEND_productToken: ""
+    MEND_userToken: ""
+    MEND_projectToken_example_project: ""
