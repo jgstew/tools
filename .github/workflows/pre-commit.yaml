@@ -16,7 +16,7 @@ jobs:
           # Required to grab the full history for proper pre-commit checks
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version-file: ".github/workflows/action-python-version"
 
