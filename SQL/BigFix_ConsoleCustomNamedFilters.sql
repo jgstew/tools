@@ -1,0 +1,12 @@
+/****** BigFix Console Custom Named Filters ******/
+SELECT [FilterID]
+      ,[UserID]
+      ,[IsPrivate]
+      ,[FilterName]
+      ,[FilterData]
+      ,[IsDeleted]
+      ,[Sequence]
+      ,[ManyVersion]
+      ,[OriginServerID]
+      ,[OriginSequence]
+  FROM [BFEnterprise].[dbo].[NAMEDFILTERS]
