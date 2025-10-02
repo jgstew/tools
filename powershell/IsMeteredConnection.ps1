@@ -7,4 +7,6 @@ $cost = [Windows.Networking.Connectivity.NetworkInformation]::GetInternetConnect
 
 Write-Host "Cost Type: $($cost.NetworkCostType)"
 
-Write-Host "Metered Connection: $($cost.ApproachingDataLimit -or $cost.OverDataLimit -or $cost.Roaming -or $cost.BackgroundDataUsageRestricted)"
+$boolMetered = $cost.ApproachingDataLimit -or $cost.OverDataLimit -or $cost.Roaming -or $cost.BackgroundDataUsageRestricted -or ($cost.NetworkCostType -ne "Unrestricted" -and $cost.NetworkCostType -ne "Unknown")
+
+Write-Host "Metered Connection: $($boolMetered)"
