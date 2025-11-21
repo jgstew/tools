@@ -1,8 +1,8 @@
 /****** Get newest computer last report time in DB ******/
-SELECT MAX(LastReportTime) AS LastReportTimeMax 
+SELECT MAX(LastReportTime) AS LastReportTimeMax
   FROM [BFEnterprise].[dbo].[COMPUTERS]
-/****** 
-SELECT TOP (1) 
+/******
+SELECT TOP (1)
        [LastReportTime]
   FROM [BFEnterprise].[dbo].[COMPUTERS]
   ORDER BY [LastReportTime] DESC
