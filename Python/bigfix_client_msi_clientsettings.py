@@ -11,8 +11,10 @@ import os
 import shutil
 import sys
 
-# pip install pywin32
+# python -m pip install pywin32
+# might need to do this to generate cache:
 # python -m win32com.client.makepy -i "Windows Installer Object Library"
+# might need to start the Windows Installer service if not already running:
 # net start msiserver
 import win32com.client
 
