@@ -11,6 +11,7 @@ import os
 import shutil
 import sys
 
+# pip install pywin32
 import win32com.client
 
 
@@ -39,7 +40,7 @@ def msi_property_edit(msi_path, property_name, new_value):
     print(f"Updated {property_name} to {new_value}")
 
 
-def update_msi_registry_bigfix_clientsettings(msi_path, setting_name, setting_value):
+def msi_update_registry_bigfix_clientsettings(msi_path, setting_name, setting_value, component="BESClient.exe"):
     """
     Inserts BigFix configuration registry keys into a specific MSI file.
     """
@@ -62,7 +63,7 @@ def update_msi_registry_bigfix_clientsettings(msi_path, setting_name, setting_va
     key = r"SOFTWARE\\BigFix\\EnterpriseClient\\Settings\\Client"
     name = setting_name
     value = setting_value
-    component = "BESClient.exe"  # Assuming a component named BESClient.exe exists
+    # component = "BESClient.exe"  # Assuming a component named BESClient.exe exists
 
     # Execute the insert
     view.Execute((registry_id, root, key, name, value, component))
@@ -70,6 +71,29 @@ def update_msi_registry_bigfix_clientsettings(msi_path, setting_name, setting_va
     # Commit changes and close
     db.Commit()
     print(f"Inserted registry setting {setting_name} with value {setting_value}")
+
+
+def msi_get_components(msi_path):
+    """
+    Docstring for msi_get_components
+
+    :param msi_path: Path to the MSI file
+    :return: List of component names in the MSI
+    """
+    installer = win32com.client.Dispatch("WindowsInstaller.Installer")
+    db = installer.OpenDatabase(msi_path, 0)  # 0 = msiOpenDatabaseModeReadOnly
+    view = db.OpenView("SELECT `Component` FROM `Component`")
+    view.Execute()
+    components = []
+    record = view.Fetch()
+    while record:
+        try:
+            components.append(record.StringData(1))
+        except Exception as e:
+            # print(f"Error reading component: {e}")
+            components.append(record.StringData(1))
+        record = view.Fetch()
+    return components
 
 
 def clientsettings_from_file(settings_path):
@@ -118,21 +142,27 @@ def main():
 
     output_msi = os.path.splitext(input_msi_path)[0] + "_modified.msi"
 
+    # delete output MSI if it already exists
+    if os.path.isfile(output_msi):
+        os.remove(output_msi)
+
     settings = clientsettings_from_file(client_settings_path)
     print("Client settings to apply:", settings)
 
     shutil.copyfile(input_msi_path, output_msi)
 
+    print("Components in MSI:", msi_get_components(output_msi))
+
     # edit the MSI registry entries based on settings
-    for setting_name, setting_value in settings.items():
-        update_msi_registry_bigfix_clientsettings(
-            output_msi, setting_name, setting_value
-        )
+    # for setting_name, setting_value in settings.items():
+    #     msi_update_registry_bigfix_clientsettings(
+    #         output_msi, setting_name, setting_value
+    #     )
 
     print(f"Modified MSI saved as '{output_msi}'.")
 
 
 if __name__ == "__main__":
-    print("This is untested! EXITING!")
-    sys.exit(1)
+    print("This is untested!")
+    # sys.exit(1)
     main()
