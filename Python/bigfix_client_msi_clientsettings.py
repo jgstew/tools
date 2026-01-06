@@ -146,7 +146,11 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--input_msi", type=str, required=True, default="c:\\Program Files (x86)\\BigFix Enterprise\\BES Installers\\ClientMSI\\BigFixAgent.msi", help="Path to input MSI file."
+        "--input_msi",
+        type=str,
+        required=True,
+        default="c:\\Program Files (x86)\\BigFix Enterprise\\BES Installers\\ClientMSI\\BigFixAgent.msi",
+        help="Path to input MSI file.",
     )
     parser.add_argument(
         "--client_settings",
