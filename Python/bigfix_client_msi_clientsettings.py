@@ -16,6 +16,8 @@ import sys
 # net start msiserver
 import win32com.client
 
+# import msilib
+
 
 def msi_property_edit(msi_path, property_name, new_value):
     """
@@ -52,12 +54,6 @@ def msi_update_registry_bigfix_clientsettings(msi_path, setting_name, setting_va
     # Open the database (2 = msiOpenDatabaseModeTransact)
     db = installer.OpenDatabase(msi_path, 2)
 
-    # Prepare the SQL Insert query
-    view = db.OpenView(
-        "INSERT INTO `Registry` (`Registry`, `Root`, `Key`, `Name`, `Value`, `Component_`) "
-        "VALUES (?, ?, ?, ?, ?, ?)"
-    )
-
     # Define registry parameters
     registry_id = f"{setting_name}"  # Unique ID for the registry entry
     root = 2  # HKEY_LOCAL_MACHINE
@@ -67,42 +63,60 @@ def msi_update_registry_bigfix_clientsettings(msi_path, setting_name, setting_va
     value = setting_value
     # component = "BESClient.exe"  # Assuming a component named BESClient.exe exists
 
-    # Execute the insert
-    view.Execute((registry_id, root, key, name, value, component))
+    # Prepare the SQL Insert query
+    view = db.OpenView(
+        f"INSERT INTO `Registry` (`Registry`, `Root`, `Key`, `Name`, `Value`, `Component_`) VALUES ('{registry_id}', {root}, '{key}', '{name}', '{value}', '{component}')"
+    )
+
+    view.Execute(None)
 
     # Commit changes and close
     db.Commit()
     print(f"Inserted registry setting {setting_name} with value {setting_value}")
 
 
-def msi_get_components(msi_path):
-    """
-    Docstring for msi_get_components
+# def msi_update_registry_bigfix_clientsettings_msilib(msi_path, setting_name, setting_value, component="BESClient.exe"):
+#     """Inserts BigFix configuration registry keys into a specific MSI file."""
+#     # Use msilib to update registry entries
+#     db = msilib.OpenDatabase(msi_path, msilib.MSIDBOPEN_TRANSACT)
+#     view = db.OpenView(
+#         "INSERT INTO `Registry` (`Registry`, `Root`, `Key`, `Name`, `Value`, `Component_`) "
+#         "VALUES (?, ?, ?, ?, ?, ?)"
+#     )
 
-    :param msi_path: Path to the MSI file
-    :return: List of component names in the MSI
+#     registry_id = f"{setting_name}"  # Unique ID for the registry entry
+#     root = 2  # HKEY_LOCAL_MACHINE
+#     key = r"SOFTWARE\\BigFix\\EnterpriseClient\\Settings\\Client\\" + setting_name
+#     name = setting_name
+#     value = setting_value
 
-    This DOES NOT WORK!
-    """
-    # win32com.client.gencache.EnsureDispatch("WindowsInstaller.Installer")
-    installer = win32com.client.Dispatch(
-        "WindowsInstaller.Installer"
-    )
+#     record = msilib.CreateRecord(6)
+#     record.SetString(1, registry_id)
+#     record.SetInteger(2, root)
+#     record.SetString(3, key)
+#     record.SetString(4, name)
+#     record.SetString(5, value)
+#     record.SetString(6, component)
+#     view.Execute(record)
+#     db.Commit()
+#     print(f"Inserted registry setting {setting_name} with value {setting_value}")
 
-    db = installer.OpenDatabase(msi_path, 0)  # Read-only
-    view = db.OpenView("SELECT `Component` FROM `Component`")
-    view.Execute()
 
-    components = []
+# def msi_get_components_msilib(msi_path):
+#     """Get list of component names in the MSI using msilib."""
+#     db = msilib.OpenDatabase(msi_path, msilib.MSIDBOPEN_READONLY)
+#     view = db.OpenView("SELECT `Component` FROM `Component`")
+#     view.Execute(None)
 
-    record = view.Fetch()
-    while record:
-        components.append(record.StringData(1))  # MSI is 1-based
-        record = view.Fetch()
+#     components = []
+#     record = view.Fetch()
+#     while record:
+#         components.append(record.GetString(1))  # MSI is 1-based
+#         record = view.Fetch()
 
-    view.Close()
-    db.Close()
-    return components
+#     view.Close()
+#     db.Close()
+#     return components
 
 
 def clientsettings_from_file(settings_path):
@@ -160,8 +174,6 @@ def main():
 
     shutil.copyfile(input_msi_path, output_msi)
 
-    # print("Components in MSI:", msi_get_components(output_msi))
-
     # edit the MSI registry entries based on settings
     for setting_name, setting_value in settings.items():
         msi_update_registry_bigfix_clientsettings(
@@ -173,5 +185,5 @@ def main():
 
 if __name__ == "__main__":
     print("This is untested!")
-    sys.exit(1)
+    # sys.exit(1)
     main()
