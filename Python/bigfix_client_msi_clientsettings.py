@@ -12,6 +12,7 @@ import shutil
 import sys
 
 # pip install pywin32
+# python -m win32com.client.makepy -i "Windows Installer Object Library"
 import win32com.client
 
 
@@ -80,19 +81,22 @@ def msi_get_components(msi_path):
     :param msi_path: Path to the MSI file
     :return: List of component names in the MSI
     """
-    installer = win32com.client.Dispatch("WindowsInstaller.Installer")
-    db = installer.OpenDatabase(msi_path, 0)  # 0 = msiOpenDatabaseModeReadOnly
+    installer = win32com.client.gencache.EnsureDispatch(
+        "WindowsInstaller.Installer"
+    )
+
+    db = installer.OpenDatabase(msi_path, 0)  # Read-only
     view = db.OpenView("SELECT `Component` FROM `Component`")
     view.Execute()
+
     components = []
+
     record = view.Fetch()
     while record:
-        try:
-            components.append(record.StringData(1))
-        except Exception as e:
-            # print(f"Error reading component: {e}")
-            components.append(record.StringData(1))
+        components.append(record.StringData(1))  # MSI is 1-based
         record = view.Fetch()
+
+    view.Close()
     return components
 
 
@@ -164,5 +168,5 @@ def main():
 
 if __name__ == "__main__":
     print("This is untested!")
-    # sys.exit(1)
+    sys.exit(1)
     main()
