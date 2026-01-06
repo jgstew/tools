@@ -46,7 +46,9 @@ def msi_property_edit(msi_path, property_name, new_value):
     print(f"Updated {property_name} to {new_value}")
 
 
-def msi_update_registry_bigfix_clientsettings(msi_path, setting_name, setting_value, component="BESClient.exe"):
+def msi_update_registry_bigfix_clientsettings(
+    msi_path, setting_name, setting_value, component="BESClient.exe"
+):
     """
     Inserts BigFix configuration registry keys into a specific MSI file.
     """
@@ -158,11 +160,15 @@ def main():
     client_settings_path = args.client_settings
 
     if not os.path.isfile(input_msi_path):
-        print(f"Input MSI file '{input_msi_path}' does not exist. Provide correct path using --input_msi cmd arg.")
+        print(
+            f"Input MSI file '{input_msi_path}' does not exist. Provide correct path using --input_msi cmd arg."
+        )
         return
 
     if not os.path.isfile(client_settings_path):
-        print(f"Client settings file '{client_settings_path}' does not exist. Provide correct path using --client_settings cmd arg.")
+        print(
+            f"Client settings file '{client_settings_path}' does not exist. Provide correct path using --client_settings cmd arg."
+        )
         return
 
     output_msi = os.path.splitext(input_msi_path)[0] + "_modified.msi"
