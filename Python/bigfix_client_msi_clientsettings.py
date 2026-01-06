@@ -63,13 +63,13 @@ def msi_update_registry_bigfix_clientsettings(
     root = 2  # HKEY_LOCAL_MACHINE
     # SOFTWARE\BigFix\EnterpriseClient\Settings\Client
     key = r"SOFTWARE\\BigFix\\EnterpriseClient\\Settings\\Client\\" + setting_name
-    name = setting_name
+    # name = setting_name
     value = setting_value
     # component = "BESClient.exe"  # Assuming a component named BESClient.exe exists
 
     # Prepare the SQL Insert query
     view = db.OpenView(
-        f"INSERT INTO `Registry` (`Registry`, `Root`, `Key`, `Name`, `Value`, `Component_`) VALUES ('{registry_id}', {root}, '{key}', '{name}', '{value}', '{component}')"
+        f"INSERT INTO `Registry` (`Registry`, `Root`, `Key`, `Name`, `Value`, `Component_`) VALUES ('{registry_id}', {root}, '{key}', 'value', '{value}', '{component}')"
     )
 
     view.Execute(None)
