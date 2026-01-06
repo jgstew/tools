@@ -62,7 +62,7 @@ def msi_update_registry_bigfix_clientsettings(
     registry_id = f"{setting_name}"  # Unique ID for the registry entry
     root = 2  # HKEY_LOCAL_MACHINE
     # SOFTWARE\BigFix\EnterpriseClient\Settings\Client
-    key = r"SOFTWARE\\BigFix\\EnterpriseClient\\Settings\\Client\\" + setting_name
+    key = f"SOFTWARE\\BigFix\\EnterpriseClient\\Settings\\Client\\{setting_name}"
     # name = setting_name
     value = setting_value
     # component = "BESClient.exe"  # Assuming a component named BESClient.exe exists
@@ -146,7 +146,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--input_msi", type=str, required=True, help="Path to input MSI file."
+        "--input_msi", type=str, required=True, default="c:\\Program Files (x86)\\BigFix Enterprise\\BES Installers\\ClientMSI\\BigFixAgent.msi", help="Path to input MSI file."
     )
     parser.add_argument(
         "--client_settings",
@@ -192,6 +192,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("This is untested!")
-    # sys.exit(1)
     main()
