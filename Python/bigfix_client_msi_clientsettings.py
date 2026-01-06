@@ -149,7 +149,7 @@ def main():
     parser.add_argument(
         "--client_settings",
         type=str,
-        required=True,
+        default="clientsettings.cfg",
         help="Path to client settings file.",
     )
     args = parser.parse_args()
@@ -158,11 +158,11 @@ def main():
     client_settings_path = args.client_settings
 
     if not os.path.isfile(input_msi_path):
-        print(f"Input MSI file '{input_msi_path}' does not exist.")
+        print(f"Input MSI file '{input_msi_path}' does not exist. Provide correct path using --input_msi cmd arg.")
         return
 
     if not os.path.isfile(client_settings_path):
-        print(f"Client settings file '{client_settings_path}' does not exist.")
+        print(f"Client settings file '{client_settings_path}' does not exist. Provide correct path using --client_settings cmd arg.")
         return
 
     output_msi = os.path.splitext(input_msi_path)[0] + "_modified.msi"
