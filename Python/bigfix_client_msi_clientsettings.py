@@ -13,6 +13,7 @@ import sys
 
 # pip install pywin32
 # python -m win32com.client.makepy -i "Windows Installer Object Library"
+# net start msiserver
 import win32com.client
 
 
@@ -61,7 +62,7 @@ def msi_update_registry_bigfix_clientsettings(msi_path, setting_name, setting_va
     registry_id = f"{setting_name}"  # Unique ID for the registry entry
     root = 2  # HKEY_LOCAL_MACHINE
     # SOFTWARE\BigFix\EnterpriseClient\Settings\Client
-    key = r"SOFTWARE\\BigFix\\EnterpriseClient\\Settings\\Client"
+    key = r"SOFTWARE\\BigFix\\EnterpriseClient\\Settings\\Client\\" + setting_name
     name = setting_name
     value = setting_value
     # component = "BESClient.exe"  # Assuming a component named BESClient.exe exists
@@ -80,8 +81,11 @@ def msi_get_components(msi_path):
 
     :param msi_path: Path to the MSI file
     :return: List of component names in the MSI
+
+    This DOES NOT WORK!
     """
-    installer = win32com.client.gencache.EnsureDispatch(
+    # win32com.client.gencache.EnsureDispatch("WindowsInstaller.Installer")
+    installer = win32com.client.Dispatch(
         "WindowsInstaller.Installer"
     )
 
@@ -97,6 +101,7 @@ def msi_get_components(msi_path):
         record = view.Fetch()
 
     view.Close()
+    db.Close()
     return components
 
 
@@ -155,13 +160,13 @@ def main():
 
     shutil.copyfile(input_msi_path, output_msi)
 
-    print("Components in MSI:", msi_get_components(output_msi))
+    # print("Components in MSI:", msi_get_components(output_msi))
 
     # edit the MSI registry entries based on settings
-    # for setting_name, setting_value in settings.items():
-    #     msi_update_registry_bigfix_clientsettings(
-    #         output_msi, setting_name, setting_value
-    #     )
+    for setting_name, setting_value in settings.items():
+        msi_update_registry_bigfix_clientsettings(
+            output_msi, setting_name, setting_value
+        )
 
     print(f"Modified MSI saved as '{output_msi}'.")
 
