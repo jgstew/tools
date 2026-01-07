@@ -23,7 +23,7 @@
 param(
     [Parameter(Mandatory=$true)]
     [string]$InputMsi,
-    
+
     [Parameter(Mandatory=$false)]
     [string]$ClientSettings = "clientsettings.cfg"
 )
@@ -38,23 +38,23 @@ function Update-MsiProperty {
         [string]$PropertyName,
         [string]$NewValue
     )
-    
+
     try {
         # Initialize the Windows Installer Object
         $installer = New-Object -ComObject WindowsInstaller.Installer
-        
+
         # Open the database (2 = msiOpenDatabaseModeTransact)
         $db = $installer.OpenDatabase($MsiPath, 2)
-        
+
         # Execute a SQL Update query
         $query = "UPDATE ``Property`` SET ``Value`` = '$NewValue' WHERE ``Property`` = '$PropertyName'"
         $view = $db.OpenView($query)
         $view.Execute()
-        
+
         # Commit changes
         $db.Commit()
         Write-Host "Updated $PropertyName to $NewValue"
-        
+
         # Clean up
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($view) | Out-Null
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($db) | Out-Null
@@ -77,31 +77,31 @@ function Add-BigFixClientSettingToMsi {
         [string]$SettingValue,
         [string]$Component = "BESClient.exe"
     )
-    
+
     try {
         # Initialize the Windows Installer Object
         $installer = New-Object -ComObject WindowsInstaller.Installer
-        
+
         # Open the database (2 = msiOpenDatabaseModeTransact)
         $db = $installer.OpenDatabase($MsiPath, 2)
-        
+
         # Define registry parameters
         $registryId = $SettingName  # Unique ID for the registry entry
         $root = 2  # HKEY_LOCAL_MACHINE
         $key = "SOFTWARE\BigFix\EnterpriseClient\Settings\Client\$SettingName"
         $value = $SettingValue
-        
+
         # Prepare the SQL Insert query
         $query = "INSERT INTO ``Registry`` (``Registry``, ``Root``, ``Key``, ``Name``, ``Value``, ``Component_``) " +
                  "VALUES ('$registryId', $root, '$key', 'value', '$value', '$Component')"
-        
+
         $view = $db.OpenView($query)
         $view.Execute()
-        
+
         # Commit changes
         $db.Commit()
         Write-Host "Inserted registry setting $SettingName with value $SettingValue"
-        
+
         # Clean up
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($view) | Out-Null
         [System.Runtime.InteropServices.Marshal]::ReleaseComObject($db) | Out-Null
@@ -121,14 +121,14 @@ function Get-ClientSettingsFromFile {
     param(
         [string]$SettingsPath
     )
-    
+
     $settings = @{}
-    
+
     if (-not (Test-Path $SettingsPath)) {
         Write-Error "Settings file not found: $SettingsPath"
         return $null
     }
-    
+
     Get-Content $SettingsPath | ForEach-Object {
         $line = $_.Trim()
         # Skip empty lines and comments
@@ -141,7 +141,7 @@ function Get-ClientSettingsFromFile {
             }
         }
     }
-    
+
     return $settings
 }
 
