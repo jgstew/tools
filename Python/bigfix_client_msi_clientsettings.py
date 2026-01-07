@@ -1,6 +1,8 @@
 """
 edit bigfix client MSI to incorporate custom client settings.
 
+There is a powershell version of this script here: powershell/bigfix_client_msi_clientsettings.ps1
+
 usage:
 
 python bigfix_client_msi_clientsettings.py --input_msi <input_msi_path> --client_settings <client_settings_path>
