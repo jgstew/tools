@@ -1,5 +1,6 @@
 #!/bin/bash
 # A bash script to set values in an INI configuration file.
+# Generated through Gemini 3 Pro and tested on MacOS.
 
 # Function to run sed in-place compatibly on both Mac (BSD) and Linux (GNU)
 sed_inplace() {
