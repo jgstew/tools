@@ -1,43 +1,55 @@
 #!/bin/bash
-# WORK IN PROGRESS: A simple script to set values in an INI configuration file.
-echo "This script is a WORK IN PROGRESS and may not function as intended. Exiting."
-exit 1
+# A bash script to set values in an INI configuration file.
 
-# so far this works to add a new section, but at least on macos it does not work to update existing keys
+# Function to run sed in-place compatibly on both Mac (BSD) and Linux (GNU)
+sed_inplace() {
+    if [[ $(uname) == "Darwin" ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
 
-# Function to set an INI value
 config_ini_set_value() {
     local INI_FILE=$1
     local SECTION=$2
     local KEY=$3
     local VALUE=$4
 
-    # create the INI file if it doesn't exist
+    # 1. Create file if it doesn't exist
     if [ ! -f "$INI_FILE" ]; then
         touch "$INI_FILE"
     fi
 
-    # Check if the key already exists in the section
-    if grep -q "^\\[$SECTION\\]" "$INI_FILE" && grep -q "^$KEY=" "$INI_FILE"; then
-        # Update existing key
-        echo "Updating $KEY in section [$SECTION] to $VALUE"
-        sed -i "/^\\[$SECTION\\]/,/^\\[/s/^$KEY=.*/$KEY=$VALUE/" "$INI_FILE"
-    else
-        # Add new key/section if it doesn't exist
-        if grep -q "^\\[$SECTION\\]" "$INI_FILE"; then
-            # Append to existing section
-            echo "Adding $KEY=$VALUE to existing section [$SECTION]"
-            sed -i "/^\\[$SECTION\\]/a\\$KEY=$VALUE" "$INI_FILE"
+    # 2. Check if the SECTION exists
+    if grep -q "^\[$SECTION\]" "$INI_FILE"; then
+
+        # 3. Check if the KEY exists specifically WITHIN that section
+        # We use sed to extract the block from [SECTION] to the next [ or EOF,
+        # then pipe to grep to see if the key is there.
+        if sed -n "/^\[$SECTION\]/,/^\[/p" "$INI_FILE" | grep -q "^$KEY\s*="; then
+            echo "Updating $KEY in section [$SECTION] to $VALUE"
+            # Update the existing key inside the specific section range
+            sed_inplace "/^\[$SECTION\]/,/^\[/s/^$KEY[[:space:]]*=.*/$KEY=$VALUE/" "$INI_FILE"
         else
-            # Append new section and key to end of file
-            echo "Creating section [$SECTION] and adding $KEY=$VALUE"
-            echo -e "\n[$SECTION]\n$KEY=$VALUE" >> "$INI_FILE"
+            echo "Adding $KEY=$VALUE to existing section [$SECTION]"
+            # Insert the new key after the section header.
+            # We use a trick with 's' (substitute) to act as an append
+            # because the 'a' command varies wildly between Mac and Linux.
+            # We explicitly use a literal escaped newline for compatibility.
+            sed_inplace "s/^\[$SECTION\]/\[$SECTION\]\\"$'
+'"$KEY=$VALUE/" "$INI_FILE"
         fi
+    else
+        echo "Creating section [$SECTION] and adding $KEY=$VALUE"
+        # Append new section and key to end of file
+        # Using printf is safer/more portable than echo -e
+        printf "\n[%s]\n%s=%s\n" "$SECTION" "$KEY" "$VALUE" >> "$INI_FILE"
     fi
 }
 
+# Run the function with the provided arguments
 config_ini_set_value "$1" "$2" "$3" "$4"
 
 # Example Usage:
 # bash bash/config_set_value.sh "myconfig.ini" "database" "host" "192.168.1.1"
-# bash bash/config_set_value.sh "myconfig.ini" "user" "name" "john_doe"
