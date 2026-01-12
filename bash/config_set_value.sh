@@ -1,5 +1,6 @@
 #!/bin/bash
 # A bash script to set values in an INI configuration file.
+# https://support.hcl-software.com/csm?id=kb_article&sysparm_article=KB0022537
 # Generated through Gemini 3 Pro and tested on MacOS.
 
 # Function to run sed in-place compatibly on both Mac (BSD) and Linux (GNU)
