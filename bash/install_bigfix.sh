@@ -42,6 +42,10 @@ else
   exit 1
 fi
 
+if [ -n "$2" ]; then
+  RELAYPASS="$2"
+fi
+
 # these variables are used to determine which version of the BigFix agent should be downloaded
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
@@ -102,6 +106,9 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_OverrideTimeoutSeconds=21600
   # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_SudoUser=`echo $SUDO_USER`
+  if [ -n "$RELAYPASS" ]; then
+    >> $INSTALLDIR/clientsettings.cfg echo _BESClient_SecureRegistration=$RELAYPASS
+  fi
 fi
 
 if [[ $OSTYPE == darwin* ]]; then
