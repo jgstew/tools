@@ -128,3 +128,11 @@ repos:
   #   rev: 0.8.2
   #   hooks:
   #     - id: slyp
+
+  # - repo: https://github.com/sqlfluff/sqlfluff
+  #   rev: "4.0.3" # Use the desired version
+  #   hooks:
+  #     - id: sqlfluff-fix # Attempts to fix violations automatically
+  #       args: ["--dialect", "tsql"]
+  #     - id: sqlfluff-lint # Returns linting errors
+  #       args: ["--dialect", "tsql"]
