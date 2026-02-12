@@ -1,32 +1,34 @@
 /****** Call Stored Procedure to hide all Superseded Content with no open actions or relevant devices ******/
+SET NOCOUNT ON; -- Stops the "1 row affected" spam for every single update
+
 DECLARE @CurrentSiteID INT;
 DECLARE @CurrentFixletID INT;
+DECLARE @ProcessedCount INT = 0;
 
--- 1. Declare the cursor using the CTE to safely exclude active items
+PRINT 'Starting analysis of Superseded Fixlets...';
+
+-- 1. Declare the cursor
 DECLARE FixletCursor CURSOR FOR
     WITH CombinedFixletsExclude AS (
-        -- 1. Exclude if it has at least 1 relevant computer
-        SELECT DISTINCT [SiteID]
-              ,[ID] As FixletID
+        -- Exclude if relevant on at least 1 computer
+        SELECT DISTINCT [SiteID], [ID] As FixletID
         FROM [BFEnterprise].[dbo].[FIXLETRESULTS]
         WHERE [IsRelevant] = 1
 
         UNION
 
-        -- 2. Exclude if it has at least 1 open action
-        SELECT [SourceSiteID] As SiteID
-              ,[SourceContentID] As FixletID
+        -- Exclude if part of an open action
+        SELECT [SourceSiteID], [SourceContentID]
         FROM [BFEnterprise].[dbo].[ACTIONS]
-        WHERE [SourceSiteID] is not NULL
+        WHERE [SourceSiteID] IS NOT NULL
           AND [IsStopped] = 0
           AND [IsDeleted] = 0
 
         UNION
 
-        -- 3. Exclude if it already has an entry in the visibility table
-        SELECT [SiteID]
-              ,[FixletID]
-          FROM [BFEnterprise].[dbo].[FIXLET_VISIBILITY]
+        -- Exclude if already hidden (already in visibility table)
+        SELECT [SiteID], [FixletID]
+        FROM [BFEnterprise].[dbo].[FIXLET_VISIBILITY]
     )
     SELECT 
           SiteNameMapTable.[SiteID]
@@ -36,7 +38,6 @@ DECLARE FixletCursor CURSOR FOR
         ON ExternalFixletsTable.[Sitename] = SiteNameMapTable.[Sitename]
     WHERE ExternalFixletsTable.[IsFixlet] = 1
       AND ExternalFixletsTable.[Name] LIKE '% (Superseded)%'
-      -- The Logic: Only select items that DO NOT exist in your Combined Exclude list
       AND NOT EXISTS (
           SELECT 1 
           FROM CombinedFixletsExclude AS ExcludeList
@@ -44,23 +45,33 @@ DECLARE FixletCursor CURSOR FOR
             AND ExcludeList.[FixletID] = ExternalFixletsTable.[ID]
       );
 
--- 2. Open the cursor and begin the loop
+-- 2. Open the cursor
 OPEN FixletCursor;
 
 FETCH NEXT FROM FixletCursor INTO @CurrentSiteID, @CurrentFixletID;
 
+-- 3. Loop through results
 WHILE @@FETCH_STATUS = 0
 BEGIN
-    -- 3. Call the Stored Procedure for the current row
-    -- We assume isVisible = 0 because we want to hide these
+    -- Run the update
     EXEC dbo.update_fixlet_visibility 
         @siteID = @CurrentSiteID, 
         @fixletID = @CurrentFixletID, 
         @isVisible = 0;
 
+    -- Increment counter
+    SET @ProcessedCount = @ProcessedCount + 1;
+    
     FETCH NEXT FROM FixletCursor INTO @CurrentSiteID, @CurrentFixletID;
 END
 
--- 4. Clean up
+-- 4. Cleanup and Final Output
 CLOSE FixletCursor;
 DEALLOCATE FixletCursor;
+
+PRINT '---------------------------------------------------';
+IF @ProcessedCount = 0
+    PRINT 'Result: No superseded items required hiding at this time.';
+ELSE
+    PRINT 'Result: Successfully hid ' + CAST(@ProcessedCount AS VARCHAR(10)) + ' superseded fixlets.';
+PRINT '---------------------------------------------------';
