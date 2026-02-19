@@ -9,7 +9,29 @@
 # https://www.marcosantadev.com/manage-plist-files-plistbuddy/
 # only if PlistBuddy binary is found:
 if [ -x "/usr/libexec/PlistBuddy" ]; then
-  /usr/libexec/PlistBuddy -c "print Settings:Client" /Library/Preferences/com.bigfix.BESAgent.plist
+
+echo "BigFix Client Settings (using PlistBuddy):"
+echo ""
+/usr/libexec/PlistBuddy -c "print Settings:Client" /Library/Preferences/com.bigfix.BESAgent.plist | awk '
+/ = Dict {/ {
+    # The key is everything before " = Dict {"
+    key = $0
+    sub(/ = Dict {/, "", key)
+    # Strip leading whitespace
+    sub(/^[[:space:]]+/, "", key)
+}
+/^[[:space:]]*Value = / {
+    # The value is everything after "Value = "
+    val = $0
+    sub(/^[[:space:]]*Value = /, "", val)
+
+    # Print them together
+    # Print ONLY if the key is not empty AND does not start with __Group___AdminBy___
+    if (key != "" && key !~ /^__Group___AdminBy___/) {
+        print key "=" val
+    }
+}'
+
 else
 
 # 1. Define the possible file paths in an array (order matters!)
