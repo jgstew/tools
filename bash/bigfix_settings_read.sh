@@ -1,3 +1,4 @@
+#!/bin/bash
 
 # OS X
 # https://macmule.com/2014/02/07/mavericks-preference-caching/
