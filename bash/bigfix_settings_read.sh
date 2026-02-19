@@ -11,6 +11,31 @@ if [ -x "/usr/libexec/PlistBuddy" ]; then
   /usr/libexec/PlistBuddy -c "print Settings:Client" /Library/Preferences/com.bigfix.BESAgent.plist
 else
 
+# 1. Define the possible file paths in an array (order matters!)
+paths=(
+    "/var/opt/BESClient/besclient.config"
+    "./persistent/var/opt/BESClient/besclient.config"
+    "./var/opt/BESClient/besclient.config"
+    "./besclient.config"
+)
+
+target_file=""
+
+# 2. Loop through the array to find the first readable file
+for file in "${paths[@]}"; do
+    if [[ -r "$file" ]]; then
+        target_file="$file"
+        echo "Found config at: $target_file" >&2  # Optional: Prints to stderr so it doesn't mess up your output
+        break # Stop looking once we find one!
+    fi
+done
+
+# 3. If no file was found, throw an error and exit
+if [[ -z "$target_file" ]]; then
+    echo "Error: besclient.config not found or not readable in any of the expected locations." >&2
+    exit 1
+fi
+
 # Linux/Unix
 awk -F'[\\\[]=]' '/^\[/ {
     # Extract the string between the last backslash and the closing bracket
@@ -24,6 +49,6 @@ awk -F'[\\\[]=]' '/^\[/ {
     val = v[2];
     gsub(/[[:space:]]/, "", val);
     if (id != "") print id "=" val;
-}' besclient.config
+}' "$target_file"
 
 fi
