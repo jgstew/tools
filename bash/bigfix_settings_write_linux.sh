@@ -50,12 +50,19 @@ config_ini_set_value() {
     fi
 }
 
+file_base_name="besclient"
+
+# if $3 starts with "bes", use it as the base name for the config file
+if [[ "$3" == bes* ]]; then
+    file_base_name="$3"
+fi
+
 # 1. Define the possible file paths in an array (order matters!)
 paths=(
-    "/var/opt/BESClient/besclient.config"
-    "./persistent/var/opt/BESClient/besclient.config"
-    "./var/opt/BESClient/besclient.config"
-    "./besclient.config"
+    "/var/opt/BESClient/$file_base_name.config"
+    "./persistent/var/opt/BESClient/$file_base_name.config"
+    "./var/opt/BESClient/$file_base_name.config"
+    "./$file_base_name.config"
 )
 
 target_file=""
@@ -71,7 +78,7 @@ done
 
 # 3. If no file was found, throw an error and exit
 if [[ -z "$target_file" ]]; then
-    echo "Error: besclient.config not found or not readable in any of the expected locations." >&2
+    echo "Error: $file_name not found or not readable in any of the expected locations." >&2
     exit 1
 fi
 
@@ -80,3 +87,4 @@ config_ini_set_value "$target_file" "Software\BigFix\EnterpriseClient\Settings\C
 
 # Example Usage:
 # bash bash/bigfix_settings_write_linux.sh "SettingName" "SettingValue"
+# bash bash/bigfix_settings_write_linux.sh "SettingName" "SettingValue" "besexplorer"
