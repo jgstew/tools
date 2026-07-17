@@ -43,7 +43,7 @@ jobs:
           usesh: true
           release: "11.4"
           sync: rsync
-          copyback: true
+          copyback: false
           # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_solaris.sh
           run: |
             bash bash/bigfix_run_qna_solaris.sh "$relevance" > qna_output.txt
