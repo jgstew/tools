@@ -23,25 +23,30 @@ on:
 env:
   relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
 
-# native aarch64 GitHub runner ( free for public repos )
-# the only 64-bit ARM BigFix agent is the Amazon Linux 2 rpm, so run it inside
-# an amazonlinux:2 container to match the build's expected runtime.
+# native aarch64 GitHub runner ( free for public repos ).
+# the only 64-bit ARM BigFix agent is the Amazon Linux 2 rpm, so the script runs
+# inside an amazonlinux:2 container to match the build's expected runtime.
+# NOTE: the container is NOT used as the job `container:` because amazonlinux:2
+# ships glibc 2.26, too old for the Node 24 that actions/checkout runs on. So we
+# checkout on the runner and only `docker run` the script ( native arm64, no QEMU ).
 jobs:
   test_run_qna_arm64:
     runs-on: ubuntu-24.04-arm
     name: run qna on aarch64
-    container:
-      image: amazonlinux:2
     steps:
-      - name: install prereqs
-        run: yum install -y tar cpio gzip
-
       - uses: actions/checkout@v7
 
       - name: run qna aarch64
+        # allow the workflow_dispatch input to override the default relevance
+        env:
+          relevance: ${{ inputs.relevance || env.relevance }}
         # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_amazonlinux_aarch64.sh
         run: |
-          bash bash/bigfix_run_qna_amazonlinux_aarch64.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
+          docker run --rm \
+            -e relevance \
+            -v "$PWD":/work -w /work \
+            amazonlinux:2 \
+            bash -c 'yum install -y tar cpio gzip >/dev/null 2>&1; bash bash/bigfix_run_qna_amazonlinux_aarch64.sh "$relevance"' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## aarch64 (Amazon Linux 2) QNA:" >> $GITHUB_STEP_SUMMARY
