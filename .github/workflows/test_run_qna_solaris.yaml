@@ -1,5 +1,5 @@
 ---
-name: test_solaris
+name: test_run_qna_solaris
 
 # only run this job when this job itself or the solaris script is modified
 on:
@@ -12,13 +12,13 @@ on:
         type: string
   push:
     paths:
-      - ".github/workflows/test_solaris.yaml"
+      - ".github/workflows/test_run_qna_solaris.yaml"
       - "bash/bigfix_run_qna_solaris.sh"
     branches:
       - master
   pull_request:
     paths:
-      - ".github/workflows/test_solaris.yaml"
+      - ".github/workflows/test_run_qna_solaris.yaml"
       - "bash/bigfix_run_qna_solaris.sh"
 
 env:
