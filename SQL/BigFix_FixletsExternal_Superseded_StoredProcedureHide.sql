@@ -30,7 +30,7 @@ DECLARE FixletCursor CURSOR FOR
         SELECT [SiteID], [FixletID]
         FROM [BFEnterprise].[dbo].[FIXLET_VISIBILITY]
     )
-    SELECT 
+    SELECT
           SiteNameMapTable.[SiteID]
         , ExternalFixletsTable.[ID]
     FROM [BFEnterprise].[dbo].[EXTERNAL_OBJECT_DEFS] AS ExternalFixletsTable
@@ -39,7 +39,7 @@ DECLARE FixletCursor CURSOR FOR
     WHERE ExternalFixletsTable.[IsFixlet] = 1
       AND ExternalFixletsTable.[Name] LIKE '% (Superseded)%'
       AND NOT EXISTS (
-          SELECT 1 
+          SELECT 1
           FROM CombinedFixletsExclude AS ExcludeList
           WHERE ExcludeList.[SiteID] = SiteNameMapTable.[SiteID]
             AND ExcludeList.[FixletID] = ExternalFixletsTable.[ID]
@@ -54,14 +54,14 @@ FETCH NEXT FROM FixletCursor INTO @CurrentSiteID, @CurrentFixletID;
 WHILE @@FETCH_STATUS = 0
 BEGIN
     -- Run the update
-    EXEC dbo.update_fixlet_visibility 
-        @siteID = @CurrentSiteID, 
-        @fixletID = @CurrentFixletID, 
+    EXEC dbo.update_fixlet_visibility
+        @siteID = @CurrentSiteID,
+        @fixletID = @CurrentFixletID,
         @isVisible = 0;
 
     -- Increment counter
     SET @ProcessedCount = @ProcessedCount + 1;
-    
+
     FETCH NEXT FROM FixletCursor INTO @CurrentSiteID, @CurrentFixletID;
 END
 

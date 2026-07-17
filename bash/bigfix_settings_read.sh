@@ -66,7 +66,7 @@ awk -F'[\\\[]=]' '/^\[/ {
     id = a[n];
     sub(/].*/, "", id);
 }
-/^[Vv]alue/ {
+/^[Vv]alue/ {  # codespell:ignore alue
     # Extract the value after the equals sign and strip whitespace
     split($0, v, "=");
     val = v[2];

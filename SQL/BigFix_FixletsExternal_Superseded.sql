@@ -1,5 +1,5 @@
 /****** SideID, FixletID of Superseded Fixlets ******/
-SELECT 
+SELECT
       SiteNameMapTable.[SiteID]
     , ExternalFixletsTable.[ID] AS [FixletID]
 FROM [BFEnterprise].[dbo].[EXTERNAL_OBJECT_DEFS] AS ExternalFixletsTable

@@ -33,4 +33,3 @@ Invoke-Sqlcmd -ServerInstance $server -Database $database -Query $query `
     [System.IO.File]::WriteAllText($path, $_.BESContent, $utf8NoBom)
     Write-Host "Wrote $path"
   }
- 
