@@ -57,7 +57,7 @@ jobs:
             -e relevance \
             -v "$PWD":/work -w /work \
             redhat/ubi9 \
-            bash -c 'dnf install -y cpio tar gzip >/dev/null 2>&1; bash bash/${{ matrix.script }} "$relevance"' > qna_output.txt
+            bash -c 'dnf install -y cpio tar gzip dbus-libs >/dev/null 2>&1; bash bash/${{ matrix.script }} "$relevance"' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## ${{ matrix.title }} QNA:" >> $GITHUB_STEP_SUMMARY
