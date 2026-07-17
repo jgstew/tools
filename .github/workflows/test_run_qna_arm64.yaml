@@ -1,0 +1,62 @@
+---
+name: test_run_qna_arm64
+
+on:
+  workflow_dispatch:
+    inputs:
+      relevance:
+        description: "Relevance to test"
+        default: ("default relevance", it) of now
+        required: true
+        type: string
+  push:
+    paths:
+      - ".github/workflows/test_run_qna_arm64.yaml"
+      - "bash/bigfix_run_qna_amazonlinux_aarch64.sh"
+    branches:
+      - master
+  pull_request:
+    paths:
+      - ".github/workflows/test_run_qna_arm64.yaml"
+      - "bash/bigfix_run_qna_amazonlinux_aarch64.sh"
+
+env:
+  relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+
+# native aarch64 GitHub runner ( free for public repos )
+# the only 64-bit ARM BigFix agent is the Amazon Linux 2 rpm, so run it inside
+# an amazonlinux:2 container to match the build's expected runtime.
+jobs:
+  test_run_qna_arm64:
+    runs-on: ubuntu-24.04-arm
+    name: run qna on aarch64
+    container:
+      image: amazonlinux:2
+    steps:
+      - name: install prereqs
+        run: yum install -y tar cpio gzip
+
+      - uses: actions/checkout@v7
+
+      - name: run qna aarch64
+        # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_amazonlinux_aarch64.sh
+        run: |
+          bash bash/bigfix_run_qna_amazonlinux_aarch64.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
+          cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+          echo "## aarch64 (Amazon Linux 2) QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+# References:
+# - https://github.blog/changelog/2025-01-16-linux-arm64-hosted-runners-now-available-for-free-in-public-repositories-public-preview/
+# - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary

@@ -1,0 +1,78 @@
+---
+name: test_run_qna_qemu
+
+on:
+  workflow_dispatch:
+    inputs:
+      relevance:
+        description: "Relevance to test"
+        default: ("default relevance", it) of now
+        required: true
+        type: string
+  push:
+    paths:
+      - ".github/workflows/test_run_qna_qemu.yaml"
+      - "bash/bigfix_run_qna_rhel_s390x.sh"
+      - "bash/bigfix_run_qna_rhel_ppc64le.sh"
+    branches:
+      - master
+  pull_request:
+    paths:
+      - ".github/workflows/test_run_qna_qemu.yaml"
+      - "bash/bigfix_run_qna_rhel_s390x.sh"
+      - "bash/bigfix_run_qna_rhel_ppc64le.sh"
+
+env:
+  relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+
+# these architectures have no native GitHub runner, so the foreign-arch rpm and
+# its qna binary run inside a multi-arch redhat/ubi9 container under QEMU
+# emulation ( registered via docker/setup-qemu-action ). Emulated, so slow.
+jobs:
+  test_run_qna_qemu:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: s390x
+            script: bigfix_run_qna_rhel_s390x.sh
+            title: s390x (IBM Z)
+          - arch: ppc64le
+            script: bigfix_run_qna_rhel_ppc64le.sh
+            title: ppc64le (IBM POWER LE)
+    name: run qna on ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-qemu-action@v3
+
+      - name: run qna ${{ matrix.arch }}
+        # allow the workflow_dispatch input to override the default relevance
+        env:
+          relevance: ${{ inputs.relevance || env.relevance }}
+        # https://github.com/jgstew/tools/blob/master/bash/${{ matrix.script }}
+        run: |
+          docker run --rm --platform linux/${{ matrix.arch }} \
+            -e relevance \
+            -v "$PWD":/work -w /work \
+            redhat/ubi9 \
+            bash -c 'dnf install -y cpio tar gzip >/dev/null 2>&1; bash bash/${{ matrix.script }} "$relevance"' > qna_output.txt
+          cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+          echo "## ${{ matrix.title }} QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+# References:
+# - https://github.com/docker/setup-qemu-action
+# - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary

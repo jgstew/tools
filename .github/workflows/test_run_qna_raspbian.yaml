@@ -1,0 +1,69 @@
+---
+name: test_run_qna_raspbian
+
+on:
+  workflow_dispatch:
+    inputs:
+      relevance:
+        description: "Relevance to test"
+        default: ("default relevance", it) of now
+        required: true
+        type: string
+  push:
+    paths:
+      - ".github/workflows/test_run_qna_raspbian.yaml"
+      - "bash/bigfix_run_qna_raspbian.sh"
+    branches:
+      - master
+  pull_request:
+    paths:
+      - ".github/workflows/test_run_qna_raspbian.yaml"
+      - "bash/bigfix_run_qna_raspbian.sh"
+
+env:
+  relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+
+# https://github.com/pguyot/arm-runner-action
+# The BigFix Raspbian agent is armhf (32-bit ARM), so it runs on the armv7l
+# (cortex-a7) emulated Pi. armv6l / aarch64 base images are not used here.
+jobs:
+  test_run_qna_raspbian:
+    runs-on: ubuntu-latest
+    name: run qna in Raspbian
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pguyot/arm-runner-action@v2
+        with:
+          base_image: raspios_lite:latest
+          cpu: cortex-a7
+          copy_artifact_path: qna_output.txt
+          copy_artifacts_on_fail: yes
+          # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_raspbian.sh
+          commands: |
+            apt-get -y update
+            apt-get install -y curl binutils xz-utils
+            bash bash/bigfix_run_qna_raspbian.sh '${{ inputs.relevance || env.relevance }}' > qna_output.txt
+            cat qna_output.txt
+
+      - name: Set summary
+        if: always()
+        run: |
+          cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+          echo "## Raspbian QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+# References:
+# - https://github.com/pguyot/arm-runner-action
+# - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
