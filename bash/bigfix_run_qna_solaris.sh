@@ -28,3 +28,6 @@ if [ $len -lt 3 ]; then
 else
 echo $args | /tmp/qna/dest/BESagent/root/opt/BESClient/bin/qna -showtypes
 fi
+
+# cleanup:
+rm -rf /tmp/qna/dest
