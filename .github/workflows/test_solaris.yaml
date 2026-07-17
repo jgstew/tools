@@ -1,0 +1,72 @@
+---
+name: test_solaris
+
+# only run this job when this job itself or the solaris script is modified
+on:
+  workflow_dispatch:
+    inputs:
+      relevance:
+        description: "Relevance to test"
+        default: ("Hello World", version of client, it) of now
+        required: true
+        type: string
+  push:
+    paths:
+      - ".github/workflows/test_solaris.yaml"
+      - "bash/bigfix_run_qna_solaris.sh"
+    branches:
+      - master
+  pull_request:
+    paths:
+      - ".github/workflows/test_solaris.yaml"
+      - "bash/bigfix_run_qna_solaris.sh"
+
+env:
+  relevance: ("Relevance in File", it) of ( (it as string) of operating system ; (it as string) of version of client ; elements of it ) of sets of pathnames of (files of it; folders of it) of folders ("/tmp";"/Windows/Temp")
+
+# https://github.com/vmactions/solaris-vm
+jobs:
+  test_run_qna_solaris:
+    runs-on: ubuntu-latest
+    name: run qna in Solaris
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: run qna solaris
+        id: test
+        uses: vmactions/solaris-vm@v1
+        # allow the workflow_dispatch input to override the default relevance passed into the VM
+        env:
+          relevance: ${{ inputs.relevance || env.relevance }}
+        with:
+          envs: "relevance"
+          usesh: true
+          release: "11.4"
+          sync: rsync
+          copyback: true
+          # https://github.com/jgstew/tools/blob/master/bash/bigfix_run_qna_solaris.sh
+          run: |
+            bash bash/bigfix_run_qna_solaris.sh "$relevance" > qna_output.txt
+            cat qna_output.txt
+
+      - name: Set summary
+        if: always()
+        run: |
+          cat qna_output.txt
+          cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
+          echo "## Solaris QNA:" >> $GITHUB_STEP_SUMMARY
+          echo "### Errors:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "E: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Result Type:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "I: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Time Taken:" >> $GITHUB_STEP_SUMMARY
+          cat qna_output.txt | grep "T: " | sed 's/^.*: //' >> $GITHUB_STEP_SUMMARY
+          echo "### Answers:" >> $GITHUB_STEP_SUMMARY
+          echo 'Q: `${{ inputs.relevance || env.relevance }}`' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat qna_markdown.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+# References:
+# - https://github.com/vmactions/solaris-vm
+# - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
