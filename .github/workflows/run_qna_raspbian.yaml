@@ -1,5 +1,5 @@
 ---
-name: test_run_qna_raspbian
+name: run_qna_raspbian
 
 on:
   workflow_dispatch:
@@ -11,13 +11,13 @@ on:
         type: string
   push:
     paths:
-      - ".github/workflows/test_run_qna_raspbian.yaml"
+      - ".github/workflows/run_qna_raspbian.yaml"
       - "bash/bigfix_run_qna_raspbian.sh"
     branches:
       - master
   pull_request:
     paths:
-      - ".github/workflows/test_run_qna_raspbian.yaml"
+      - ".github/workflows/run_qna_raspbian.yaml"
       - "bash/bigfix_run_qna_raspbian.sh"
 
 env:
@@ -27,7 +27,7 @@ env:
 # The BigFix Raspbian agent is armhf (32-bit ARM), so it runs on the armv7l
 # (cortex-a7) emulated Pi. armv6l / aarch64 base images are not used here.
 jobs:
-  test_run_qna_raspbian:
+  run_qna_raspbian:
     runs-on: ubuntu-latest
     name: run qna in Raspbian
     steps:

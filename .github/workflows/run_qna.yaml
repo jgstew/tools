@@ -36,10 +36,10 @@ env:
 # https://github.com/pguyot/arm-runner-action
 #
 # other architectures / OSes are covered by dedicated workflows:
-# - Solaris x86        -> test_run_qna_solaris.yaml   (vmactions/solaris-vm)
-# - Raspbian armhf     -> test_run_qna_raspbian.yaml  (pguyot/arm-runner-action)
-# - aarch64 / arm64    -> test_run_qna_arm64.yaml     (native ubuntu-24.04-arm)
-# - s390x, ppc64le     -> test_run_qna_qemu.yaml      (QEMU emulation)
+# - Solaris x86        -> run_qna_solaris.yaml   (vmactions/solaris-vm)
+# - Raspbian armhf     -> run_qna_raspbian.yaml  (pguyot/arm-runner-action)
+# - aarch64 / arm64    -> run_qna_arm64.yaml     (native ubuntu-24.04-arm)
+# - s390x, ppc64le     -> run_qna_qemu.yaml      (QEMU emulation)
 # - AIX (ppc64)        -> bash/bigfix_run_qna_aix.sh  (UNTESTED, no CI runner)
 
 jobs:

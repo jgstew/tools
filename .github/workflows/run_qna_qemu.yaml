@@ -1,5 +1,5 @@
 ---
-name: test_run_qna_qemu
+name: run_qna_qemu
 
 on:
   workflow_dispatch:
@@ -11,14 +11,14 @@ on:
         type: string
   push:
     paths:
-      - ".github/workflows/test_run_qna_qemu.yaml"
+      - ".github/workflows/run_qna_qemu.yaml"
       - "bash/bigfix_run_qna_rhel_s390x.sh"
       - "bash/bigfix_run_qna_rhel_ppc64le.sh"
     branches:
       - master
   pull_request:
     paths:
-      - ".github/workflows/test_run_qna_qemu.yaml"
+      - ".github/workflows/run_qna_qemu.yaml"
       - "bash/bigfix_run_qna_rhel_s390x.sh"
       - "bash/bigfix_run_qna_rhel_ppc64le.sh"
 
@@ -29,7 +29,7 @@ env:
 # its qna binary run inside a multi-arch redhat/ubi9 container under QEMU
 # emulation ( registered via docker/setup-qemu-action ). Emulated, so slow.
 jobs:
-  test_run_qna_qemu:
+  run_qna_qemu:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

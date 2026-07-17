@@ -1,5 +1,5 @@
 ---
-name: test_run_qna_arm64
+name: run_qna_arm64
 
 on:
   workflow_dispatch:
@@ -11,13 +11,13 @@ on:
         type: string
   push:
     paths:
-      - ".github/workflows/test_run_qna_arm64.yaml"
+      - ".github/workflows/run_qna_arm64.yaml"
       - "bash/bigfix_run_qna_amazonlinux_aarch64.sh"
     branches:
       - master
   pull_request:
     paths:
-      - ".github/workflows/test_run_qna_arm64.yaml"
+      - ".github/workflows/run_qna_arm64.yaml"
       - "bash/bigfix_run_qna_amazonlinux_aarch64.sh"
 
 env:
@@ -30,7 +30,7 @@ env:
 # ships glibc 2.26, too old for the Node 24 that actions/checkout runs on. So we
 # checkout on the runner and only `docker run` the script ( native arm64, no QEMU ).
 jobs:
-  test_run_qna_arm64:
+  run_qna_arm64:
     runs-on: ubuntu-24.04-arm
     name: run qna on aarch64
     steps:
