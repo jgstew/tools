@@ -46,7 +46,7 @@ jobs:
             -e relevance \
             -v "$PWD":/work -w /work \
             amazonlinux:2 \
-            bash -c 'yum install -y tar cpio gzip >/dev/null 2>&1; bash bash/bigfix_run_qna_amazonlinux_aarch64.sh "$relevance"' > qna_output.txt
+            bash -c 'yum install -y tar cpio gzip dbus-libs >/dev/null 2>&1; bash bash/bigfix_run_qna_amazonlinux_aarch64.sh "$relevance"' > qna_output.txt
           cat qna_output.txt
           cat qna_output.txt | grep "A: " | sed 's/^.*: //' > qna_markdown.txt
           echo "## aarch64 (Amazon Linux 2) QNA:" >> $GITHUB_STEP_SUMMARY
