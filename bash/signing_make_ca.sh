@@ -26,10 +26,13 @@ CA_KEY_PASSWORD="CHANGE-ME-please-use-a-real-passphrase"
 
 MAIN_DOMAIN="acme.com"
 # DNS name constraints. This CA is PERMITTED to issue TLS certificates ONLY for
-# these names. A leading dot means "subdomains of":
-#     "localhost"    -> localhost (and *.localhost)
-#     ".local"       -> any *.local
-#     ".test.local"  -> any *.test.local
+# these names. A LEADING DOT means "subdomains only"; no dot means "this host
+# AND its subdomains":
+#     ".local"           -> subdomains of local (e.g. foo.local) but NOT "local"
+#     "localhost"        -> localhost itself and its subdomains (e.g. app.localhost)
+#     "test.local"       -> test.local itself and its subdomains
+#     "acme.com"         -> acme.com itself and its subdomains
+#     "test.acme.com"    -> test.acme.com itself and its subdomains
 # Anything outside this list will FAIL to validate even though the root is trusted.
 PERMITTED_DNS=("localhost" ".local" "test.local" "${MAIN_DOMAIN}" "test.${MAIN_DOMAIN}")
 
