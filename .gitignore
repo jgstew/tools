@@ -1,4 +1,5 @@
 *.msi
+test-ca-out/
 .venv/
 
 # Byte-compiled / optimized / DLL files
