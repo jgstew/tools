@@ -4,7 +4,8 @@
 # -----------------------------------------------------------------------------
 # Creates a NAME-CONSTRAINED private Root CA for INTERNAL TEST USE and issues:
 #     * one code-signing leaf  (Windows Authenticode + optional Linux)
-#     * one TLS leaf for the wildcard you configure (default *.test.local)
+#     * one TLS leaf whose SANs cover EVERY name PERMITTED_DNS allows
+#       (each host + its *.wildcard), so a single test cert serves them all
 #
 # The root is deliberately RSA (not ECDSA) for the broadest code-signing
 # compatibility with older operating systems, and carries DNS name constraints
@@ -31,8 +32,17 @@ CA_KEY_PASSWORD="CHANGE-ME-please-use-a-real-passphrase"
 # Anything outside this list will FAIL to validate even though the root is trusted.
 PERMITTED_DNS=("localhost" ".local" ".test.local")
 
-# The wildcard the example TLS leaf is issued for (must fall inside PERMITTED_DNS).
-TLS_WILDCARD="*.test.local"
+# The TLS leaf's SubjectAltNames are derived automatically from PERMITTED_DNS
+# (see the TLS LEAF section) so a single test cert covers every name this CA is
+# allowed to issue for.
+#
+# CAVEAT: a TLS wildcard matches only ONE label, and strict clients (openssl,
+# curl, most browsers) IGNORE a wildcard whose suffix is a single label. So
+# "*.test.local" works, but "*.local" and "*.localhost" effectively do NOT.
+# For subdomains of those short suffixes, list the exact hostnames your tests
+# use here -- each becomes an exact-match SAN (always honored). Every entry must
+# fall inside PERMITTED_DNS or the final nameConstraints check will reject it.
+EXTRA_TLS_SANS=("server.local" "app.localhost")
 
 # Output directory.
 OUT_DIR="./test-ca-out"
@@ -40,7 +50,8 @@ OUT_DIR="./test-ca-out"
 # Subject names.
 ROOT_SUBJECT="/O=Acme Test/OU=Internal Test PKI/CN=Acme Internal TEST Root CA"
 CODESIGN_SUBJECT="/O=Acme Test/CN=Acme TEST Code Signing"
-TLS_SUBJECT="/O=Acme Test/CN=${TLS_WILDCARD}"
+# TLS leaf CN is derived from the first permitted name; only the /O is set here.
+TLS_SUBJECT_ORG="/O=Acme Test"
 
 # --- Cryptography ------------------------------------------------------------
 # Root key = RSA-4096 ON PURPOSE:
@@ -161,7 +172,7 @@ log "Bundling code-signing key+cert+chain into .pfx for signtool"
 openssl pkcs12 -export -out "codesign-BUNDLE.pfx" \
   -inkey "codesign-PRIVATE-KEY-ENCRYPTED.pem" -passin env:CAPASS \
   -in "codesign-PUBLIC.crt" -certfile "root-ca-PUBLIC.crt" \
-  -passout env:CAPASS "${PFX_OPTS[@]}"
+  -passout env:CAPASS ${PFX_OPTS[@]+"${PFX_OPTS[@]}"}
 
 if [ "$ENABLE_LINUX_CODE_SIGNING" = "true" ]; then
   log "Emitting Linux (DER) form of the code-signing certificate"
@@ -169,35 +180,78 @@ if [ "$ENABLE_LINUX_CODE_SIGNING" = "true" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# 3) TLS LEAF
+# 3) TLS LEAF  (single cert covering every name PERMITTED_DNS allows)
 # -----------------------------------------------------------------------------
-log "Generating TLS leaf for ${TLS_WILDCARD} (RSA-${LEAF_KEY_BITS})"
-gen_key "${LEAF_KEY_BITS}" "tls-wildcard.test.local-PRIVATE-KEY-ENCRYPTED.pem"
-openssl req -new -key "tls-wildcard.test.local-PRIVATE-KEY-ENCRYPTED.pem" \
+# Derive SubjectAltNames from PERMITTED_DNS so one test leaf covers all of them:
+#   ".suffix" (leading dot) -> "*.suffix"        wildcard for that subtree
+#   "host"    (no dot)      -> "host" and "*.host"
+# A TLS wildcard matches only ONE label, so this is the most a single leaf can
+# cover; deeper names (a.b.local) are unreachable by any single certificate.
+# Note: a leading-dot constraint permits subdomains but NOT the bare apex, so we
+# deliberately do NOT emit the apex for those (it would fail nameConstraints).
+TLS_SANS=()
+for d in "${PERMITTED_DNS[@]}"; do
+  if [[ "$d" == .* ]]; then
+    TLS_SANS+=("*.${d#.}")
+  else
+    TLS_SANS+=("$d" "*.$d")
+  fi
+done
+
+# Append any exact hostnames the wildcards can't cover (short-suffix subdomains).
+if [ "${#EXTRA_TLS_SANS[@]}" -gt 0 ]; then
+  TLS_SANS+=("${EXTRA_TLS_SANS[@]}")
+fi
+
+# De-duplicate while preserving order (portable; no bash-4 associative arrays,
+# and safe under `set -u` with empty arrays on bash 3.2).
+_uniq=()
+for s in "${TLS_SANS[@]}"; do
+  dup=0
+  if [ "${#_uniq[@]}" -gt 0 ]; then
+    for u in "${_uniq[@]}"; do
+      [ "$u" = "$s" ] && { dup=1; break; }
+    done
+  fi
+  [ "$dup" -eq 0 ] && _uniq+=("$s")
+done
+TLS_SANS=("${_uniq[@]}")
+
+# Build the "DNS:a,DNS:b,..." line and pick the first SAN as the CN.
+SAN_LINE=""
+for s in "${TLS_SANS[@]}"; do
+  [ -n "$SAN_LINE" ] && SAN_LINE="${SAN_LINE},"
+  SAN_LINE="${SAN_LINE}DNS:${s}"
+done
+TLS_SUBJECT="${TLS_SUBJECT_ORG}/CN=${TLS_SANS[0]}"
+
+log "Generating TLS leaf covering: ${TLS_SANS[*]} (RSA-${LEAF_KEY_BITS})"
+gen_key "${LEAF_KEY_BITS}" "tls-test-PRIVATE-KEY-ENCRYPTED.pem"
+openssl req -new -key "tls-test-PRIVATE-KEY-ENCRYPTED.pem" \
   -passin env:CAPASS -subj "${TLS_SUBJECT}" -out tls.csr
 
 cat > tls.ext <<EOF
 basicConstraints = critical,CA:FALSE
 keyUsage = critical,digitalSignature,keyEncipherment
 extendedKeyUsage = serverAuth
-subjectAltName = DNS:${TLS_WILDCARD}
+subjectAltName = ${SAN_LINE}
 subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid,issuer
 EOF
-sign_leaf tls.csr tls.ext "tls-wildcard.test.local-PUBLIC.crt"
+sign_leaf tls.csr tls.ext "tls-test-PUBLIC.crt"
 
 log "Bundling TLS key+cert+chain into .pfx"
-openssl pkcs12 -export -out "tls-wildcard.test.local-BUNDLE.pfx" \
-  -inkey "tls-wildcard.test.local-PRIVATE-KEY-ENCRYPTED.pem" -passin env:CAPASS \
-  -in "tls-wildcard.test.local-PUBLIC.crt" -certfile "root-ca-PUBLIC.crt" \
-  -passout env:CAPASS "${PFX_OPTS[@]}"
+openssl pkcs12 -export -out "tls-test-BUNDLE.pfx" \
+  -inkey "tls-test-PRIVATE-KEY-ENCRYPTED.pem" -passin env:CAPASS \
+  -in "tls-test-PUBLIC.crt" -certfile "root-ca-PUBLIC.crt" \
+  -passout env:CAPASS ${PFX_OPTS[@]+"${PFX_OPTS[@]}"}
 
 # -----------------------------------------------------------------------------
 # 4) VERIFY + SUMMARY
 # -----------------------------------------------------------------------------
 log "Verifying both leaves chain to the root and satisfy name constraints"
 openssl verify -CAfile "root-ca-PUBLIC.crt" "codesign-PUBLIC.crt"
-openssl verify -CAfile "root-ca-PUBLIC.crt" "tls-wildcard.test.local-PUBLIC.crt"
+openssl verify -CAfile "root-ca-PUBLIC.crt" "tls-test-PUBLIC.crt"
 
 # Remove intermediates.
 rm -f codesign.csr tls.csr root.cnf codesign.ext tls.ext root-ca-PUBLIC.srl
@@ -213,16 +267,16 @@ cat <<EOF
   ----------------------------------------------------------------------------
   root-ca-PUBLIC.crt                         import into Trusted Root CA store
   codesign-PUBLIC.crt                        the code-signing certificate
-  tls-wildcard.test.local-PUBLIC.crt         the TLS server certificate
+  tls-test-PUBLIC.crt                        the TLS server certificate (all SANs)
 ${LINUX_LINE}
 
   SECRET  -- keep OFF test machines; all protected by your password
   ----------------------------------------------------------------------------
   root-ca-PRIVATE-KEY-ENCRYPTED.pem          ROOT private key (guard this most)
   codesign-PRIVATE-KEY-ENCRYPTED.pem         code-signing private key
-  tls-wildcard.test.local-PRIVATE-KEY-ENCRYPTED.pem   TLS private key
+  tls-test-PRIVATE-KEY-ENCRYPTED.pem         TLS private key
   codesign-BUNDLE.pfx                        code-signing key+cert+chain
-  tls-wildcard.test.local-BUNDLE.pfx         TLS key+cert+chain
+  tls-test-BUNDLE.pfx                        TLS key+cert+chain
 
   USAGE
   ----------------------------------------------------------------------------
@@ -235,7 +289,7 @@ ${LINUX_LINE}
     openssl rsa -in codesign-PRIVATE-KEY-ENCRYPTED.pem -out codesign.key
     scripts/sign-file sha256 codesign.key codesign-linux.der module.ko
 
-  TLS server: point it at tls-wildcard.test.local-PUBLIC.crt + its key
+  TLS server: point it at tls-test-PUBLIC.crt + its key
   (config depends on the server; most accept an encrypted key with a passphrase
   prompt, or extract from the .pfx). Import root-ca-PUBLIC.crt into client trust.
 EOF
