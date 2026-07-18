@@ -24,13 +24,14 @@ set -euo pipefail
 # and every .pfx bundle. CHANGE THIS before running.
 CA_KEY_PASSWORD="CHANGE-ME-please-use-a-real-passphrase"
 
+MAIN_DOMAIN="acme.com"
 # DNS name constraints. This CA is PERMITTED to issue TLS certificates ONLY for
 # these names. A leading dot means "subdomains of":
 #     "localhost"    -> localhost (and *.localhost)
 #     ".local"       -> any *.local
 #     ".test.local"  -> any *.test.local
 # Anything outside this list will FAIL to validate even though the root is trusted.
-PERMITTED_DNS=("localhost" ".local" ".test.local")
+PERMITTED_DNS=("localhost" ".local" "test.local" "${MAIN_DOMAIN}" "test.${MAIN_DOMAIN}")
 
 # The TLS leaf's SubjectAltNames are derived automatically from PERMITTED_DNS
 # (see the TLS LEAF section) so a single test cert covers every name this CA is
@@ -42,16 +43,17 @@ PERMITTED_DNS=("localhost" ".local" ".test.local")
 # For subdomains of those short suffixes, list the exact hostnames your tests
 # use here -- each becomes an exact-match SAN (always honored). Every entry must
 # fall inside PERMITTED_DNS or the final nameConstraints check will reject it.
-EXTRA_TLS_SANS=("server.local" "app.localhost")
+EXTRA_TLS_SANS=("homeassistant.local" "app.localhost")
 
 # Output directory.
 OUT_DIR="./test-ca-out"
 
 # Subject names.
-ROOT_SUBJECT="/O=Acme Test/OU=Internal Test PKI/CN=Acme Internal TEST Root CA"
-CODESIGN_SUBJECT="/O=Acme Test/CN=Acme TEST Code Signing"
+SUBJECT_FRIENDLY="Acme"
+ROOT_SUBJECT="/O=${SUBJECT_FRIENDLY} Test/OU=Internal Test PKI/CN=${SUBJECT_FRIENDLY} Internal TEST Root CA"
+CODESIGN_SUBJECT="/O=${SUBJECT_FRIENDLY} Test/CN=${SUBJECT_FRIENDLY} TEST Code Signing"
 # TLS leaf CN is derived from the first permitted name; only the /O is set here.
-TLS_SUBJECT_ORG="/O=Acme Test"
+TLS_SUBJECT_ORG="/O=${SUBJECT_FRIENDLY} Test"
 
 # --- Cryptography ------------------------------------------------------------
 # Root key = RSA-4096 ON PURPOSE:
@@ -256,21 +258,61 @@ openssl verify -CAfile "root-ca-PUBLIC.crt" "tls-test-PUBLIC.crt"
 # Remove intermediates.
 rm -f codesign.csr tls.csr root.cnf codesign.ext tls.ext root-ca-PUBLIC.srl
 
-log "Done. Files in ${OUT_DIR}:"
-LINUX_LINE=""
+# Build a human-readable TLS coverage report from the SANs, classifying each.
+COVERAGE=""
+for s in "${TLS_SANS[@]}"; do
+  case "$s" in
+    \*.*)
+      rest="${s#\*.}"
+      case "$rest" in
+        *.*) note="wildcard (one label) - honored by strict clients" ;;
+        *)   note="wildcard (single-label suffix) - IGNORED by strict clients; use EXTRA_TLS_SANS" ;;
+      esac
+      ;;
+    *) note="exact hostname - always honored" ;;
+  esac
+  COVERAGE="${COVERAGE}$(printf '    %-22s %s' "$s" "$note")"$'\n'
+done
+
+# Optional Linux DER cert line (only when that output was produced).
+LINUX_FILE_NOTE=""
 [ "$ENABLE_LINUX_CODE_SIGNING" = "true" ] && \
-  LINUX_LINE="  codesign-linux.der                         DER code-signing cert for Linux sign-file / IMA"
+  LINUX_FILE_NOTE=$'\n'"  codesign-linux.der                         DER code-signing cert for Linux sign-file / IMA"
 
-cat <<EOF
+log "Writing ReadMe.txt"
+cat > ReadMe.txt <<EOF
+==============================================================================
+ Acme Internal TEST PKI  --  FOR TEST FLEETS ONLY, do not deploy to production
+==============================================================================
+Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
 
+This private Root CA is name-constrained: it can ONLY issue TLS certificates for
+the domains below. Anything outside them fails validation even if the root is
+trusted.
+
+  Permitted DNS name constraints:
+$(for d in "${PERMITTED_DNS[@]}"; do echo "    ${d}"; done)
+
+------------------------------------------------------------------------------
+ TLS COVERAGE  (SANs on tls-test-PUBLIC.crt, CN=${TLS_SANS[0]})
+------------------------------------------------------------------------------
+${COVERAGE}
+  NOTE: a TLS wildcard matches only ONE label, and strict clients (openssl,
+  curl, most browsers) ignore a wildcard whose suffix is a single label -- so
+  "*.local" / "*.localhost" do NOT work, while "*.test.local" does. For
+  subdomains of short suffixes, add exact hostnames to EXTRA_TLS_SANS and re-run.
+
+------------------------------------------------------------------------------
+ FILES
+------------------------------------------------------------------------------
   PUBLIC  -- safe to distribute to test machines
   ----------------------------------------------------------------------------
   root-ca-PUBLIC.crt                         import into Trusted Root CA store
   codesign-PUBLIC.crt                        the code-signing certificate
-  tls-test-PUBLIC.crt                        the TLS server certificate (all SANs)
-${LINUX_LINE}
+  tls-test-PUBLIC.crt                        the TLS server certificate (all SANs)${LINUX_FILE_NOTE}
+  ReadMe.txt                                 this file
 
-  SECRET  -- keep OFF test machines; all protected by your password
+  SECRET  -- keep OFF test machines; all protected by your configured password
   ----------------------------------------------------------------------------
   root-ca-PRIVATE-KEY-ENCRYPTED.pem          ROOT private key (guard this most)
   codesign-PRIVATE-KEY-ENCRYPTED.pem         code-signing private key
@@ -278,8 +320,9 @@ ${LINUX_LINE}
   codesign-BUNDLE.pfx                        code-signing key+cert+chain
   tls-test-BUNDLE.pfx                        TLS key+cert+chain
 
-  USAGE
-  ----------------------------------------------------------------------------
+------------------------------------------------------------------------------
+ USAGE
+------------------------------------------------------------------------------
   Windows Authenticode:
     signtool sign /f codesign-BUNDLE.pfx /p '<password>' /fd sha256 \\
       /tr http://timestamp.digicert.com /td sha256 yourapp.exe
@@ -289,7 +332,10 @@ ${LINUX_LINE}
     openssl rsa -in codesign-PRIVATE-KEY-ENCRYPTED.pem -out codesign.key
     scripts/sign-file sha256 codesign.key codesign-linux.der module.ko
 
-  TLS server: point it at tls-test-PUBLIC.crt + its key
-  (config depends on the server; most accept an encrypted key with a passphrase
-  prompt, or extract from the .pfx). Import root-ca-PUBLIC.crt into client trust.
+  TLS server: point it at tls-test-PUBLIC.crt + its key (config depends on the
+  server; most accept an encrypted key with a passphrase prompt, or extract from
+  the .pfx). Import root-ca-PUBLIC.crt into client trust.
 EOF
+
+log "Done. Files in ${OUT_DIR} (see ReadMe.txt):"
+cat ReadMe.txt
