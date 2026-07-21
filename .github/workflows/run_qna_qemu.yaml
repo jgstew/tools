@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v4
 
       - name: run qna ${{ matrix.arch }}
         # allow the workflow_dispatch input to override the default relevance
