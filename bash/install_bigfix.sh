@@ -138,16 +138,21 @@ else
 
     if [[ $OSBIT == x64 ]]; then
       URLBITS=amd64
+      UBUNTUDIST=ubuntu18
+      DEBIANDIST=debian10
     else
       URLBITS=i386
+      # BigFix 9.5 (the last release with 32-bit x86 builds) uses older distro tags.
+      UBUNTUDIST=ubuntu10
+      DEBIANDIST=debian6
     fi
 
     if [[ $DEBDIST == Ubuntu* ]]; then
       # Ubuntu
-      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu18.$URLBITS.deb"
+      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-$UBUNTUDIST.$URLBITS.deb"
     else
       # Debian
-      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-debian10.$URLBITS.deb"
+      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-$DEBIANDIST.$URLBITS.deb"
 
       # get rasbian installer if on arm architecture:
       if uname -m | grep --ignore-case --max-count=1 --count -E "aarch64|arm" ; then
@@ -173,11 +178,16 @@ else
 
     if [[ $OSBIT == x64 ]]; then
       URLBITS=x86_64
+      RHELDIST=rhe7
+      SUSEDIST=sle12
     else
       URLBITS=i686
+      # BigFix 9.5 (the last release with 32-bit x86 builds) uses older distro tags.
+      RHELDIST=rhe6
+      SUSEDIST=sle11
     fi
 
-    INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe7.$URLBITS.rpm"
+    INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-$RHELDIST.$URLBITS.rpm"
 
     # TODO check for other CPU architectures (arm64, ppc64le, s390x, etc) and set URLBITS accordingly
     # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-al2.aarch64.rpm
@@ -188,8 +198,9 @@ else
     if [ ! -f /etc/redhat-release ] ; then
       # Assume SUSE
       #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
-      INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle12.$URLBITS.rpm
+      INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-$SUSEDIST.$URLBITS.rpm
       # NOTE: BigFix 11 dropped sle11 builds; sle12 is the oldest SUSE build published for 11.0.x.
+      #       32-bit x86 (i686) falls back to BigFix 9.5 which does publish sle11.i686.rpm.
       # TODO: Check for CPU architecture (ppc64le, s390x) and set URLBITS accordingly
       # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.ppc64le.rpm
       # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.s390x.rpm
