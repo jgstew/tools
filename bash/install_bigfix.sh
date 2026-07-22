@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Short link: http://bit.ly/installbigfix
+# Short link: https://bit.ly/installbigfix
 #
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
@@ -22,15 +22,15 @@
 
 # TODO: use the masthead file in current directory if present
 
-# http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
-# http://www.tldp.org/LDP/abs/html/functions.html
+# https://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
+# https://www.tldp.org/LDP/abs/html/functions.html
 # FUNCTION: check if command exists
 command_exists () {
   type "$1" &> /dev/null ;
 }
 
 # if $1 exists, then set MASTHEADURL
-# http://www.tldp.org/LDP/abs/html/comparison-ops.html
+# https://www.tldp.org/LDP/abs/html/comparison-ops.html
 if [ -n "$1" ]; then
   MASTHEADURL="https://$1:52311/masthead/masthead.afxm"
   RELAYFQDN="$1:52311"
@@ -52,7 +52,7 @@ fi
 # these variables are used to determine which version of the BigFix agent should be downloaded
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
-#  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
+#  most recent version# found here under `Agent`:  https://support.bigfix.com/bes/release/
 URLVERSION=11.0.6.137
 
 # check for x32bit or x64bit OS
@@ -274,11 +274,11 @@ DLEXITCODE=0
 if command_exists curl ; then
   # Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
   curl -S -f -o $INSTALLER $INSTALLERURL
-  # http://stackoverflow.com/questions/6348902/how-can-i-add-numbers-in-a-bash-script
+  # https://stackoverflow.com/questions/6348902/how-can-i-add-numbers-in-a-bash-script
   DLEXITCODE=$(( DLEXITCODE + $? ))
   # Download the masthead, renamed, into the correct location
   # TODO: get masthead from CWD instead if present
-  # http://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
+  # https://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
   #  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
   curl -S -f --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
   DLEXITCODE=$(( DLEXITCODE + $? ))
@@ -286,7 +286,7 @@ else
   if command_exists wget ; then
     # this is run if curl doesn't exist, but wget does
     # download using wget
-    # http://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
+    # https://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
     # https://www.gnu.org/software/wget/manual/html_node/HTTPS-_0028SSL_002fTLS_0029-Options.html
     wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
     DLEXITCODE=$(( DLEXITCODE + $? ))
@@ -303,7 +303,7 @@ fi
 
 # Exit if download failed
 if [ $DLEXITCODE -ne 0 ]; then
-  # http://stackoverflow.com/questions/2990414/echo-that-outputs-to-stderr
+  # https://stackoverflow.com/questions/2990414/echo-that-outputs-to-stderr
   (>&2 echo Download Failed. ExitCode=$DLEXITCODE)
   exit $DLEXITCODE
 fi
@@ -397,10 +397,10 @@ if [ -f "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log" ]; then
 fi
 
 ### References:
-# - http://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
-# - http://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
-# - http://wiki.bash-hackers.org/scripting/posparams
-# - http://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
-# - http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
+# - https://stackoverflow.com/questions/733824/how-to-run-a-sh-script-in-an-unix-console-mac-terminal
+# - https://stackoverflow.com/questions/394230/detect-the-os-from-a-bash-script
+# - https://flokoe.github.io/bash-hackers-wiki/scripting/posparams/
+# - https://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
+# - https://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 # - https://forum.bigfix.com/t/script-to-kickstart-the-installation-of-bigfix-on-os-x-debian-family-rhel-family/17023
-# - http://stackoverflow.com/questions/30557508/bash-checking-if-string-does-not-contain-other-string
+# - https://stackoverflow.com/questions/30557508/bash-checking-if-string-does-not-contain-other-string
