@@ -162,6 +162,8 @@ else
         # Raspberry Pi OS / Raspbian is 32-bit ARM (armhf)
         URLBITS=armhf
         INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-raspbian10.armhf.deb"
+        dpkg --add-architecture armhf
+        apt-get update
       fi
     fi
 
