@@ -4,8 +4,11 @@
 # kickstart bigfix install
 # tested as working with the following: Mac OS X, Debian, Ubuntu, RHEL, CentOS, Fedora, OracleEL, SUSE
 #
-# Only currently works with Intel32 & AMD64 architectures. (any Intel or AMD or compatible processor)
-#          (Itanium, Power, and others are not common, but could be added)
+# Supported architectures:
+#   - x86_64 / amd64   (BigFix 11)
+#   - i386  / i686     (falls back to BigFix 9.5, the last release with 32-bit x86 builds)
+#   - armhf            (Raspberry Pi OS / Raspbian, .deb only)
+#   - ppc64le          (Ubuntu .deb only in this script; RPM ppc64le/s390x not yet wired up)
 #
 #    Reference: https://support.bigfix.com/bes/install/besclients-nonwindows.html
 #      Related: https://github.com/bigfix/bfdocker/tree/master/besclient
@@ -55,8 +58,8 @@ URLVERSION=11.0.6.137
 # check for x32bit or x64bit OS
 MACHINETYPE=`uname -m`
 
-# set OS_BIT variable based upon MACHINE_TYPE (this currently assumes either Intel 32bit or AMD 64bit)
-# if machine_type does not contain 64 then 32bit else 64bit (assume 64 unless otherwise noted)
+# set OSBIT based on MACHINETYPE. Only x86-family CPUs get OSBIT=x32 (name lacks "64" but contains "86").
+# Anything else (x86_64, aarch64, ppc64le, s390x, armv7l, ...) gets OSBIT=x64 and is disambiguated below.
 if [[ $MACHINETYPE != *"64"* ]] && [[ $MACHINETYPE == *"86"* ]]; then
   OSBIT=x32
   URLVERSION=9.5.25.11
@@ -115,7 +118,7 @@ fi
 
 if [[ $OSTYPE == darwin* ]]; then
   # Mac OS X
-  # https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52-BigFix_MacOS11.0.pkg
+  # example: https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-BigFix_MacOS11.0.pkg
   INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOS11.0.pkg"
   INSTALLER="/tmp/BESAgent.pkg"
 else
@@ -194,7 +197,7 @@ else
     # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-rhe7.ppc64le.rpm
     # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-rhe7.s390x.rpm
 
-    # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
+    # if not RHEL family, fall through to SUSE (the only other RPM-based dist BigFix ships)
     if [ ! -f /etc/redhat-release ] ; then
       # Assume SUSE
       #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
@@ -215,7 +218,7 @@ else
       # don't accidentally leak into the Solaris branch.
       INSTALLDIR="/etc/opt/BESClient"
       INSTALLER="/tmp/BESAgent.pkg"
-      # example:   https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52.x86_sol11.pkg
+      # example:   https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137.x86_sol11.pkg
       INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION.x86_sol11.pkg
       echo $INSTALLERURL
 
