@@ -7,6 +7,7 @@ REM install_bigfix.bat __FQDN_OF_ROOT_OR_RELAY__
 
 REM    Source: https://github.com/jgstew/tools/blob/master/CMD/install_bigfix.bat
 REM   Related: https://github.com/jgstew/tools/blob/master/bash/install_bigfix.sh
+REM            https://github.com/jgstew/tools/blob/master/powershell/install_bigfix.ps1
 
 REM http://stackoverflow.com/questions/2541767/what-is-the-proper-way-to-test-if-variable-is-empty-in-a-batch-file-if-not-1
 IF [%1] == [] ECHO please provide FQDN for root or relay && EXIT /B
