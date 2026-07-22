@@ -50,7 +50,7 @@ fi
 # these variables are typically set to the latest version of the BigFix agent
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
-URLVERSION=11.0.3.82
+URLVERSION=11.0.6.137
 URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 
 # check for x32bit or x64bit OS
@@ -127,7 +127,12 @@ else
 
     # check distribution
     # cat /etc/os-release /etc/lsb-release | grep --ignore-case --max-count=1 --count ubuntu
+    # cat /etc/os-release | grep '^ID' | awk -F=  '{ print $2 }'
     DEBDIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
+
+    if [[ $DEBDIST == "" ]]; then
+      DEBDIST=`cat /etc/os-release | grep '^ID' | awk -F=  '{ print $2 }'`
+    fi
 
     if [[ $OSBIT == x64 ]]; then
       URLBITS=amd64
@@ -141,6 +146,21 @@ else
     else
       # Debian
       INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-debian10.$URLBITS.deb"
+
+      # get rasbian installer if on arm architecture:
+      if uname -m | grep --ignore-case --max-count=1 --count -E "aarch64|arm" ; then
+        # Raspberry Pi OS / Raspbian is 32-bit ARM (armhf)
+        URLBITS=armhf
+        INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-raspbian10.armhf.deb"
+      fi
+    fi
+
+    # Check for CPU architecture (ppc64el)
+    # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-ubuntu18.ppc64el.deb
+    if uname -m | grep --ignore-case --max-count=1 --count -E "ppc64el" ; then
+      # PPC64LE architecture
+      URLBITS=ppc64el
+      INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu18.$URLBITS.deb"
     fi
   fi # END_IF Debian (dpkg)
 
@@ -157,12 +177,20 @@ else
 
     INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-rhe7.$URLBITS.rpm"
 
+    # TODO check for other CPU architectures (arm64, ppc64le, s390x, etc) and set URLBITS accordingly
+    # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-al2.aarch64.rpm
+    # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-rhe7.ppc64le.rpm
+    # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-rhe7.s390x.rpm
+
     # because only RHEL style dist is currently supported for RPM installs, then exit if not RHEL family
     if [ ! -f /etc/redhat-release ] ; then
       # Assume SUSE
       #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
       INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle11.$URLBITS.rpm
       # TODO: could add support for SUSE 10, but 11+ should work with the above.
+      # TODO: Check for CPU architecture (ppc64le, s390x) and set URLBITS accordingly
+      # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.ppc64le.rpm
+      # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.s390x.rpm
     fi # END_IF not-RHEL-family
   fi # END_IF exists rpm
 
@@ -173,6 +201,9 @@ else
       # example:   https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52.x86_sol11.pkg
       INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION.x86_sol11.pkg
       echo $INSTALLERURL
+
+      # TODO check for CPU architecture (sparc)
+      # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137.sparc_sol11.pkg
   fi # END_IF pkgadd
 fi # END_IF darwin
 ############################################################
