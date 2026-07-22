@@ -147,7 +147,7 @@ else
       DEBIANDIST=debian6
     fi
 
-    if [[ $DEBDIST == Ubuntu* ]]; then
+    if [[ $DEBDIST == *buntu* ]]; then
       # Ubuntu
       INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-$UBUNTUDIST.$URLBITS.deb"
     else
@@ -164,7 +164,7 @@ else
 
     # Check for CPU architecture (ppc64el)
     # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-ubuntu18.ppc64el.deb
-    if uname -m | grep --ignore-case --max-count=1 --count -E "ppc64el" ; then
+    if uname -m | grep --ignore-case --max-count=1 --count -E "ppc64le" ; then
       # PPC64LE architecture
       URLBITS=ppc64el
       INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu18.$URLBITS.deb"
@@ -210,7 +210,11 @@ else
   if command_exists pkgadd ; then
       # TODO: test case for Solaris
       echo "Solaris Detected"
-      INSTALLER="BESAgent.pkg"
+      # BigFix on Solaris uses /etc/opt/BESClient for the masthead/clientsettings staging
+      # (same layout as Linux). Set it explicitly so any future non-Linux paths above
+      # don't accidentally leak into the Solaris branch.
+      INSTALLDIR="/etc/opt/BESClient"
+      INSTALLER="/tmp/BESAgent.pkg"
       # example:   https://software.bigfix.com/download/bes/100/BESAgent-10.0.7.52.x86_sol11.pkg
       INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION.x86_sol11.pkg
       echo $INSTALLERURL
@@ -255,6 +259,14 @@ fi
 
 
 #### Downloads #############################################
+
+# Fail fast if OS detection above did not produce a download URL (unsupported OS/arch).
+if [ -z "$INSTALLERURL" ] || [ -z "$INSTALLER" ]; then
+  (>&2 echo "ERROR: could not determine BigFix agent download URL for this OS/arch.")
+  (>&2 echo "  OSTYPE=$OSTYPE MACHINETYPE=$MACHINETYPE OSBIT=$OSBIT")
+  exit 3
+fi
+
 DLEXITCODE=0
 if command_exists curl ; then
   # Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
