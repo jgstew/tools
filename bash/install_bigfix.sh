@@ -51,19 +51,21 @@ fi
 # URLMAJORMINOR is the first two integers of URLVERSION
 #  most recent version# found here under `Agent`:  http://support.bigfix.com/bes/release/
 URLVERSION=11.0.6.137
-URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 
 # check for x32bit or x64bit OS
 MACHINETYPE=`uname -m`
 
 # set OS_BIT variable based upon MACHINE_TYPE (this currently assumes either Intel 32bit or AMD 64bit)
 # if machine_type does not contain 64 then 32bit else 64bit (assume 64 unless otherwise noted)
-if [[ $MACHINETYPE != *"64"* ]]; then
+if [[ $MACHINETYPE != *"64"* ]] && [[ $MACHINETYPE == *"86"* ]]; then
   OSBIT=x32
+  URLVERSION=9.5.25.11
 else
   OSBIT=x64
   # KNOWN ISSUE: this will incorrectly assume AMD64 compatible processor in the case of PowerPC64
 fi
+
+URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 
 ############################################################
 # TODO: add more linux cases, not all are handled
@@ -186,8 +188,8 @@ else
     if [ ! -f /etc/redhat-release ] ; then
       # Assume SUSE
       #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
-      INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle11.$URLBITS.rpm
-      # TODO: could add support for SUSE 10, but 11+ should work with the above.
+      INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-sle12.$URLBITS.rpm
+      # NOTE: BigFix 11 dropped sle11 builds; sle12 is the oldest SUSE build published for 11.0.x.
       # TODO: Check for CPU architecture (ppc64le, s390x) and set URLBITS accordingly
       # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.ppc64le.rpm
       # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.s390x.rpm
