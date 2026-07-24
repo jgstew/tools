@@ -22,10 +22,25 @@ else
   OUTPUTFILE=besclient.config
 fi
 
+# FUNCTION: convert clientsettings.cfg to besclient.config format
+convert_clientsettings () {
+  awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' "$CLIENTSETTINGSFILE"
+}
+
 # check that AWK is present
 if command_exists awk ; then
-  if [ -f $CLIENTSETTINGSFILE ] ; then
-    cat $CLIENTSETTINGSFILE | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}'
+  if [ -f "$CLIENTSETTINGSFILE" ] ; then
+    # only redirect to OUTPUTFILE if second argument was explicitly given,
+    #  otherwise write to stdout so existing pipe/redirect usage keeps working
+    # see the issue this solves:  https://github.com/jgstew/tools/issues/12
+    if [ -n "$2" ]; then
+      convert_clientsettings > "$OUTPUTFILE"
+    else
+      convert_clientsettings
+    fi
+  else
+    (>&2 echo "input file not found: $CLIENTSETTINGSFILE")
+    exit 1
   fi
 else
   (>&2 echo "AWK is missing!")
