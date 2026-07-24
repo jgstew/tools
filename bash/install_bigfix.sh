@@ -22,6 +22,21 @@
 
 # TODO: use the masthead file in current directory if present
 
+# Ensure we are actually running under bash, not sh/dash/ash.
+#  $BASH_VERSION is unset in any non-bash shell.
+#  This guard must stay pure POSIX (no [[ ]], no &>) so sh can parse it,
+#   then it transparently re-executes the script under bash if available.
+# see the issue this solves:  https://github.com/jgstew/tools/issues/20
+# https://unix.stackexchange.com/questions/71121/determine-shell-in-script-during-runtime
+if [ -z "$BASH_VERSION" ]; then
+  if command -v bash >/dev/null 2>&1; then
+    exec bash "$0" "$@"
+  fi
+  echo "ERROR: this script requires bash (it uses [[ ]], &>, and OSTYPE)." >&2
+  echo "       Re-run as: bash $0 $*" >&2
+  exit 1
+fi
+
 # https://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
 # https://www.tldp.org/LDP/abs/html/functions.html
 # FUNCTION: check if command exists
