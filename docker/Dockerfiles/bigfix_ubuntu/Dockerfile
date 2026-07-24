@@ -16,6 +16,9 @@ RUN wget https://raw.githubusercontent.com/jgstew/tools/master/bash/install_bigf
 RUN StartBigFix=false bash install_bigfix.sh _PUT.YOUR.RELAY.HERE.hostnameORfqdnORip_
 
 # start bigfix client when container is started
-# using this to make it keep running:  tail -f /dev/null
+# using `exec sleep infinity` to keep it running: lighter than `tail -f /dev/null`
+#  and exec lets SIGTERM from `docker stop` end the container promptly
+# see the issue this solves:  https://github.com/jgstew/tools/issues/22
+# NOTE: `sleep infinity` is GNU coreutils; on BusyBox/Alpine use `sleep 2147483647` instead
 # could potentially use QnA to keep it running instead, which would be interesting
-ENTRYPOINT bash -c "/etc/init.d/besclient start;tail -f /dev/null"
+ENTRYPOINT ["/bin/bash","-c","/etc/init.d/besclient start; exec sleep infinity"]
