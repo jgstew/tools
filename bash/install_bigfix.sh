@@ -203,7 +203,7 @@ else
       INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-$DEBIANDIST.$URLBITS.deb"
 
       # get rasbian installer if on arm architecture:
-      if uname -m | grep --ignore-case --max-count=1 --count -E "aarch64|arm" ; then
+      if uname -m | grep --quiet --ignore-case -E "aarch64|arm" ; then
         # Raspberry Pi OS / Raspbian is 32-bit ARM (armhf)
         URLBITS=armhf
         INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-raspbian10.armhf.deb"
@@ -214,15 +214,15 @@ else
 
     # Check for CPU architecture (ppc64el)
     # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-ubuntu18.ppc64el.deb
-    if uname -m | grep --ignore-case --max-count=1 --count -E "ppc64le" ; then
+    if uname -m | grep --quiet --ignore-case -E "ppc64le" ; then
       # PPC64LE architecture
       URLBITS=ppc64el
       INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-ubuntu18.$URLBITS.deb"
     fi
-  fi # END_IF Debian (dpkg)
-
-  # if rpm exists
-  if command_exists rpm ; then
+  # if rpm exists (and dpkg does not - a Debian family system with the rpm
+  #  command installed, e.g. via `alien`, must still use the .deb installer,
+  #  so rpm is only considered when dpkg is absent)
+  elif command_exists rpm ; then
     # rpm - Currently assuming RedHat based
     INSTALLER="$STAGINGDIR/BESAgent.rpm"
 
@@ -257,7 +257,7 @@ else
       # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.ppc64le.rpm
       # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-sle12.s390x.rpm
     fi # END_IF not-RHEL-family
-  fi # END_IF exists rpm
+  fi # END_IF dpkg (Debian) / rpm
 
   if command_exists pkgadd ; then
       # TODO: test case for Solaris
@@ -360,7 +360,8 @@ fi
 # See here: https://github.com/jgstew/tools/blob/master/bash/enable_incoming_port.sh
 # open up linux firewall to accept UDP 52311 - iptables
 if command_exists iptables ; then
-  iptables -A INPUT -p udp --dport 52311 -j ACCEPT
+  # -C checks if the rule already exists so re-runs don't append duplicates
+  iptables -C INPUT -p udp --dport 52311 -j ACCEPT 2>/dev/null || iptables -A INPUT -p udp --dport 52311 -j ACCEPT
 fi
 # open up linux firewall to accept UDP 52311 - firewall-cmd
 if command_exists firewall-cmd ; then
@@ -384,7 +385,8 @@ if [[ $INSTALLER == *.deb ]]; then
   # Prefer apt-get so runtime dependencies get resolved automatically on
   #  minimal or container images. Fall back to dpkg (no dependency
   #  resolution) if apt-get is missing or fails (e.g. empty package lists).
-  #  The ./ prefix makes apt-get treat it as a local file, not a repo package.
+  #  The absolute path (contains a slash) makes apt-get treat it as a local
+  #  file, not a repo package.
   # see the issue this solves:  https://github.com/jgstew/tools/issues/19
   if command_exists apt-get ; then
     apt-get install -y "$INSTALLER" || dpkg -i "$INSTALLER"
@@ -416,7 +418,8 @@ if [[ $INSTALLER == *.rpm ]]; then
   #  dependencies like libstdc++ get pulled in automatically on minimal or
   #  container images. Fall back to plain rpm, which does not resolve
   #  dependencies, since some environments only have the rpm command.
-  #  The ./ prefix makes dnf/yum treat it as a local file, not a repo package.
+  #  The absolute path (contains a slash) makes dnf/yum treat it as a local
+  #  file, not a repo package.
   # see the issue this solves:  https://github.com/jgstew/tools/issues/19
   if command_exists dnf ; then
     dnf install -y "$INSTALLER"
@@ -458,22 +461,31 @@ if [[ $INSTALLER == *.rpm ]]; then
   fi
 fi
 
-# if missing, create besclient.config file based upon the staged clientsettings.cfg
-if [ ! -f /var/opt/BESClient/besclient.config ]; then
-  cat "$STAGED_CFG" | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
-  chmod 600 /var/opt/BESClient/besclient.config
-fi
+# Linux only: /var/opt/BESClient and init.d/systemd do not apply to macOS,
+#  where the pkg installer handles config placement and service startup itself.
+if [[ $OSTYPE != darwin* ]]; then
+  # if missing, create besclient.config file based upon the staged clientsettings.cfg
+  if [ ! -f /var/opt/BESClient/besclient.config ]; then
+    cat "$STAGED_CFG" | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
+    chmod 600 /var/opt/BESClient/besclient.config
+  fi
 
-### start the BigFix client (required for most linux dist)
-# if file `/etc/init.d/besclient` exists
-if [ -f /etc/init.d/besclient ]; then
+  ### start the BigFix client (required for most linux dist)
   # Do not start bigfix if: StartBigFix=false
   if [[ "$StartBigFix" != "false" ]]; then
-    /etc/init.d/besclient start
+    # if file `/etc/init.d/besclient` exists
+    if [ -f /etc/init.d/besclient ]; then
+      /etc/init.d/besclient start
+    else
+      # start using systemd
+      systemctl start besclient
+    fi
   fi
-else
-  # start using systemd
-  systemctl start besclient
+fi # END_IF not darwin
+
+# nothing to wait for or tail if the client was intentionally not started
+if [[ "$StartBigFix" == "false" ]]; then
+  exit 0
 fi
 
 # pause 30 seconds to wait for bigfix to get going a bit
