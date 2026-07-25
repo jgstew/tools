@@ -482,7 +482,10 @@ fi
 if [[ $OSTYPE != darwin* ]]; then
   # if missing, create besclient.config file based upon the staged clientsettings.cfg
   if [ ! -f /var/opt/BESClient/besclient.config ]; then
-    cat "$STAGED_CFG" | $AWK 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } $0 ~ /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
+    # NOTE: no /=/ regex literals here. Solaris nawk (and oawk) misparse a `/`
+    #  after `~` or a `{` as the start of the /= operator, so the separator is
+    #  matched with index()/gsub("=") using a plain string instead.
+    cat "$STAGED_CFG" | $AWK 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } index($0, "=") { gsub("=", " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
     chmod 600 /var/opt/BESClient/besclient.config
   fi
 
@@ -512,15 +515,17 @@ sleep 10
 # TODO: add mac support to the following:
 BESLOGFILE="/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
 if [ -f "$BESLOGFILE" ]; then
-  # -n/-f are POSIX; the old GNU long options (--lines/--verbose) are not
-  #  accepted by Solaris /usr/bin/tail (it exited nonzero and failed the whole
-  #  script). Print the filename ourselves in place of GNU --verbose.
+  # Use the obsolescent `tail -25` count form and `-f`: both are understood by
+  #  Solaris SVR4 /usr/bin/tail AND GNU tail. The GNU long options
+  #  (--lines/--verbose) and even POSIX `-n 25` are rejected by Solaris tail
+  #  (it exited nonzero and failed the whole script). Print the filename
+  #  ourselves in place of GNU --verbose.
   echo "==> $BESLOGFILE <=="
   if [ -n "$NOEXIT" ]; then
     # tail log forever if NOEXIT set to anything
     tail -f "$BESLOGFILE"
   else
-    tail -n 25 "$BESLOGFILE"
+    tail -25 "$BESLOGFILE"
   fi
   # Related:
   #  - https://bigfix.me/fixlet/details/24646
