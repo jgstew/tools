@@ -245,7 +245,9 @@ else
     # https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-rhe7.s390x.rpm
 
     # if not RHEL family, fall through to SUSE (the only other RPM-based dist BigFix ships)
-    if [ ! -f /etc/redhat-release ] ; then
+    #  Amazon Linux has /etc/system-release but NOT /etc/redhat-release, and
+    #  should use the RHEL build, so only assume SUSE when neither exists.
+    if [ ! -f /etc/redhat-release ] && [ ! -f /etc/system-release ] ; then
       # Assume SUSE
       #  SUSE is the only other RPM based linux supported by BigFix that is not based upon the RHEL family
       INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-$SUSEDIST.$URLBITS.rpm
@@ -420,6 +422,9 @@ if [[ $INSTALLER == *.rpm ]]; then
     dnf install -y "$INSTALLER"
   elif command_exists yum ; then
     yum install -y "$INSTALLER"
+  elif command_exists zypper ; then
+    # SUSE: --no-gpg-checks because the BESAgent rpm key is not imported
+    zypper --non-interactive --no-gpg-checks install "$INSTALLER"
   else
     # if file `/etc/init.d/besclient` exists then do upgrade
     if [ -f /etc/init.d/besclient ]; then
@@ -444,6 +449,8 @@ if [[ $INSTALLER == *.rpm ]]; then
         dnf install -y "$MISSINGLIB()(64bit)" || dnf install -y "$MISSINGLIB"
       elif command_exists yum ; then
         yum install -y "$MISSINGLIB()(64bit)" || yum install -y "$MISSINGLIB"
+      elif command_exists zypper ; then
+        zypper --non-interactive install "$MISSINGLIB()(64bit)" || zypper --non-interactive install "$MISSINGLIB"
       else
         (>&2 echo "WARNING: no package manager available to install $MISSINGLIB - BESClient may not run")
       fi
