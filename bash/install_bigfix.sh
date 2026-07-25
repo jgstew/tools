@@ -86,12 +86,27 @@ fi
 #  most recent version# found here under `Agent`:  https://support.bigfix.com/bes/release/
 URLVERSION=11.0.6.137
 
+# Pick a modern awk. Solaris /usr/bin/awk is the ancient oawk: it has no
+#  gsub() and misparses the /=/ regex as the /= operator (breaks the
+#  besclient.config generator below). nawk and /usr/xpg4/bin/awk are POSIX.
+#  On Linux awk is already gawk/mawk and nawk is normally absent, so this
+#  resolves back to plain awk there - a no-op.
+AWK=awk
+if command_exists nawk ; then
+  AWK=nawk
+elif [ -x /usr/xpg4/bin/awk ] ; then
+  AWK=/usr/xpg4/bin/awk
+fi
+
 # check for x32bit or x64bit OS
 MACHINETYPE=`uname -m`
 
 # set OSBIT based on MACHINETYPE. Only x86-family CPUs get OSBIT=x32 (name lacks "64" but contains "86").
 # Anything else (x86_64, aarch64, ppc64le, s390x, armv7l, ...) gets OSBIT=x64 and is disambiguated below.
-if [[ $MACHINETYPE != *"64"* ]] && [[ $MACHINETYPE == *"86"* ]]; then
+#  Solaris x86 reports "i86pc" from `uname -m` for 64-bit hardware too (it is a
+#  platform token, not a bitness), so it is excluded here - BigFix 11 ships a
+#  64-bit Solaris pkg and Solaris 11 is 64-bit only.
+if [[ $MACHINETYPE != *"64"* ]] && [[ $MACHINETYPE == *"86"* ]] && [[ $MACHINETYPE != "i86pc" ]]; then
   OSBIT=x32
   URLVERSION=9.5.25.11
 else
@@ -101,7 +116,7 @@ else
   #  (see the TODO in the rpm branch), so it would wrongly download x86_64 there.
 fi
 
-URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
+URLMAJORMINOR=`echo $URLVERSION | $AWK -F. '{print $1 $2}'`
 
 ############################################################
 # TODO: add more linux cases, not all are handled
@@ -467,7 +482,7 @@ fi
 if [[ $OSTYPE != darwin* ]]; then
   # if missing, create besclient.config file based upon the staged clientsettings.cfg
   if [ ! -f /var/opt/BESClient/besclient.config ]; then
-    cat "$STAGED_CFG" | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
+    cat "$STAGED_CFG" | $AWK 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } $0 ~ /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
     chmod 600 /var/opt/BESClient/besclient.config
   fi
 
@@ -495,13 +510,17 @@ sleep 10
 
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
 # TODO: add mac support to the following:
-if [ -f "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log" ]; then
-
+BESLOGFILE="/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+if [ -f "$BESLOGFILE" ]; then
+  # -n/-f are POSIX; the old GNU long options (--lines/--verbose) are not
+  #  accepted by Solaris /usr/bin/tail (it exited nonzero and failed the whole
+  #  script). Print the filename ourselves in place of GNU --verbose.
+  echo "==> $BESLOGFILE <=="
   if [ -n "$NOEXIT" ]; then
     # tail log forever if NOEXIT set to anything
-    tail --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+    tail -f "$BESLOGFILE"
   else
-    tail --lines=25 --verbose "/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+    tail -n 25 "$BESLOGFILE"
   fi
   # Related:
   #  - https://bigfix.me/fixlet/details/24646
