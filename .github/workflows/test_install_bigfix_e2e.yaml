@@ -33,7 +33,22 @@ jobs:
 
       - name: Run e2e test suite
         # default shell is bash with pipefail, so tee does not mask a failure
+        env:
+          # keep per-test logs outside the harness temp dir so they survive
+          # the run and can be uploaded as an artifact on failure
+          E2E_LOGDIR: ${{ runner.temp }}/e2e-logs
         run: bash tests/test_install_bigfix_e2e.sh | tee e2e_output.txt
+
+      - name: Upload full logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-logs
+          path: |
+            ${{ runner.temp }}/e2e-logs/
+            e2e_output.txt
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Write results to job summary
         if: always()

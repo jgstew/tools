@@ -61,7 +61,9 @@ SRCDIR="$(cd "$(dirname "$0")/../bash" && pwd)"
 NET=bigfix-e2e
 PLATFORM=linux/amd64
 WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/bigfix_e2e.XXXXXX")" || exit 1
-LOGDIR="$WORKDIR/logs"
+# Per-test logs default inside WORKDIR (removed at exit). Set E2E_LOGDIR to a
+# path outside it to keep the logs after the run, e.g. for CI artifact upload.
+LOGDIR="${E2E_LOGDIR:-$WORKDIR/logs}"
 mkdir -p "$LOGDIR" "$WORKDIR/relay/www/masthead"
 
 cleanup() {
@@ -408,16 +410,29 @@ echo E2E_PASS
 " linux/arm64 &
 
 # 32-bit x86 must fall back to BigFix 9.5 (last release with 32-bit builds).
+# On native x86_64 hosts an i386 container still reports x86_64 from uname
+# (the binaries run natively, no emulation), so there the script must run
+# under linux32, which sets the 32-bit personality and makes uname -m report
+# i686 - exactly what a real 32-bit machine reports. Under qemu on non-x86
+# hosts uname -m is already i686, and linux32 must NOT be used (qemu-user
+# cannot set the personality and setarch exits nonzero).
 NAMES+=(i386-bigfix95)
 run_test i386-bigfix95 i386/debian:bullseye "
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
-uname -m | grep -qE 'i.86' || { echo 'SETUP FAIL: not 32-bit x86'; exit 20; }
-$RUN_AND_ASSERT
-[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
-dpkg -s besagent 2>/dev/null | grep -q '^Version: 9.5' || { echo 'FAIL: expected BigFix 9.5 fallback version'; exit 46; }
+dpkg --print-architecture | grep -qx i386 || { echo 'SETUP FAIL: not an i386 userland'; exit 20; }
+"'
+uname -m | grep -qE "i.86" || linux32 true 2>/dev/null || { echo "SETUP FAIL: cannot get a 32-bit uname"; exit 20; }
+RUNARCH=""
+uname -m | grep -qE "i.86" || RUNARCH=linux32
+mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
+$RUNARCH bash install_bigfix.sh relay
+rc=$?
+'"$ASSERT_COMMON"'
+[ -f /work/BESAgent.deb ] || { echo "MISSING: staged BESAgent.deb"; exit 14; }
+dpkg -s besagent 2>/dev/null | grep -q "^Version: 9.5" || { echo "FAIL: expected BigFix 9.5 fallback version"; exit 46; }
 echo E2E_PASS
-" linux/386 &
+' linux/386 &
 
 wait
 
