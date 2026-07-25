@@ -6,10 +6,11 @@
 #     TLS on port 52311 (works because the script fetches the masthead with
 #     --insecure by design; the masthead cert is tied to the deployment, not
 #     a public CA).
-#   - Five test containers run IN PARALLEL (--platform linux/amd64, so this
-#     also works on arm64 hosts via emulation), each doing a REAL agent
-#     download from software.bigfix.com, installing it, and asserting the
-#     install completed.
+#   - All test containers run IN PARALLEL simultaneously (mostly
+#     --platform linux/amd64, so this also works on arm64 hosts via
+#     emulation), each doing a REAL agent download from software.bigfix.com,
+#     installing it, and asserting the install completed. Expect max CPU
+#     usage while the suite runs.
 #
 # Tests:
 #   ubuntu-deb             .deb path via apt-get on ubuntu:24.04
@@ -19,10 +20,16 @@
 #                           where the rpm block overrode dpkg detection)
 #   alma-dnf               .rpm path via dnf on almalinux:9
 #   oracle-dnf             .rpm path via dnf on oraclelinux:9
-#   fedora-dnf             .rpm path via dnf on fedora:latest
+#   fedora-dnf             .rpm path via dnf on fedora:41
 #   amazon-dnf             .rpm path on amazonlinux:2023 — exercises the
 #                           /etc/system-release branch (no /etc/redhat-release;
 #                           must pick the RHEL rpm, not fall through to SUSE)
+#   ubi7-yum               .rpm path via yum on Red Hat UBI 7 (RHEL 7)
+#   ubi8-dnf               .rpm path via dnf on Red Hat UBI 8 (RHEL 8)
+#   ubi9-dnf               .rpm path via dnf on Red Hat UBI 9 (RHEL 9)
+#   ubi10-dnf              .rpm path via dnf on Red Hat UBI 10 (RHEL 10)
+#                           (auto-SKIPs where emulation lacks x86-64-v3,
+#                           e.g. Apple Silicon hosts)
 #   leap-zypper            .rpm path via zypper on opensuse/leap:15
 #   startbigfix-false      StartBigFix=false installs but does not start the
 #                           client, skips the 30s sleep, exits 0
@@ -60,6 +67,7 @@ mkdir -p "$LOGDIR" "$WORKDIR/relay/www/masthead"
 cleanup() {
   docker rm -f e2e-relay >/dev/null 2>&1
   for t in ubuntu-deb ubuntu2204-deb debian-rpm-regression alma-dnf oracle-dnf fedora-dnf amazon-dnf leap-zypper startbigfix-false \
+           ubi7-yum ubi8-dnf ubi9-dnf ubi10-dnf \
            wget-fallback amazon2-yum rpm-only sh-reexec readonly-staging hostport-arg relaypass custom-cfg negatives armhf-native i386-bigfix95; do
     docker rm -f "e2e-$t" >/dev/null 2>&1
   done
@@ -141,7 +149,7 @@ echo E2E_PASS
 # Regression for the rpm-overrides-dpkg bug: Debian WITH the rpm command
 # installed must still choose the .deb installer, never the SUSE rpm.
 NAMES+=(debian-rpm-regression)
-run_test debian-rpm-regression debian:latest "
+run_test debian-rpm-regression debian:12 "
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates rpm >/dev/null 2>&1
 command -v rpm >/dev/null || { echo 'SETUP FAIL: rpm not installed'; exit 20; }
@@ -171,7 +179,7 @@ echo E2E_PASS
 " &
 
 NAMES+=(fedora-dnf)
-run_test fedora-dnf fedora:latest "
+run_test fedora-dnf fedora:41 "
 command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
 $RUN_AND_ASSERT
 [ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
@@ -214,14 +222,56 @@ pgrep -x BESClient >/dev/null && { echo 'FAIL: BESClient running despite StartBi
 echo E2E_PASS
 " &
 
-# Two waves so ~20 emulated containers don't all compete for CPU at once.
-echo "wave 1 (${#NAMES[@]} tests) running..."
-wait
-echo "wave 1 done, starting wave 2..."
+# Red Hat UBI images: real RHEL 7/8/9/10 userlands, publicly pullable.
+# UBI 7 is yum-based; 8/9/10 use dnf. All have /etc/redhat-release, so they
+# take the RHEL branch (rhe7 rpm). Note UBI repos are a subset of full RHEL,
+# so the ldd missing-library loop may only find some soname providers there.
+
+NAMES+=(ubi7-yum)
+run_test ubi7-yum registry.access.redhat.com/ubi7/ubi "
+[ -f /etc/redhat-release ] || { echo 'SETUP FAIL: missing /etc/redhat-release'; exit 20; }
+command -v curl >/dev/null || yum install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+NAMES+=(ubi8-dnf)
+run_test ubi8-dnf registry.access.redhat.com/ubi8/ubi "
+[ -f /etc/redhat-release ] || { echo 'SETUP FAIL: missing /etc/redhat-release'; exit 20; }
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+NAMES+=(ubi9-dnf)
+run_test ubi9-dnf registry.access.redhat.com/ubi9/ubi "
+[ -f /etc/redhat-release ] || { echo 'SETUP FAIL: missing /etc/redhat-release'; exit 20; }
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+NAMES+=(ubi10-dnf)
+run_test ubi10-dnf registry.access.redhat.com/ubi10/ubi "
+[ -f /etc/redhat-release ] || { echo 'SETUP FAIL: missing /etc/redhat-release'; exit 20; }
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+# All tests run simultaneously — expect max CPU usage while the suite runs.
 
 # Download path when wget is present but curl is not (debian base has no curl).
 NAMES+=(wget-fallback)
-run_test wget-fallback debian:latest "
+run_test wget-fallback debian:12 "
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null && apt-get install -y -qq wget ca-certificates >/dev/null 2>&1
 command -v curl >/dev/null && { echo 'SETUP FAIL: curl unexpectedly present'; exit 20; }
@@ -284,7 +334,7 @@ echo E2E_PASS
 
 # host:port argument form exercises the colon-parsing branch.
 NAMES+=(hostport-arg)
-run_test hostport-arg debian:latest "
+run_test hostport-arg debian:12 "
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
 "'
@@ -348,7 +398,7 @@ echo E2E_PASS
 # Native arm64 debian reports aarch64 and takes the raspbian armhf branch
 # (dpkg --add-architecture armhf + raspbian10.armhf.deb).
 NAMES+=(armhf-native)
-run_test armhf-native debian:latest "
+run_test armhf-native debian:12 "
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
 uname -m | grep -q aarch64 || { echo 'SETUP FAIL: not aarch64'; exit 20; }
@@ -376,6 +426,12 @@ echo "==== RESULTS ===="
 FAILED=0
 for name in "${NAMES[@]}"; do
   ec=$(cat "$LOGDIR/$name.exit" 2>/dev/null || echo "?")
+  # RHEL 10 x86_64 requires the x86-64-v3 microarchitecture; emulation on
+  # some hosts (e.g. Apple Silicon) cannot provide it. Skip, don't fail.
+  if grep -q "CPU does not support x86-64-v3" "$LOGDIR/$name.log" 2>/dev/null; then
+    printf "%-25s %s\n" "$name" "SKIP(host emulation lacks x86-64-v3)"
+    continue
+  fi
   if [ "$ec" = "0" ] && grep -q E2E_PASS "$LOGDIR/$name.log"; then
     status=PASS
   else

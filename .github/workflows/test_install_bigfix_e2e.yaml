@@ -1,0 +1,57 @@
+---
+name: test_install_bigfix_e2e
+
+# End-to-end Docker tests for bash/install_bigfix.sh.
+# Runs whenever the installer script or the e2e test harness changes.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - bash/install_bigfix.sh
+      - tests/test_install_bigfix_e2e.sh
+      - .github/workflows/test_install_bigfix_e2e.yaml
+  pull_request:
+    paths:
+      - bash/install_bigfix.sh
+      - tests/test_install_bigfix_e2e.sh
+      - .github/workflows/test_install_bigfix_e2e.yaml
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    # all ~24 containers run in parallel; downloads dominate, but leave headroom
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      # needed for the non-amd64 test containers (armhf-native runs
+      # linux/arm64, i386-bigfix95 runs linux/386) on the amd64 runner
+      - name: Set up QEMU for multi-arch containers
+        uses: docker/setup-qemu-action@v3
+
+      - name: Run e2e test suite
+        # default shell is bash with pipefail, so tee does not mask a failure
+        run: bash tests/test_install_bigfix_e2e.sh | tee e2e_output.txt
+
+      - name: Write results to job summary
+        if: always()
+        run: |
+          {
+            echo '## install_bigfix.sh e2e results'
+            echo
+            echo '| Test | Result |'
+            echo '| --- | --- |'
+            # result lines look like "name   PASS|FAIL(...)|SKIP(...)"; the
+          # failing-log excerpts that follow FAIL lines are filtered out
+          awk '/^==== RESULTS ====$/ {f=1; next}
+                 f && $2 ~ /^(PASS$|FAIL\(|SKIP\()/ {
+                   name=$1; $1=""; sub(/^ +/, "");
+                   icon="";
+                   if ($0 ~ /^PASS/) icon="✅ ";
+                   else if ($0 ~ /^FAIL/) icon="❌ ";
+                   else if ($0 ~ /^SKIP/) icon="⚠️ ";
+                   printf "| %s | %s%s |\n", name, icon, $0
+                 }' e2e_output.txt
+          } >> "$GITHUB_STEP_SUMMARY"
