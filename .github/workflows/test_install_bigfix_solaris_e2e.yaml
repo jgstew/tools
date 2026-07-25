@@ -42,6 +42,14 @@ jobs:
           }
           EOF
           echo "dummy-masthead-content-for-e2e-test" > "$RELAYDIR/www/masthead/masthead.afxm"
+          # Pre-pull with retries: Docker Hub occasionally times out on the
+          # runner (registry-1.docker.io context deadline exceeded), which is a
+          # transient flake unrelated to the test.
+          for i in 1 2 3 4 5; do
+            docker pull nginx:alpine && break
+            echo "docker pull attempt $i failed; retrying in $((i*5))s"
+            sleep $((i*5))
+          done
           docker run -d --name e2e-relay -p 52311:52311 -v "$RELAYDIR:/relay:ro" \
             nginx:alpine nginx -c /relay/nginx.conf -g 'daemon off;'
           sleep 2
