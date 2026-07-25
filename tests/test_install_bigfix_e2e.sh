@@ -53,7 +53,13 @@
 #   when new OS versions ship. A representative sample per branch, not every
 #   supported OS.
 #   compat-ubuntu-oldest   ubuntu:18.04 (the ubuntu18 package's target)
-#   compat-ubuntu-latest   ubuntu:latest
+#   compat-ubuntu-latest   ubuntu:latest (latest LTS)
+#   compat-ubuntu-rolling  ubuntu:rolling — latest release INCLUDING non-LTS
+#                           interims. Not officially supported by BigFix, but
+#                           works in practice and previews breakage coming in
+#                           the next LTS. Identical to :latest just after an
+#                           LTS ships; diverges when each October interim
+#                           lands.
 #   compat-debian-oldest   debian:10 (the debian10 package's target; apt
 #                           sources are repointed to archive.debian.org since
 #                           buster is EOL)
@@ -94,7 +100,7 @@ cleanup() {
   for t in ubuntu-deb ubuntu2204-deb debian-rpm-regression alma-dnf oracle-dnf fedora-dnf amazon-dnf leap-zypper startbigfix-false \
            ubi7-yum ubi8-dnf ubi9-dnf \
            wget-fallback amazon2-yum rpm-only sh-reexec readonly-staging hostport-arg relaypass custom-cfg negatives armhf-native i386-bigfix95 \
-           compat-ubuntu-oldest compat-ubuntu-latest compat-debian-oldest compat-debian-latest \
+           compat-ubuntu-oldest compat-ubuntu-latest compat-ubuntu-rolling compat-debian-oldest compat-debian-latest \
            compat-suse-42 compat-suse-oldest compat-suse-latest compat-fedora-latest compat-rhel-latest; do
     docker rm -f "e2e-$t" >/dev/null 2>&1
   done
@@ -464,6 +470,18 @@ echo E2E_PASS
 
 NAMES+=(compat-ubuntu-latest)
 run_test compat-ubuntu-latest ubuntu:latest "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" &
+
+# Latest Ubuntu release INCLUDING non-LTS interims (unsupported by BigFix but
+# works in practice; previews breakage coming in the next LTS). Same as
+# :latest right after an LTS ships; diverges when each October interim lands.
+NAMES+=(compat-ubuntu-rolling)
+run_test compat-ubuntu-rolling ubuntu:rolling "
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
 $RUN_AND_ASSERT
