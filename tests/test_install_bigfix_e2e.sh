@@ -13,13 +13,33 @@
 #
 # Tests:
 #   ubuntu-deb             .deb path via apt-get on ubuntu:24.04
+#   ubuntu2204-deb         .deb path via apt-get on ubuntu:22.04
 #   debian-rpm-regression  Debian WITH the rpm command installed must still
 #                           choose the .deb installer (regression for the bug
 #                           where the rpm block overrode dpkg detection)
 #   alma-dnf               .rpm path via dnf on almalinux:9
+#   oracle-dnf             .rpm path via dnf on oraclelinux:9
+#   fedora-dnf             .rpm path via dnf on fedora:latest
+#   amazon-dnf             .rpm path on amazonlinux:2023 — exercises the
+#                           /etc/system-release branch (no /etc/redhat-release;
+#                           must pick the RHEL rpm, not fall through to SUSE)
 #   leap-zypper            .rpm path via zypper on opensuse/leap:15
 #   startbigfix-false      StartBigFix=false installs but does not start the
 #                           client, skips the 30s sleep, exits 0
+#   wget-fallback          download path when wget is present but curl is not
+#   amazon2-yum            .rpm path via yum (no dnf) on amazonlinux:2
+#   rpm-only               plain `rpm -ivh` fallback when no dnf/yum/zypper
+#   sh-reexec              invoking via `sh` re-execs itself under bash
+#   readonly-staging       script dir mounted read-only -> stages in /tmp
+#   hostport-arg           host:port argument form (colon-parsing branch)
+#   relaypass              relay password ($2) lands in besclient.config
+#   custom-cfg             pre-existing clientsettings.cfg in CWD is used
+#                           instead of generating defaults
+#   negatives              no-arg exits 1; unreachable relay fails nonzero
+#                           without installing; no curl/wget exits 2
+#   armhf-native           native arm64 debian takes the raspbian armhf branch
+#                           (runs natively on arm64 hosts, emulated elsewhere)
+#   i386-bigfix95          32-bit x86 falls back to BigFix 9.5 (linux/386)
 #
 # Prerequisites: docker (with amd64 emulation on non-x86 hosts), openssl,
 #                network access to software.bigfix.com and docker hub.
@@ -39,7 +59,8 @@ mkdir -p "$LOGDIR" "$WORKDIR/relay/www/masthead"
 
 cleanup() {
   docker rm -f e2e-relay >/dev/null 2>&1
-  for t in ubuntu-deb debian-rpm-regression alma-dnf leap-zypper startbigfix-false; do
+  for t in ubuntu-deb ubuntu2204-deb debian-rpm-regression alma-dnf oracle-dnf fedora-dnf amazon-dnf leap-zypper startbigfix-false \
+           wget-fallback amazon2-yum rpm-only sh-reexec readonly-staging hostport-arg relaypass custom-cfg negatives armhf-native i386-bigfix95; do
     docker rm -f "e2e-$t" >/dev/null 2>&1
   done
   docker network rm $NET >/dev/null 2>&1
@@ -71,20 +92,18 @@ docker run -d --rm --name e2e-relay --network $NET --network-alias relay \
   nginx:alpine nginx -c /relay/nginx.conf -g 'daemon off;' >/dev/null || exit 1
 sleep 2
 
-# run_test <name> <image> <inner-script>
+# run_test <name> <image> <inner-script> [platform]
 run_test() {
-  local name=$1 image=$2 inner=$3
-  docker run --rm --name "e2e-$name" --platform $PLATFORM --network $NET \
+  local name=$1 image=$2 inner=$3 platform=${4:-$PLATFORM}
+  docker run --rm --name "e2e-$name" --platform "$platform" --network $NET \
     -v "$SRCDIR:/src:ro" "$image" bash -c "$inner" \
     > "$LOGDIR/$name.log" 2>&1
   echo $? > "$LOGDIR/$name.exit"
 }
 
-# Common tail of every inner script: run installer, require exit 0, assert artifacts.
-RUN_AND_ASSERT='
-mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
-bash install_bigfix.sh relay
-rc=$?
+# Post-run assertions shared by every install test: requires $rc set to the
+# installer script's exit code by the preceding lines.
+ASSERT_COMMON='
 echo "SCRIPT_EXIT=$rc"
 [ $rc -eq 0 ] || exit 10
 [ -x /opt/BESClient/bin/BESClient ]        || { echo "MISSING: BESClient binary"; exit 11; }
@@ -92,10 +111,26 @@ echo "SCRIPT_EXIT=$rc"
 [ -f /etc/opt/BESClient/actionsite.afxm ]  || { echo "MISSING: actionsite.afxm"; exit 13; }
 '
 
+# Common tail of every inner script: run installer, require exit 0, assert artifacts.
+RUN_AND_ASSERT='
+mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
+bash install_bigfix.sh relay
+rc=$?
+'"$ASSERT_COMMON"
+
 declare -a NAMES=()
 
 NAMES+=(ubuntu-deb)
 run_test ubuntu-deb ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" &
+
+NAMES+=(ubuntu2204-deb)
+run_test ubuntu2204-deb ubuntu:22.04 "
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
 $RUN_AND_ASSERT
@@ -126,6 +161,37 @@ rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit
 echo E2E_PASS
 " &
 
+NAMES+=(oracle-dnf)
+run_test oracle-dnf oraclelinux:9 "
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+NAMES+=(fedora-dnf)
+run_test fedora-dnf fedora:latest "
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+# Amazon Linux has /etc/system-release but NOT /etc/redhat-release; the script
+# must still select the RHEL rpm rather than falling through to the SUSE build.
+NAMES+=(amazon-dnf)
+run_test amazon-dnf amazonlinux:2023 "
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+[ ! -f /etc/redhat-release ] || { echo 'SETUP FAIL: unexpected /etc/redhat-release'; exit 20; }
+[ -f /etc/system-release ]   || { echo 'SETUP FAIL: missing /etc/system-release'; exit 20; }
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
 NAMES+=(leap-zypper)
 run_test leap-zypper opensuse/leap:15 "
 command -v curl >/dev/null || zypper --non-interactive install curl >/dev/null 2>&1
@@ -147,6 +213,161 @@ $RUN_AND_ASSERT
 pgrep -x BESClient >/dev/null && { echo 'FAIL: BESClient running despite StartBigFix=false'; exit 30; }
 echo E2E_PASS
 " &
+
+# Two waves so ~20 emulated containers don't all compete for CPU at once.
+echo "wave 1 (${#NAMES[@]} tests) running..."
+wait
+echo "wave 1 done, starting wave 2..."
+
+# Download path when wget is present but curl is not (debian base has no curl).
+NAMES+=(wget-fallback)
+run_test wget-fallback debian:latest "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq wget ca-certificates >/dev/null 2>&1
+command -v curl >/dev/null && { echo 'SETUP FAIL: curl unexpectedly present'; exit 20; }
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" &
+
+# yum path: amazonlinux:2 has yum but no dnf.
+NAMES+=(amazon2-yum)
+run_test amazon2-yum amazonlinux:2 "
+command -v dnf >/dev/null && { echo 'SETUP FAIL: dnf unexpectedly present'; exit 20; }
+command -v curl >/dev/null || yum install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+# Plain `rpm -ivh` fallback: hide dnf/yum so no dependency-resolving package
+# manager is found (zypper is absent on almalinux).
+NAMES+=(rpm-only)
+run_test rpm-only almalinux:9 "
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+mv /usr/bin/dnf /usr/bin/dnf.hidden 2>/dev/null
+mv /usr/bin/yum /usr/bin/yum.hidden 2>/dev/null
+command -v dnf >/dev/null && { echo 'SETUP FAIL: dnf still present'; exit 20; }
+$RUN_AND_ASSERT
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+# Invoking via `sh` (dash on ubuntu) must re-exec itself under bash.
+NAMES+=(sh-reexec)
+run_test sh-reexec ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
+sh install_bigfix.sh relay
+rc=$?
+'"$ASSERT_COMMON
+echo E2E_PASS
+" &
+
+# Script dir mounted read-only: staging must fall back to /tmp.
+NAMES+=(readonly-staging)
+run_test readonly-staging ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+cd /
+bash /src/install_bigfix.sh relay
+rc=$?
+'"$ASSERT_COMMON"'
+[ -f /tmp/BESAgent.deb ]        || { echo "FAIL: installer not staged in /tmp"; exit 40; }
+[ -f /tmp/clientsettings.cfg ]  || { echo "FAIL: clientsettings.cfg not staged in /tmp"; exit 41; }
+echo E2E_PASS
+' &
+
+# host:port argument form exercises the colon-parsing branch.
+NAMES+=(hostport-arg)
+run_test hostport-arg debian:latest "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
+bash install_bigfix.sh relay:52311
+rc=$?
+'"$ASSERT_COMMON
+echo E2E_PASS
+" &
+
+# Relay password ($2) must land in the staged cfg and besclient.config.
+NAMES+=(relaypass)
+run_test relaypass ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
+bash install_bigfix.sh relay secretpass123
+rc=$?
+'"$ASSERT_COMMON"'
+grep -q "_BESClient_SecureRegistration=secretpass123" /work/clientsettings.cfg || { echo "FAIL: password not in staged cfg"; exit 42; }
+grep -q "secretpass123" /var/opt/BESClient/besclient.config || { echo "FAIL: password not in besclient.config"; exit 43; }
+echo E2E_PASS
+' &
+
+# A pre-existing clientsettings.cfg in CWD must be used as-is (no generated defaults).
+NAMES+=(custom-cfg)
+run_test custom-cfg ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
+printf "_BESClient_Custom_TestMarker=e2emarker42\n_BESClient_Log_Days=7\n" > clientsettings.cfg
+bash install_bigfix.sh relay
+rc=$?
+'"$ASSERT_COMMON"'
+grep -q "e2emarker42" /var/opt/BESClient/besclient.config || { echo "FAIL: custom cfg not used"; exit 44; }
+grep -q "CommandPollEnable" /var/opt/BESClient/besclient.config && { echo "FAIL: defaults generated despite custom cfg"; exit 45; }
+echo E2E_PASS
+' &
+
+# Negative cases: no-arg usage error, unreachable relay, no curl/wget.
+NAMES+=(negatives)
+run_test negatives ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+mkdir -p /work && cp /src/install_bigfix.sh /work/ && cd /work
+bash install_bigfix.sh
+[ $? -eq 1 ] || { echo "FAIL: no-arg should exit 1"; exit 31; }
+bash install_bigfix.sh nonexistent-relay.invalid
+rc=$?
+[ $rc -ne 0 ] || { echo "FAIL: unreachable relay should exit nonzero"; exit 32; }
+[ ! -x /opt/BESClient/bin/BESClient ] || { echo "FAIL: agent installed despite failed download"; exit 33; }
+mv /usr/bin/curl /usr/bin/curl.hidden
+bash install_bigfix.sh relay
+[ $? -eq 2 ] || { echo "FAIL: no curl/wget should exit 2"; exit 34; }
+echo E2E_PASS
+' &
+
+# Native arm64 debian reports aarch64 and takes the raspbian armhf branch
+# (dpkg --add-architecture armhf + raspbian10.armhf.deb).
+NAMES+=(armhf-native)
+run_test armhf-native debian:latest "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+uname -m | grep -q aarch64 || { echo 'SETUP FAIL: not aarch64'; exit 20; }
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" linux/arm64 &
+
+# 32-bit x86 must fall back to BigFix 9.5 (last release with 32-bit builds).
+NAMES+=(i386-bigfix95)
+run_test i386-bigfix95 i386/debian:bullseye "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+uname -m | grep -qE 'i.86' || { echo 'SETUP FAIL: not 32-bit x86'; exit 20; }
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+dpkg -s besagent 2>/dev/null | grep -q '^Version: 9.5' || { echo 'FAIL: expected BigFix 9.5 fallback version'; exit 46; }
+echo E2E_PASS
+" linux/386 &
 
 wait
 
