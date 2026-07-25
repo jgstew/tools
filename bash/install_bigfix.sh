@@ -124,8 +124,18 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PersistentConnection_Enabled=1
   >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_OverrideTimeoutSeconds=21600
-  # TODO: the following line needs tested. Seems to not be working in docker containers, or perhaps not at all.
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_SudoUser=`echo $SUDO_USER`
+  # Best-effort record of who initiated the install.
+  #  $SUDO_USER only exists when launched through sudo, so fall back through
+  #  progressively less specific sources. who/logname need a tty/utmp entry,
+  #  so in docker containers / non-interactive root this resolves to "root"
+  #  via id -un, which is the truthful answer there.
+  # see the issue this solves:  https://github.com/jgstew/tools/issues/17
+  INSTALL_USER="$SUDO_USER"
+  [ -z "$INSTALL_USER" ] && INSTALL_USER=`who am i 2>/dev/null | awk '{print $1}'`
+  [ -z "$INSTALL_USER" ] && INSTALL_USER=`logname 2>/dev/null`
+  [ -z "$INSTALL_USER" ] && INSTALL_USER="$USER"
+  [ -z "$INSTALL_USER" ] && INSTALL_USER=`id -un 2>/dev/null`
+  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_SudoUser=$INSTALL_USER
   if [ -n "$RELAYPASS" ]; then
     >> $INSTALLDIR/clientsettings.cfg echo _BESClient_SecureRegistration=$RELAYPASS
   fi
