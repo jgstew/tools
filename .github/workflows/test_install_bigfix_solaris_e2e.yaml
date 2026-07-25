@@ -55,18 +55,25 @@ jobs:
           release: "11.4"
           sync: rsync
           copyback: true
-          # the exit code is written to a file instead of failing this step so
-          # copyback always runs and the output survives for the summary; the
-          # "Check result" step below turns it into the job status
+          # vmactions runs this block under errexit, so a nonzero test would
+          # abort the SSH session before the exit code and output are saved.
+          # The `&& rc=0 || rc=$?` capture keeps errexit from firing so the
+          # output is always tee'd, the logs dir is always populated (both
+          # returned to the runner by copyback), and the real exit code lands
+          # in e2e_exit.txt for the "Check result" step to turn into status.
           run: |
-            bash tests/test_install_bigfix_solaris_e2e.sh > e2e_output.txt 2>&1
-            echo $? > e2e_exit.txt
+            bash tests/test_install_bigfix_solaris_e2e.sh > e2e_output.txt 2>&1 && rc=0 || rc=$?
+            echo "$rc" > e2e_exit.txt
             cat e2e_output.txt
+            echo "test exited $rc"
 
       - name: Check result
         run: |
-          cat e2e_output.txt
-          exit "$(cat e2e_exit.txt)"
+          echo "==== e2e_output.txt ===="
+          cat e2e_output.txt || echo "(no e2e_output.txt was returned)"
+          echo "==== diagnostics.txt ===="
+          cat solaris-e2e-logs/diagnostics.txt 2>/dev/null || echo "(no diagnostics dump — test passed or failed before install)"
+          exit "$(cat e2e_exit.txt 2>/dev/null || echo 1)"
 
       - name: Write results to job summary
         if: always()
@@ -87,12 +94,18 @@ jobs:
                  }' e2e_output.txt 2>/dev/null || echo '| (no output) | ❌ VM run produced no results |'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload output on failure
+      - name: Upload full logs on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: solaris-e2e-output
-          path: e2e_output.txt
+          name: solaris-e2e-logs
+          # e2e_output.txt is the full test transcript; solaris-e2e-logs/ holds
+          # the installer log and the on-failure diagnostic dump (both returned
+          # by copyback)
+          path: |
+            e2e_output.txt
+            e2e_exit.txt
+            solaris-e2e-logs/
           if-no-files-found: warn
           retention-days: 14
 
