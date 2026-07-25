@@ -255,10 +255,11 @@ pgrep -x BESClient >/dev/null && { echo 'FAIL: BESClient running despite StartBi
 echo E2E_PASS
 " &
 
-# Red Hat UBI images: real RHEL 7/8/9/10 userlands, publicly pullable.
-# UBI 7 is yum-based; 8/9/10 use dnf. All have /etc/redhat-release, so they
+# Red Hat UBI images: real RHEL 7/8/9 userlands, publicly pullable.
+# UBI 7 is yum-based; 8/9 use dnf. All have /etc/redhat-release, so they
 # take the RHEL branch (rhe7 rpm). Note UBI repos are a subset of full RHEL,
 # so the ldd missing-library loop may only find some soname providers there.
+# (RHEL 10 coverage comes from compat-rhel-latest on almalinux:latest below.)
 
 NAMES+=(ubi7-yum)
 run_test ubi7-yum registry.access.redhat.com/ubi7/ubi "

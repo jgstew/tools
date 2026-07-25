@@ -81,9 +81,8 @@ if [ -n "$2" ]; then
   RELAYPASS="$2"
 fi
 
-# these variables are used to determine which version of the BigFix agent should be downloaded
-# these variables are typically set to the latest version of the BigFix agent
-# URLMAJORMINOR is the first two integers of URLVERSION
+# URLVERSION determines which version of the BigFix agent is downloaded and is
+#  typically set to the latest release (URLMAJORMINOR is derived from it below).
 #  most recent version# found here under `Agent`:  https://support.bigfix.com/bes/release/
 URLVERSION=11.0.6.137
 
@@ -97,7 +96,9 @@ if [[ $MACHINETYPE != *"64"* ]] && [[ $MACHINETYPE == *"86"* ]]; then
   URLVERSION=9.5.25.11
 else
   OSBIT=x64
-  # KNOWN ISSUE: this will incorrectly assume AMD64 compatible processor in the case of PowerPC64
+  # NOTE: non-x86 64-bit CPUs (ppc64le, aarch64, s390x) also land here; the deb
+  #  path corrects URLBITS for ppc64le/arm below, but the rpm path does not yet
+  #  (see the TODO in the rpm branch), so it would wrongly download x86_64 there.
 fi
 
 URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
