@@ -489,9 +489,9 @@ if [[ "$StartBigFix" == "false" ]]; then
   exit 0
 fi
 
-# pause 30 seconds to wait for bigfix to get going a bit
-echo "sleep for 30 seconds"
-sleep 30
+# pause 10 seconds to wait for bigfix to get going a bit
+echo "sleep for 10 seconds"
+sleep 10
 
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
 # TODO: add mac support to the following:

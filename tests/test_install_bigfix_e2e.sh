@@ -44,6 +44,26 @@
 #   armhf-native           native arm64 debian takes the raspbian armhf branch
 #                           (runs natively on arm64 hosts, emulated elsewhere)
 #   i386-bigfix95          32-bit x86 falls back to BigFix 9.5 (linux/386)
+#   ppc64le-deb            ppc64le must select the ubuntu18.ppc64el.deb
+#                           (linux/ppc64le, QEMU-emulated; StartBigFix=false
+#                           because long-running daemons under qemu-user
+#                           emulation are unreliable)
+#   rerun-deb              installer run twice (agent update / re-run
+#                           scenario): both runs must exit 0; also asserts
+#                           SUDO_USER lands in besclient.config and the
+#                           iptables -C guard adds the UDP 52311 rule exactly
+#                           once across both runs
+#   rerun-rpm              second run with dnf/yum hidden and a call-recording
+#                           stub /etc/init.d/besclient (modern BESAgent rpms
+#                           ship only a systemd unit) takes the otherwise
+#                           unexercised stop-before-upgrade, plain `rpm -U`,
+#                           and init.d start branches
+#   pipe-stdin             piped invocation (`cat ... | bash -s`, i.e. the
+#                           `curl | bash` form) - $0 is not a file, so
+#                           SCRIPTDIR degrades to CWD and staging lands there
+#   scriptdir-cfg          clientsettings.cfg NEXT TO the script (not in CWD)
+#                           with a read-only script dir: cfg must be copied
+#                           into /tmp staging and used instead of defaults
 #
 # OS compatibility tests:
 #   Unlike the functional tests above (pinned to specific OS versions so an OS
@@ -81,6 +101,8 @@
 #                network access to software.bigfix.com and docker hub.
 # Usage:
 #   bash tests/test_install_bigfix_e2e.sh
+#   E2E_ONLY="name1 name2" limits the run to those tests (the rest report
+#   SKIP) - useful when developing a single test.
 # Exits 0 if all tests pass, 1 otherwise. Takes several minutes.
 set -u
 
@@ -100,6 +122,7 @@ cleanup() {
   for t in ubuntu-deb ubuntu2204-deb debian-rpm-regression alma-dnf oracle-dnf fedora-dnf amazon-dnf leap-zypper startbigfix-false \
            ubi7-yum ubi8-dnf ubi9-dnf \
            wget-fallback amazon2-yum rpm-only sh-reexec readonly-staging hostport-arg relaypass custom-cfg negatives armhf-native i386-bigfix95 \
+           ppc64le-deb rerun-deb rerun-rpm pipe-stdin scriptdir-cfg \
            compat-ubuntu-oldest compat-ubuntu-latest compat-ubuntu-rolling compat-debian-oldest compat-debian-latest \
            compat-suse-42 compat-suse-oldest compat-suse-latest compat-fedora-latest compat-rhel-latest; do
     docker rm -f "e2e-$t" >/dev/null 2>&1
@@ -133,10 +156,16 @@ docker run -d --rm --name e2e-relay --network $NET --network-alias relay \
   nginx:alpine nginx -c /relay/nginx.conf -g 'daemon off;' >/dev/null || exit 1
 sleep 2
 
-# run_test <name> <image> <inner-script> [platform]
+# run_test <name> <image> <inner-script> [platform] [extra-docker-opts]
 run_test() {
-  local name=$1 image=$2 inner=$3 platform=${4:-$PLATFORM}
-  docker run --rm --name "e2e-$name" --platform "$platform" --network $NET \
+  local name=$1 image=$2 inner=$3 platform=${4:-$PLATFORM} extra=${5:-}
+  if [ -n "${E2E_ONLY:-}" ] && [[ " $E2E_ONLY " != *" $name "* ]]; then
+    echo "FILTERED" > "$LOGDIR/$name.exit"
+    return 0
+  fi
+  # $extra is intentionally unquoted: it word-splits into docker options
+  # (e.g. "--cap-add=NET_ADMIN" or "-v hostdir:/inst:ro")
+  docker run --rm --name "e2e-$name" --platform "$platform" --network $NET $extra \
     -v "$SRCDIR:/src:ro" "$image" bash -c "$inner" \
     > "$LOGDIR/$name.log" 2>&1
   echo $? > "$LOGDIR/$name.exit"
@@ -456,6 +485,113 @@ dpkg -s besagent 2>/dev/null | grep -q "^Version: 9.5" || { echo "FAIL: expected
 echo E2E_PASS
 ' linux/386 &
 
+# ppc64le: the deb path must override URLBITS and select the
+# ubuntu18.ppc64el.deb. Full-arch QEMU emulation, but the heavy work is
+# network-bound (measured ~1 min locally), so it lives in the main suite.
+NAMES+=(ppc64le-deb)
+run_test ppc64le-deb ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive StartBigFix=false
+apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+uname -m | grep -qx ppc64le || { echo 'SETUP FAIL: not a ppc64le userland'; exit 20; }
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+dpkg -s besagent 2>/dev/null | grep -q '^Architecture: ppc64el' || { echo 'FAIL: installed package is not ppc64el'; exit 15; }
+echo E2E_PASS
+" linux/ppc64le &
+
+# Running the installer twice (the agent update / re-run scenario): the deb
+# reinstall path must exit 0 both times. Two piggybacked assertions:
+#  - SUDO_USER (exported before the first run) must be recorded in
+#    besclient.config as _BESClient_InstallTime_SudoUser
+#  - the iptables -C guard must add the UDP 52311 rule exactly ONCE across
+#    both runs (needs NET_ADMIN; iptables-legacy avoids nft netlink, which
+#    qemu-user emulation on non-x86 hosts does not support)
+NAMES+=(rerun-deb)
+run_test rerun-deb ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive SUDO_USER=e2esudouser
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates iptables >/dev/null 2>&1
+update-alternatives --set iptables /usr/sbin/iptables-legacy >/dev/null 2>&1
+$RUN_AND_ASSERT
+"'
+grep -q "e2esudouser" /var/opt/BESClient/besclient.config || { echo "FAIL: SUDO_USER not recorded in besclient.config"; exit 50; }
+bash install_bigfix.sh relay || { echo "FAIL: second run exited nonzero"; exit 51; }
+dpkg -l | grep -qi besagent || { echo "FAIL: agent gone after second run"; exit 52; }
+if iptables -S INPUT >/dev/null 2>&1; then
+  RULES=$(iptables -S INPUT | grep -c -- "--dport 52311")
+  [ "$RULES" = "1" ] || { echo "FAIL: expected exactly 1 iptables rule for 52311, got $RULES"; exit 53; }
+else
+  # e.g. qemu-user emulation without netfilter support: the script tolerates
+  # a broken iptables, so the duplicate-rule assertion is skipped, not failed
+  echo "NOTE: iptables cannot talk to the kernel here; rule-count assertion skipped"
+fi
+echo E2E_PASS
+' "$PLATFORM" "--cap-add=NET_ADMIN" &
+
+# Second run over an existing install must take the stop-before-upgrade
+# branch and (with dnf/yum hidden) the plain `rpm -U` fallback - both
+# otherwise unexercised. Modern BESAgent rpms ship ONLY a systemd unit
+# (verified against 11.0.6.137: no /etc/init.d/besclient is ever created), so
+# a stub init script that records its calls is planted to reach these legacy
+# SysV branches deterministically. `rpm -U` of the same version reports
+# "already installed"; the script tolerates that and must still exit 0 with
+# the client intact. Also reaches the no-package-manager WARNING branch of
+# the missing-library loop.
+NAMES+=(rerun-rpm)
+run_test rerun-rpm almalinux:9 "
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+"'
+mkdir -p /etc/init.d
+printf "#!/bin/sh\necho \"\$1\" >> /tmp/initd-calls\nexit 0\n" > /etc/init.d/besclient
+chmod +x /etc/init.d/besclient
+mv /usr/bin/dnf /usr/bin/dnf.hidden 2>/dev/null
+mv /usr/bin/yum /usr/bin/yum.hidden 2>/dev/null
+bash install_bigfix.sh relay || { echo "FAIL: second run exited nonzero"; exit 51; }
+grep -qx stop  /tmp/initd-calls 2>/dev/null || { echo "FAIL: stop-before-upgrade branch not taken"; exit 50; }
+grep -qx start /tmp/initd-calls 2>/dev/null || { echo "FAIL: init.d start branch not taken"; exit 54; }
+rpm -q BESAgent >/dev/null || { echo "FAIL: agent gone after second run"; exit 52; }
+[ -x /opt/BESClient/bin/BESClient ] || { echo "FAIL: binary gone after second run"; exit 53; }
+echo E2E_PASS
+' &
+
+# Piped invocation (the `curl ... | bash` form): $0 is not a file, so
+# SCRIPTDIR must degrade to CWD and staging must land there.
+NAMES+=(pipe-stdin)
+run_test pipe-stdin debian:12 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+mkdir -p /work && cd /work
+cat /src/install_bigfix.sh | bash -s -- relay
+rc=$?
+'"$ASSERT_COMMON"'
+[ -f /work/BESAgent.deb ] || { echo "FAIL: not staged in CWD when piped"; exit 54; }
+echo E2E_PASS
+' &
+
+# clientsettings.cfg NEXT TO the script (not in CWD), script dir mounted
+# read-only: staging falls back to /tmp and the cfg must be copied from
+# SCRIPTDIR into staging (the second copy branch) and used instead of
+# defaults. Read-only must come from a ro mount - chmod is not enough
+# because root ignores directory permissions.
+mkdir -p "$WORKDIR/instdir"
+cp "$SRCDIR/install_bigfix.sh" "$WORKDIR/instdir/"
+printf "_BESClient_Custom_TestMarker=e2escriptdircfg\n" > "$WORKDIR/instdir/clientsettings.cfg"
+NAMES+=(scriptdir-cfg)
+run_test scriptdir-cfg ubuntu:24.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+"'
+cd /root
+bash /inst/install_bigfix.sh relay
+rc=$?
+'"$ASSERT_COMMON"'
+[ -f /tmp/clientsettings.cfg ] || { echo "FAIL: cfg not copied into /tmp staging"; exit 55; }
+grep -q "e2escriptdircfg" /var/opt/BESClient/besclient.config || { echo "FAIL: scriptdir cfg not used"; exit 56; }
+grep -q "CommandPollEnable" /var/opt/BESClient/besclient.config && { echo "FAIL: defaults generated despite scriptdir cfg"; exit 57; }
+echo E2E_PASS
+' "$PLATFORM" "-v $WORKDIR/instdir:/inst:ro" &
+
 ############################################################
 # OS compatibility tests: oldest OS the BigFix 11 package targets + floating
 # latest tags to catch breakage on future OS releases (see header).
@@ -571,6 +707,10 @@ echo "==== RESULTS ===="
 FAILED=0
 for name in "${NAMES[@]}"; do
   ec=$(cat "$LOGDIR/$name.exit" 2>/dev/null || echo "?")
+  if [ "$ec" = "FILTERED" ]; then
+    printf "%-25s %s\n" "$name" "SKIP(E2E_ONLY filter)"
+    continue
+  fi
   # RHEL 10 x86_64 requires the x86-64-v3 microarchitecture; emulation on
   # some hosts (e.g. Apple Silicon) cannot provide it. Skip, don't fail.
   if grep -q "CPU does not support x86-64-v3" "$LOGDIR/$name.log" 2>/dev/null; then
