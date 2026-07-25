@@ -359,7 +359,16 @@ fi
 # install BigFix client
 if [[ $INSTALLER == *.deb ]]; then
   #  debian (DEB)
-  dpkg -i $INSTALLER
+  # Prefer apt-get so runtime dependencies get resolved automatically on
+  #  minimal or container images. Fall back to dpkg (no dependency
+  #  resolution) if apt-get is missing or fails (e.g. empty package lists).
+  #  The ./ prefix makes apt-get treat it as a local file, not a repo package.
+  # see the issue this solves:  https://github.com/jgstew/tools/issues/19
+  if command_exists apt-get ; then
+    apt-get install -y "./$INSTALLER" || dpkg -i $INSTALLER
+  else
+    dpkg -i $INSTALLER
+  fi
 fi
 if [[ $INSTALLER == *.pkg ]]; then
   # PKG type
@@ -377,12 +386,48 @@ if [[ $INSTALLER == *.pkg ]]; then
 fi # *.pkg install file
 if [[ $INSTALLER == *.rpm ]]; then
   #  linux (RPM)
-  # if file `/etc/init.d/besclient` exists then do upgrade
+  # if file `/etc/init.d/besclient` exists then stop before upgrade
   if [ -f /etc/init.d/besclient ]; then
     /etc/init.d/besclient stop
-    rpm -U $INSTALLER
+  fi
+  # Prefer a dependency resolving package manager (dnf, then yum) so runtime
+  #  dependencies like libstdc++ get pulled in automatically on minimal or
+  #  container images. Fall back to plain rpm, which does not resolve
+  #  dependencies, since some environments only have the rpm command.
+  #  The ./ prefix makes dnf/yum treat it as a local file, not a repo package.
+  # see the issue this solves:  https://github.com/jgstew/tools/issues/19
+  if command_exists dnf ; then
+    dnf install -y "./$INSTALLER"
+  elif command_exists yum ; then
+    yum install -y "./$INSTALLER"
   else
-    rpm -ivh $INSTALLER
+    # if file `/etc/init.d/besclient` exists then do upgrade
+    if [ -f /etc/init.d/besclient ]; then
+      rpm -U $INSTALLER
+    else
+      rpm -ivh $INSTALLER
+    fi
+  fi
+
+  # The BESAgent rpm does not declare its shared library dependencies
+  #  (verified against 11.0.6.137: `rpm -qp --requires` lists no sonames),
+  #  so even a dependency resolving package manager cannot pull them in.
+  #  Instead ask ldd which libraries are actually missing and install
+  #  whatever package provides that soname (e.g. minimal container images
+  #  are missing libdbus-1.so.3 and sometimes libstdc++.so.6).
+  #  Nothing is hardcoded here so this adapts if the missing library changes.
+  # see the issue this solves:  https://github.com/jgstew/tools/issues/19
+  if command_exists ldd && [ -f /opt/BESClient/bin/BESClient ]; then
+    for MISSINGLIB in `ldd /opt/BESClient/bin/BESClient 2>/dev/null | grep "not found" | awk '{print $1}' | sort -u`; do
+      echo "BESClient requires missing library: $MISSINGLIB - attempting to install it"
+      if command_exists dnf ; then
+        dnf install -y "$MISSINGLIB()(64bit)" || dnf install -y "$MISSINGLIB"
+      elif command_exists yum ; then
+        yum install -y "$MISSINGLIB()(64bit)" || yum install -y "$MISSINGLIB"
+      else
+        (>&2 echo "WARNING: no package manager available to install $MISSINGLIB - BESClient may not run")
+      fi
+    done
   fi
 fi
 
