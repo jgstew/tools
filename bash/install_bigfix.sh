@@ -44,6 +44,23 @@ command_exists () {
   type "$1" &> /dev/null ;
 }
 
+# resolve the directory this script lives in, regardless of CWD
+#  (degrades to CWD when piped, e.g. `curl ... | bash`, where $0 is not a file)
+SCRIPTDIR="$(cd "$(dirname "$0")" && pwd)"
+
+# All downloads and generated files are staged in STAGINGDIR.
+#  Defaults to the script's own directory; falls back to /tmp when that
+#  is not writable (e.g. script mounted read-only in a container).
+#  This is separate from INSTALLDIR, which is where the BES installer
+#  expects to read the masthead from (OS specific, set further below).
+# see the issue this solves:  https://github.com/jgstew/tools/issues/16
+STAGINGDIR="$SCRIPTDIR"
+if [ ! -w "$STAGINGDIR" ]; then
+  echo "NOTE: $STAGINGDIR is not writable, staging in /tmp instead"
+  STAGINGDIR="/tmp"
+fi
+STAGED_CFG="$STAGINGDIR/clientsettings.cfg"
+
 # if $1 exists, then set MASTHEADURL
 # https://www.tldp.org/LDP/abs/html/comparison-ops.html
 if [ -n "$1" ]; then
@@ -88,42 +105,43 @@ URLMAJORMINOR=`echo $URLVERSION | awk -F. '{print $1 $2}'`
 ############################################################
 # TODO: add more linux cases, not all are handled
 
-# set INSTALLDIR for OS X - other OS options will change this variable
-#   This will also be used to create the default clientsettings.cfg file
-INSTALLDIR="/tmp"
-
-# if clientsettings.cfg exists in CWD copy it
-if [ -f clientsettings.cfg ] && [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
-  cp clientsettings.cfg $INSTALLDIR/clientsettings.cfg
+# if clientsettings.cfg exists in CWD (or next to this script) copy it to
+#  staging. CWD wins if both exist. Guard against copying a file onto itself
+#  when the cfg already sits in the staging directory.
+if [ -f clientsettings.cfg ] && [ ! -f "$STAGED_CFG" ] && [ "$(pwd)/clientsettings.cfg" != "$STAGED_CFG" ] ; then
+  cp clientsettings.cfg "$STAGED_CFG"
+fi
+if [ -f "$SCRIPTDIR/clientsettings.cfg" ] && [ ! -f "$STAGED_CFG" ] && [ "$SCRIPTDIR/clientsettings.cfg" != "$STAGED_CFG" ] ; then
+  cp "$SCRIPTDIR/clientsettings.cfg" "$STAGED_CFG"
 fi
 
-if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
+if [ ! -f "$STAGED_CFG" ] ; then
   # create clientsettings.cfg file
-  echo -n > $INSTALLDIR/clientsettings.cfg
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_RelaySelect_FailoverRelay=https://$RELAYFQDN/bfmirror/downloads/
-  >> $INSTALLDIR/clientsettings.cfg echo __RelaySelect_Automatic=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_StartupNormalSpeed=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_RetryMinutes=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_CheckAvailabilitySeconds=120
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_WorkIdle=20
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_SleepIdle=500
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_PowerSaveEnable=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_SleepTime=500
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_WorkTime=250
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Query_NMOMaxQueryTime=30
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Resource_AccelerateForPendingMessage=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollEnable=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Comm_CommandPollIntervalSeconds=1800
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_Days=30
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Log_MaxSize=1536000
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_UtilitiesCacheLimitMB=500
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_DownloadsCacheLimitMB=5000
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_Download_MinimumDiskFreeMB=2000
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryKeepDays=1825
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_HistoryDisplayDaysTech=90
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_PersistentConnection_Enabled=1
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_ActionManager_OverrideTimeoutSeconds=21600
+  echo -n > "$STAGED_CFG"
+  >> "$STAGED_CFG" echo _BESClient_RelaySelect_FailoverRelay=https://$RELAYFQDN/bfmirror/downloads/
+  >> "$STAGED_CFG" echo __RelaySelect_Automatic=1
+  >> "$STAGED_CFG" echo _BESClient_Resource_StartupNormalSpeed=1
+  >> "$STAGED_CFG" echo _BESClient_Download_RetryMinutes=1
+  >> "$STAGED_CFG" echo _BESClient_Download_CheckAvailabilitySeconds=120
+  >> "$STAGED_CFG" echo _BESClient_Resource_WorkIdle=20
+  >> "$STAGED_CFG" echo _BESClient_Resource_SleepIdle=500
+  >> "$STAGED_CFG" echo _BESClient_Resource_PowerSaveEnable=1
+  >> "$STAGED_CFG" echo _BESClient_Query_SleepTime=500
+  >> "$STAGED_CFG" echo _BESClient_Query_WorkTime=250
+  >> "$STAGED_CFG" echo _BESClient_Query_NMOMaxQueryTime=30
+  >> "$STAGED_CFG" echo _BESClient_Resource_AccelerateForPendingMessage=1
+  >> "$STAGED_CFG" echo _BESClient_Comm_CommandPollEnable=1
+  >> "$STAGED_CFG" echo _BESClient_Comm_CommandPollIntervalSeconds=1800
+  >> "$STAGED_CFG" echo _BESClient_Log_Days=30
+  >> "$STAGED_CFG" echo _BESClient_Log_MaxSize=1536000
+  >> "$STAGED_CFG" echo _BESClient_Download_UtilitiesCacheLimitMB=500
+  >> "$STAGED_CFG" echo _BESClient_Download_DownloadsCacheLimitMB=5000
+  >> "$STAGED_CFG" echo _BESClient_Download_MinimumDiskFreeMB=2000
+  >> "$STAGED_CFG" echo _BESClient_ActionManager_HistoryKeepDays=1825
+  >> "$STAGED_CFG" echo _BESClient_ActionManager_HistoryDisplayDaysTech=90
+  >> "$STAGED_CFG" echo _BESClient_ActionManager_CompletionDialogTimeoutSeconds=30
+  >> "$STAGED_CFG" echo _BESClient_PersistentConnection_Enabled=1
+  >> "$STAGED_CFG" echo _BESClient_ActionManager_OverrideTimeoutSeconds=21600
   # Best-effort record of who initiated the install.
   #  $SUDO_USER only exists when launched through sudo, so fall back through
   #  progressively less specific sources. who/logname need a tty/utmp entry,
@@ -135,17 +153,19 @@ if [ ! -f $INSTALLDIR/clientsettings.cfg ] ; then
   [ -z "$INSTALL_USER" ] && INSTALL_USER=`logname 2>/dev/null`
   [ -z "$INSTALL_USER" ] && INSTALL_USER="$USER"
   [ -z "$INSTALL_USER" ] && INSTALL_USER=`id -un 2>/dev/null`
-  >> $INSTALLDIR/clientsettings.cfg echo _BESClient_InstallTime_SudoUser=$INSTALL_USER
+  >> "$STAGED_CFG" echo _BESClient_InstallTime_SudoUser=$INSTALL_USER
   if [ -n "$RELAYPASS" ]; then
-    >> $INSTALLDIR/clientsettings.cfg echo _BESClient_SecureRegistration=$RELAYPASS
+    >> "$STAGED_CFG" echo _BESClient_SecureRegistration=$RELAYPASS
   fi
 fi
 
 if [[ $OSTYPE == darwin* ]]; then
   # Mac OS X
+  # the macOS installer reads the masthead from the staging folder
+  INSTALLDIR="$STAGINGDIR"
   # example: https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137-BigFix_MacOS11.0.pkg
   INSTALLERURL="https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION-BigFix_MacOS11.0.pkg"
-  INSTALLER="/tmp/BESAgent.pkg"
+  INSTALLER="$STAGINGDIR/BESAgent.pkg"
 else
   # For most Linux:
   INSTALLDIR="/etc/opt/BESClient"
@@ -153,7 +173,7 @@ else
   # if dpkg exists (Debian)
   if command_exists dpkg ; then
     # Debian based
-    INSTALLER="BESAgent.deb"
+    INSTALLER="$STAGINGDIR/BESAgent.deb"
 
     # check distribution
     # cat /etc/os-release /etc/lsb-release | grep --ignore-case --max-count=1 --count ubuntu
@@ -204,7 +224,7 @@ else
   # if rpm exists
   if command_exists rpm ; then
     # rpm - Currently assuming RedHat based
-    INSTALLER="BESAgent.rpm"
+    INSTALLER="$STAGINGDIR/BESAgent.rpm"
 
     if [[ $OSBIT == x64 ]]; then
       URLBITS=x86_64
@@ -244,7 +264,7 @@ else
       # (same layout as Linux). Set it explicitly so any future non-Linux paths above
       # don't accidentally leak into the Solaris branch.
       INSTALLDIR="/etc/opt/BESClient"
-      INSTALLER="/tmp/BESAgent.pkg"
+      INSTALLER="$STAGINGDIR/BESAgent.pkg"
       # example:   https://software.bigfix.com/download/bes/110/BESAgent-11.0.6.137.x86_sol11.pkg
       INSTALLERURL=https://software.bigfix.com/download/bes/$URLMAJORMINOR/BESAgent-$URLVERSION.x86_sol11.pkg
       echo $INSTALLERURL
@@ -284,7 +304,7 @@ fi
 # Create $INSTALLDIR folder if missing
 if [ ! -d "$INSTALLDIR" ]; then
   # Control will enter here if $INSTALLDIR doesn't exist.
-  mkdir -p $INSTALLDIR
+  mkdir -p "$INSTALLDIR"
 fi
 
 
@@ -300,14 +320,14 @@ fi
 DLEXITCODE=0
 if command_exists curl ; then
   # Download the BigFix agent (using cURL because it is on most Linux & OS X by default)
-  curl -S -f -o $INSTALLER $INSTALLERURL
+  curl -S -f -o "$INSTALLER" $INSTALLERURL
   # https://stackoverflow.com/questions/6348902/how-can-i-add-numbers-in-a-bash-script
   DLEXITCODE=$(( DLEXITCODE + $? ))
   # Download the masthead, renamed, into the correct location
   # TODO: get masthead from CWD instead if present
   # https://unix.stackexchange.com/questions/60750/does-curl-have-a-no-check-certificate-option-like-wget
   #  the url for the masthead will not use a valid SSL certificate, instead it will use one tied to the masthead itself
-  curl -S -f --insecure -o $INSTALLDIR/actionsite.afxm $MASTHEADURL
+  curl -S -f --insecure -o "$INSTALLDIR/actionsite.afxm" $MASTHEADURL
   DLEXITCODE=$(( DLEXITCODE + $? ))
 else
   if command_exists wget ; then
@@ -315,10 +335,10 @@ else
     # download using wget
     # https://stackoverflow.com/questions/16678487/wget-command-to-download-a-file-and-save-as-a-different-filename
     # https://www.gnu.org/software/wget/manual/html_node/HTTPS-_0028SSL_002fTLS_0029-Options.html
-    wget $MASTHEADURL -O $INSTALLDIR/actionsite.afxm --no-check-certificate
+    wget $MASTHEADURL -O "$INSTALLDIR/actionsite.afxm" --no-check-certificate
     DLEXITCODE=$(( DLEXITCODE + $? ))
 
-    wget $INSTALLERURL -O $INSTALLER
+    wget $INSTALLERURL -O "$INSTALLER"
     DLEXITCODE=$(( DLEXITCODE + $? ))
   else
     echo neither wget nor curl is installed.
@@ -365,9 +385,9 @@ if [[ $INSTALLER == *.deb ]]; then
   #  The ./ prefix makes apt-get treat it as a local file, not a repo package.
   # see the issue this solves:  https://github.com/jgstew/tools/issues/19
   if command_exists apt-get ; then
-    apt-get install -y "./$INSTALLER" || dpkg -i $INSTALLER
+    apt-get install -y "$INSTALLER" || dpkg -i "$INSTALLER"
   else
-    dpkg -i $INSTALLER
+    dpkg -i "$INSTALLER"
   fi
 fi
 if [[ $INSTALLER == *.pkg ]]; then
@@ -375,12 +395,12 @@ if [[ $INSTALLER == *.pkg ]]; then
   #   Could be Mac OS X, Solaris, or AIX
   if command_exists installer ; then
     #  Mac OS X
-    installer -pkg $INSTALLER -target /
+    installer -pkg "$INSTALLER" -target /
   else
     if command_exists pkgadd ; then
         # TODO: test case for Solaris
 
-        echo y | pkgadd -d $INSTALLER BESagent
+        echo y | pkgadd -d "$INSTALLER" BESagent
     fi # pkgadd
   fi # installer
 fi # *.pkg install file
@@ -397,15 +417,15 @@ if [[ $INSTALLER == *.rpm ]]; then
   #  The ./ prefix makes dnf/yum treat it as a local file, not a repo package.
   # see the issue this solves:  https://github.com/jgstew/tools/issues/19
   if command_exists dnf ; then
-    dnf install -y "./$INSTALLER"
+    dnf install -y "$INSTALLER"
   elif command_exists yum ; then
-    yum install -y "./$INSTALLER"
+    yum install -y "$INSTALLER"
   else
     # if file `/etc/init.d/besclient` exists then do upgrade
     if [ -f /etc/init.d/besclient ]; then
-      rpm -U $INSTALLER
+      rpm -U "$INSTALLER"
     else
-      rpm -ivh $INSTALLER
+      rpm -ivh "$INSTALLER"
     fi
   fi
 
@@ -431,9 +451,9 @@ if [[ $INSTALLER == *.rpm ]]; then
   fi
 fi
 
-# if missing, create besclient.config file based upon /tmp/clientsettings.cfg
+# if missing, create besclient.config file based upon the staged clientsettings.cfg
 if [ ! -f /var/opt/BESClient/besclient.config ]; then
-  cat /tmp/clientsettings.cfg | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
+  cat "$STAGED_CFG" | awk 'BEGIN { print "[Software\\BigFix\\EnterpriseClient]"; print "EnterpriseClientFolder = /opt/BESClient"; print; print "[Software\\BigFix\\EnterpriseClient\\GlobalOptions]"; print "StoragePath = /var/opt/BESClient"; print "LibPath = /opt/BESClient/BESLib"; } /=/ {gsub(/=/, " "); print "\n[Software\\BigFix\\EnterpriseClient\\Settings\\Client\\" $1 "]\nvalue = " $2;}' > /var/opt/BESClient/besclient.config
   chmod 600 /var/opt/BESClient/besclient.config
 fi
 
