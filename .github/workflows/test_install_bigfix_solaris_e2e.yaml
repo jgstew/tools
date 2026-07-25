@@ -1,0 +1,101 @@
+---
+name: test_install_bigfix_solaris_e2e
+
+# End-to-end test of the Solaris (pkgadd) branch of bash/install_bigfix.sh,
+# using the same vmactions/solaris-vm mechanism as run_qna_solaris.yaml.
+#
+# workflow_dispatch ONLY: booting the Solaris VM makes this much slower than
+# the docker-based test_install_bigfix_e2e.yaml, so it is not wired to
+# push/pull_request. Run it manually when the Solaris branch changes.
+on:
+  workflow_dispatch:
+
+# https://github.com/vmactions/solaris-vm
+jobs:
+  e2e_solaris:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    name: install_bigfix e2e in Solaris
+    steps:
+      - uses: actions/checkout@v7
+
+      # Fake relay on the runner host, identical to the one in
+      # tests/test_install_bigfix_e2e.sh: nginx serving a dummy masthead over
+      # self-signed TLS on 52311. The Solaris VM reaches the runner host at
+      # its default-route gateway; the guest-side test script maps the
+      # hostname "relay" to that IP.
+      - name: Start fake relay on runner host
+        run: |
+          RELAYDIR="$RUNNER_TEMP/relay"
+          mkdir -p "$RELAYDIR/www/masthead"
+          openssl req -x509 -newkey rsa:2048 -nodes -days 2 \
+            -keyout "$RELAYDIR/key.pem" -out "$RELAYDIR/cert.pem" -subj "/CN=relay"
+          cat > "$RELAYDIR/nginx.conf" <<'EOF'
+          events {}
+          http {
+            server {
+              listen 52311 ssl;
+              ssl_certificate /relay/cert.pem;
+              ssl_certificate_key /relay/key.pem;
+              root /relay/www;
+            }
+          }
+          EOF
+          echo "dummy-masthead-content-for-e2e-test" > "$RELAYDIR/www/masthead/masthead.afxm"
+          docker run -d --name e2e-relay -p 52311:52311 -v "$RELAYDIR:/relay:ro" \
+            nginx:alpine nginx -c /relay/nginx.conf -g 'daemon off;'
+          sleep 2
+          # sanity check from the host before spending minutes booting the VM
+          curl -sk https://127.0.0.1:52311/masthead/masthead.afxm
+
+      - name: run install e2e in Solaris VM
+        uses: vmactions/solaris-vm@v1
+        with:
+          usesh: true
+          release: "11.4"
+          sync: rsync
+          copyback: true
+          # the exit code is written to a file instead of failing this step so
+          # copyback always runs and the output survives for the summary; the
+          # "Check result" step below turns it into the job status
+          run: |
+            bash tests/test_install_bigfix_solaris_e2e.sh > e2e_output.txt 2>&1
+            echo $? > e2e_exit.txt
+            cat e2e_output.txt
+
+      - name: Check result
+        run: |
+          cat e2e_output.txt
+          exit "$(cat e2e_exit.txt)"
+
+      - name: Write results to job summary
+        if: always()
+        run: |
+          {
+            echo '## install_bigfix.sh Solaris e2e results'
+            echo
+            echo '| Test | Result |'
+            echo '| --- | --- |'
+            awk '/^==== RESULTS ====$/ {f=1; next}
+                 f && $2 ~ /^(PASS$|FAIL\(|SKIP\()/ {
+                   name=$1; $1=""; sub(/^ +/, "");
+                   icon="";
+                   if ($0 ~ /^PASS/) icon="✅ ";
+                   else if ($0 ~ /^FAIL/) icon="❌ ";
+                   else if ($0 ~ /^SKIP/) icon="⚠️ ";
+                   printf "| %s | %s%s |\n", name, icon, $0
+                 }' e2e_output.txt 2>/dev/null || echo '| (no output) | ❌ VM run produced no results |'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload output on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solaris-e2e-output
+          path: e2e_output.txt
+          if-no-files-found: warn
+          retention-days: 14
+
+# References:
+# - https://github.com/vmactions/solaris-vm
+# - https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary

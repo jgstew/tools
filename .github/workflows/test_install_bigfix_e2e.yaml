@@ -3,6 +3,11 @@ name: test_install_bigfix_e2e
 
 # End-to-end Docker tests for bash/install_bigfix.sh.
 # Runs whenever the installer script or the e2e test harness changes.
+#
+# platforms docker cannot cover have dedicated workflows (like run_qna*):
+# - Solaris x86 -> test_install_bigfix_solaris_e2e.yaml (vmactions/solaris-vm;
+#                  workflow_dispatch only because the VM boot is slow)
+# - macOS       -> test_install_bigfix_macos_e2e.yaml (native macos runner)
 on:
   push:
     branches:

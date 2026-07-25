@@ -1,0 +1,63 @@
+---
+name: test_install_bigfix_macos_e2e
+
+# End-to-end test of the macOS (darwin) branch of bash/install_bigfix.sh on a
+# native macos runner (the docker-based test_install_bigfix_e2e.yaml cannot
+# cover darwin). Native runners are fast, so unlike the Solaris e2e this runs
+# on push/PR like the main suite.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - bash/install_bigfix.sh
+      - tests/test_install_bigfix_macos_e2e.sh
+      - .github/workflows/test_install_bigfix_macos_e2e.yaml
+  pull_request:
+    paths:
+      - bash/install_bigfix.sh
+      - tests/test_install_bigfix_macos_e2e.sh
+      - .github/workflows/test_install_bigfix_macos_e2e.yaml
+  workflow_dispatch:
+
+jobs:
+  e2e_macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    name: install_bigfix e2e on macOS
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run macOS e2e test
+        # the test script starts its own fake relay (python3 https server) and
+        # really installs the agent on the (disposable) runner
+        shell: bash
+        run: sudo -E bash tests/test_install_bigfix_macos_e2e.sh | tee e2e_output.txt
+
+      - name: Write results to job summary
+        if: always()
+        run: |
+          {
+            echo '## install_bigfix.sh macOS e2e results'
+            echo
+            echo '| Test | Result |'
+            echo '| --- | --- |'
+            awk '/^==== RESULTS ====$/ {f=1; next}
+                 f && $2 ~ /^(PASS$|FAIL\(|SKIP\()/ {
+                   name=$1; $1=""; sub(/^ +/, "");
+                   icon="";
+                   if ($0 ~ /^PASS/) icon="✅ ";
+                   else if ($0 ~ /^FAIL/) icon="❌ ";
+                   else if ($0 ~ /^SKIP/) icon="⚠️ ";
+                   printf "| %s | %s%s |\n", name, icon, $0
+                 }' e2e_output.txt 2>/dev/null || echo '| (no output) | ❌ run produced no results |'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload output on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-e2e-output
+          path: e2e_output.txt
+          if-no-files-found: warn
+          retention-days: 14
