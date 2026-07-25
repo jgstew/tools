@@ -27,9 +27,6 @@
 #   ubi7-yum               .rpm path via yum on Red Hat UBI 7 (RHEL 7)
 #   ubi8-dnf               .rpm path via dnf on Red Hat UBI 8 (RHEL 8)
 #   ubi9-dnf               .rpm path via dnf on Red Hat UBI 9 (RHEL 9)
-#   ubi10-dnf              .rpm path via dnf on Red Hat UBI 10 (RHEL 10)
-#                           (auto-SKIPs where emulation lacks x86-64-v3,
-#                           e.g. Apple Silicon hosts)
 #   leap-zypper            .rpm path via zypper on opensuse/leap:15
 #   startbigfix-false      StartBigFix=false installs but does not start the
 #                           client, skips the 30s sleep, exits 0
@@ -47,6 +44,32 @@
 #   armhf-native           native arm64 debian takes the raspbian armhf branch
 #                           (runs natively on arm64 hosts, emulated elsewhere)
 #   i386-bigfix95          32-bit x86 falls back to BigFix 9.5 (linux/386)
+#
+# OS compatibility tests:
+#   Unlike the functional tests above (pinned to specific OS versions so an OS
+#   release never breaks a still-valid test), these intentionally test the
+#   compatibility ENVELOPE per OS family branch: the oldest OS the BigFix 11
+#   package targets, and the floating latest tag to catch FUTURE breakages
+#   when new OS versions ship. A representative sample per branch, not every
+#   supported OS.
+#   compat-ubuntu-oldest   ubuntu:18.04 (the ubuntu18 package's target)
+#   compat-ubuntu-latest   ubuntu:latest
+#   compat-debian-oldest   debian:10 (the debian10 package's target; apt
+#                           sources are repointed to archive.debian.org since
+#                           buster is EOL)
+#   compat-debian-latest   debian:latest
+#   compat-suse-42         opensuse/leap:42.3 — oldest openSUSE major; it is
+#                           SLE12-based, so it is the closest public match to
+#                           the sle12 package the script installs (SLES12
+#                           images exist but need a subscription for packages)
+#   compat-suse-oldest     opensuse/leap:15.0 (oldest 15.x)
+#   compat-suse-latest     opensuse/leap:latest (16.0 today — all three
+#                           openSUSE majors 42/15/16 are covered)
+#   compat-fedora-latest   fedora:latest (unusual vs RHEL-family servers)
+#   compat-rhel-latest     almalinux:latest — floats across majors (10 today),
+#                           unlike UBI repos which encode the major in the
+#                           repo name; auto-SKIPs where emulation lacks
+#                           x86-64-v3 (e.g. RHEL-10-family on Apple Silicon)
 #
 # Prerequisites: docker (with amd64 emulation on non-x86 hosts), openssl,
 #                network access to software.bigfix.com and docker hub.
@@ -69,8 +92,10 @@ mkdir -p "$LOGDIR" "$WORKDIR/relay/www/masthead"
 cleanup() {
   docker rm -f e2e-relay >/dev/null 2>&1
   for t in ubuntu-deb ubuntu2204-deb debian-rpm-regression alma-dnf oracle-dnf fedora-dnf amazon-dnf leap-zypper startbigfix-false \
-           ubi7-yum ubi8-dnf ubi9-dnf ubi10-dnf \
-           wget-fallback amazon2-yum rpm-only sh-reexec readonly-staging hostport-arg relaypass custom-cfg negatives armhf-native i386-bigfix95; do
+           ubi7-yum ubi8-dnf ubi9-dnf \
+           wget-fallback amazon2-yum rpm-only sh-reexec readonly-staging hostport-arg relaypass custom-cfg negatives armhf-native i386-bigfix95 \
+           compat-ubuntu-oldest compat-ubuntu-latest compat-debian-oldest compat-debian-latest \
+           compat-suse-42 compat-suse-oldest compat-suse-latest compat-fedora-latest compat-rhel-latest; do
     docker rm -f "e2e-$t" >/dev/null 2>&1
   done
   docker network rm $NET >/dev/null 2>&1
@@ -259,16 +284,6 @@ rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit
 echo E2E_PASS
 " &
 
-NAMES+=(ubi10-dnf)
-run_test ubi10-dnf registry.access.redhat.com/ubi10/ubi "
-[ -f /etc/redhat-release ] || { echo 'SETUP FAIL: missing /etc/redhat-release'; exit 20; }
-command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
-$RUN_AND_ASSERT
-[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
-rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
-echo E2E_PASS
-" &
-
 # All tests run simultaneously — expect max CPU usage while the suite runs.
 
 # Download path when wget is present but curl is not (debian base has no curl).
@@ -433,6 +448,102 @@ rc=$?
 dpkg -s besagent 2>/dev/null | grep -q "^Version: 9.5" || { echo "FAIL: expected BigFix 9.5 fallback version"; exit 46; }
 echo E2E_PASS
 ' linux/386 &
+
+############################################################
+# OS compatibility tests: oldest OS the BigFix 11 package targets + floating
+# latest tags to catch breakage on future OS releases (see header).
+
+NAMES+=(compat-ubuntu-oldest)
+run_test compat-ubuntu-oldest ubuntu:18.04 "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" &
+
+NAMES+=(compat-ubuntu-latest)
+run_test compat-ubuntu-latest ubuntu:latest "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" &
+
+# Debian 10 (buster) is EOL: apt sources must be repointed at archive.debian.org.
+NAMES+=(compat-debian-oldest)
+run_test compat-debian-oldest debian:10 "
+export DEBIAN_FRONTEND=noninteractive
+sed -i -e 's|deb.debian.org/debian|archive.debian.org/debian|g' -e 's|security.debian.org|archive.debian.org/debian-security|g' -e '/buster-updates/d' /etc/apt/sources.list
+apt-get -o Acquire::Check-Valid-Until=false update -qq >/dev/null 2>&1 && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" &
+
+NAMES+=(compat-debian-latest)
+run_test compat-debian-latest debian:latest "
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.deb ] || { echo 'MISSING: staged BESAgent.deb'; exit 14; }
+echo E2E_PASS
+" &
+
+# Oldest openSUSE major (SLE12-based, so the closest public match to the
+# sle12 package the script installs; SLES12 images themselves cannot install
+# packages without a subscription). Its default repos still work.
+NAMES+=(compat-suse-42)
+run_test compat-suse-42 opensuse/leap:42.3 "
+command -v curl >/dev/null || zypper --non-interactive --no-gpg-checks install curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+# Oldest 15.x.
+NAMES+=(compat-suse-oldest)
+run_test compat-suse-oldest opensuse/leap:15.0 "
+command -v curl >/dev/null || zypper --non-interactive --no-gpg-checks install curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+NAMES+=(compat-suse-latest)
+run_test compat-suse-latest opensuse/leap:latest "
+command -v curl >/dev/null || zypper --non-interactive install curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+NAMES+=(compat-fedora-latest)
+run_test compat-fedora-latest fedora:latest "
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
+
+# almalinux:latest floats across major versions (unlike UBI repos, which
+# encode the major in the repo name), so this catches future RHEL majors.
+# RHEL-10-family x86_64 requires x86-64-v3; auto-SKIPs where emulation
+# cannot provide it (e.g. Apple Silicon hosts).
+NAMES+=(compat-rhel-latest)
+run_test compat-rhel-latest almalinux:latest "
+[ -f /etc/redhat-release ] || { echo 'SETUP FAIL: missing /etc/redhat-release'; exit 20; }
+command -v curl >/dev/null || dnf install -y -q curl >/dev/null 2>&1
+$RUN_AND_ASSERT
+[ -f /work/BESAgent.rpm ] || { echo 'MISSING: staged BESAgent.rpm'; exit 14; }
+rpm -q BESAgent >/dev/null || { echo 'MISSING: BESAgent rpm not installed'; exit 15; }
+echo E2E_PASS
+" &
 
 wait
 
