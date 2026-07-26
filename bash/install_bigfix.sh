@@ -44,6 +44,20 @@ command_exists () {
   type "$1" &> /dev/null ;
 }
 
+# FUNCTION: is the BESClient daemon currently running?
+#  Uses pgrep when available, falls back to ps. The [B] in the ps pattern
+#  keeps grep from matching its own command line. Returns 1 (not running)
+#  when neither tool is present, so callers treat "unknown" as "not started".
+besclient_running () {
+  if command_exists pgrep ; then
+    pgrep -x BESClient > /dev/null 2>&1
+  elif command_exists ps ; then
+    ps -e 2>/dev/null | grep -q '[B]ESClient'
+  else
+    return 1
+  fi
+}
+
 # resolve the directory this script lives in, regardless of CWD
 #  (degrades to CWD when piped, e.g. `curl ... | bash`, where $0 is not a file)
 SCRIPTDIR="$(cd "$(dirname "$0")" && pwd)"
@@ -409,6 +423,87 @@ if [[ $INSTALLER == *.deb ]]; then
   else
     dpkg -i "$INSTALLER"
   fi
+
+  # Same shared-library gap as the rpm path below: the BESAgent .deb does not
+  #  declare its library dependencies, so apt cannot pull them in. This is most
+  #  visible for foreign-architecture installs (e.g. the raspbian armhf client
+  #  on an arm64 host), where libstdc++.so.6:armhf is never installed and the
+  #  binary fails at runtime with "cannot open shared object file".
+  #
+  #  ldd is the cheap check that works on native hosts: if it reports no missing
+  #  libraries the common case pays nothing (no extra tooling installed). But
+  #  ldd runs the binary through its loader, so it cannot trace a foreign-arch
+  #  binary - it prints "not a dynamic executable" instead. In that case fall
+  #  back to a static readelf scan of the ELF NEEDED entries, which is
+  #  architecture independent. Either way, map each soname to its package with
+  #  apt-file (apt, unlike rpm, has no soname virtual-provides) and let apt-get
+  #  install it - apt-get is idempotent, so already-present libraries are no-ops
+  #  and only the genuinely missing ones get pulled in. Nothing is hardcoded so
+  #  this adapts if the missing library changes.
+  if command_exists ldd && command_exists apt-get && [ -f /opt/BESClient/bin/BESClient ]; then
+    LDDOUT=`ldd /opt/BESClient/bin/BESClient 2>/dev/null`
+    MISSINGLIBS=`echo "$LDDOUT" | awk '/not found/ {print $1}' | sort -u`
+    # ldd could not trace the binary (foreign architecture) if it said so or
+    #  produced nothing at all.
+    UNTRACEABLE=false
+    if echo "$LDDOUT" | grep -q "not a dynamic executable" || [ -z "$LDDOUT" ]; then
+      UNTRACEABLE=true
+    fi
+    if [ -n "$MISSINGLIBS" ] || [ "$UNTRACEABLE" = true ]; then
+      # architecture of the client package (armhf, ppc64el, amd64, i386) and its
+      #  multiarch triplet, read from the already-installed libc for that arch.
+      #  The triplet scopes the apt-file lookup to the right architecture's copy
+      #  of the library (the soname itself is an ldconfig symlink, not a
+      #  packaged file, so the lookup matches the versioned file under the
+      #  triplet directory, e.g. .../arm-linux-gnueabihf/libstdc++.so.6.0.30).
+      PKGARCH=`dpkg-deb -f "$INSTALLER" Architecture 2>/dev/null`
+      TRIPLET=`dpkg -L libc6${PKGARCH:+:$PKGARCH} 2>/dev/null | grep -oE '/lib/[a-z0-9_]+-linux-gnu[a-z]*' | head -n1 | sed 's#/lib/##'`
+      # apt-file maps a soname to its package; install and index it on demand.
+      if ! command_exists apt-file ; then
+        apt-get install -y apt-file && apt-file update
+      fi
+      # Candidate sonames: exactly the missing ones when ldd could trace,
+      #  otherwise every NEEDED entry from a static readelf scan.
+      CANDIDATELIBS="$MISSINGLIBS"
+      if [ "$UNTRACEABLE" = true ]; then
+        command_exists readelf || apt-get install -y binutils
+        if command_exists readelf ; then
+          CANDIDATELIBS=`readelf -d /opt/BESClient/bin/BESClient 2>/dev/null | awk -F'[][]' '/NEEDED/ {print $2}'`
+        fi
+      fi
+      for MISSINGLIB in $CANDIDATELIBS; do
+        # skip the dynamic loader itself: it lives outside the triplet dir and
+        #  is always provided by an already-installed libc.
+        case "$MISSINGLIB" in ld-*|ld.so*) continue ;; esac
+        PROVIDER=""
+        if command_exists apt-file && [ -n "$TRIPLET" ]; then
+          # -l: package names only; -a: restrict to the client's arch. Scope the
+          #  match to the arch triplet dir so it resolves to the real library
+          #  package and not an unrelated cross-compiler package.
+          if [ -n "$PKGARCH" ]; then
+            PROVIDER=`apt-file -l -a "$PKGARCH" search "$TRIPLET/$MISSINGLIB" 2>/dev/null | head -n1`
+          else
+            PROVIDER=`apt-file -l search "$TRIPLET/$MISSINGLIB" 2>/dev/null | head -n1`
+          fi
+        fi
+        if [ -n "$PROVIDER" ]; then
+          echo "ensuring BESClient library $MISSINGLIB via package $PROVIDER${PKGARCH:+:$PKGARCH}"
+          if [ -n "$PKGARCH" ]; then
+            apt-get install -y "$PROVIDER:$PKGARCH" || apt-get install -y "$PROVIDER"
+          else
+            apt-get install -y "$PROVIDER"
+          fi
+        elif [ -n "$MISSINGLIBS" ]; then
+          # only warn about libraries ldd actually flagged as missing; in the
+          #  untraceable case an unresolved NEEDED entry is usually already
+          #  satisfied and not worth a warning.
+          case " $MISSINGLIBS " in
+            *" $MISSINGLIB "*) (>&2 echo "WARNING: could not find a package providing $MISSINGLIB - BESClient may not run") ;;
+          esac
+        fi
+      done
+    fi
+  fi
 fi
 if [[ $INSTALLER == *.pkg ]]; then
   # PKG type
@@ -492,12 +587,27 @@ if [[ $OSTYPE != darwin* ]]; then
   ### start the BigFix client (required for most linux dist)
   # Do not start bigfix if: StartBigFix=false
   if [[ "$StartBigFix" != "false" ]]; then
-    # if file `/etc/init.d/besclient` exists
+    # Prefer the platform's service manager on real hosts: the SysV init.d
+    #  script (shipped by the .deb) or systemd (used by the .rpm packages).
+    #  Ignore failures here - many environments cannot run either, and the
+    #  direct-launch fallback below covers them.
     if [ -f /etc/init.d/besclient ]; then
-      /etc/init.d/besclient start
-    else
-      # start using systemd
-      systemctl start besclient
+      /etc/init.d/besclient start || true
+    elif command_exists systemctl ; then
+      systemctl start besclient || true
+    fi
+
+    # Fallback for containers with no working init system: no systemd as PID 1
+    #  ("System has not been booted with systemd"), no D-Bus, no systemctl at
+    #  all, or a SysV stub that can't source /lib/lsb/init-functions. In those
+    #  cases the block above is a no-op, so launch the client binary directly -
+    #  the same approach as bigfix/bfdocker (see the reference in the header).
+    #  BESClient daemonizes and holds its own single-instance lock, so this is
+    #  harmless when the service manager already started it (and the guard
+    #  skips it when the process is already detected).
+    if ! besclient_running && [ -x /opt/BESClient/bin/BESClient ]; then
+      echo "ERROR: starting /opt/BESClient/bin/BESClient directly (no running client detected)"
+      /opt/BESClient/bin/BESClient &
     fi
   fi
 fi # END_IF not darwin
@@ -507,13 +617,36 @@ if [[ "$StartBigFix" == "false" ]]; then
   exit 0
 fi
 
-# pause 10 seconds to wait for bigfix to get going a bit
-echo "sleep for 10 seconds"
-sleep 10
-
 # output the contents of the log file to see if things are working:  https://github.com/jgstew/tools/blob/master/bash/bigfixlogs.sh
-# TODO: add mac support to the following:
-BESLOGFILE="/var/opt/BESClient/__BESData/__Global/Logs/`date +%Y%m%d`.log"
+# Resolve the BigFix log folder: most unix/linux systems use the first path,
+#  but macOS stores the logs under /Library/Application Support. The client
+#  creates this folder shortly after it starts, so poll for up to ~30s rather
+#  than a single fixed sleep - a freshly (and sometimes directly) launched
+#  client can take a few seconds to initialize. If neither ever appears, exit
+#  nonzero so the failure is visible.
+BESLOGDIR_UNIX="/var/opt/BESClient/__BESData/__Global/Logs"
+BESLOGDIR_MACOS="/Library/Application Support/Bigfix/BES Agent/__BESData/__Global/Logs"
+BESLOGDIR=""
+echo "waiting up to 30 seconds for the BigFix log folder to appear"
+i=0
+while [ "$i" -lt 30 ]; do
+  if [ -d "$BESLOGDIR_UNIX" ]; then
+    BESLOGDIR="$BESLOGDIR_UNIX"
+    break
+  elif [ -d "$BESLOGDIR_MACOS" ]; then
+    BESLOGDIR="$BESLOGDIR_MACOS"
+    break
+  fi
+  i=$((i + 1))
+  sleep 1
+done
+if [ -z "$BESLOGDIR" ]; then
+  echo "ERROR: could not find BigFix log folder in either:" >&2
+  echo "  $BESLOGDIR_UNIX" >&2
+  echo "  $BESLOGDIR_MACOS" >&2
+  exit 1
+fi
+BESLOGFILE="$BESLOGDIR/`date +%Y%m%d`.log"
 if [ -f "$BESLOGFILE" ]; then
   # Use the obsolescent `tail -25` count form and `-f`: both are understood by
   #  Solaris SVR4 /usr/bin/tail AND GNU tail. The GNU long options
@@ -530,6 +663,8 @@ if [ -f "$BESLOGFILE" ]; then
   # Related:
   #  - https://bigfix.me/fixlet/details/24646
   #  - https://bigfix.me/relevance/details/3020387
+else
+  echo "ERROR: BigFix log file not found: $BESLOGFILE" >&2
 fi
 
 ### References:

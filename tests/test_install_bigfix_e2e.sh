@@ -453,6 +453,12 @@ echo E2E_PASS
 NAMES+=(armhf-native)
 run_test armhf-native debian:12 "
 export DEBIAN_FRONTEND=noninteractive
+# Enable the armhf architecture and refresh package lists so the armhf runtime
+#  libs are resolvable. We deliberately do NOT preinstall libstdc++6:armhf: the
+#  raspbian armhf BESClient links against it but the .deb does not declare the
+#  dependency, so the installer's ldd/apt-file self-heal loop is what must pull
+#  it in. This test therefore exercises that loop end to end.
+dpkg --add-architecture armhf
 apt-get update -qq >/dev/null && apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
 uname -m | grep -q aarch64 || { echo 'SETUP FAIL: not aarch64'; exit 20; }
 $RUN_AND_ASSERT
