@@ -67,3 +67,4 @@ target/
 
 # Ignore Mac thingy
 .DS_Store
+Python/smime.p7s.txt

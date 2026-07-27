@@ -15,7 +15,7 @@ import asn1crypto.cms
 
 
 # Load the signature from a file
-with open(r"Python\smime.p7s.txt", "rb") as f:
+with open(r"Python/smime.p7s.txt", "rb") as f:
     signed_data = f.read()
 
 # convert base64 smime.p7s to binary
@@ -28,6 +28,7 @@ p7 = asn1crypto.cms.ContentInfo.load(signed_data)
 
 # Get the signature object
 signed_data = p7["content"]
+# print(signed_data.native)
 signer_infos = signed_data["signer_infos"]
 
 # # Print the signer's certificate
