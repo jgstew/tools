@@ -11,4 +11,7 @@ awk '
 base64 -D -i /tmp/site.p7s.b64 -o /tmp/site.p7s
 
 openssl pkcs7 -inform DER -in /tmp/site.p7s -print_certs -text 2>/dev/null \
-| awk '/Subject:/{s=$0} /Serial Number:/{print $0 " | " s}' | grep "Sitename:" | grep -oE 'Serial Number: [0-9A-F]+ ' | uniq
+ | awk '
+  /Serial Number:/ { sn=$0; next }
+  /Subject:/       { print sn " | " $0; sn="" }
+' | grep "Sitename:" | grep -oE 'Serial Number: [0-9A-F]+ ' | uniq
