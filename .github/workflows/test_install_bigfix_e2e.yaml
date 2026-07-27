@@ -35,7 +35,7 @@ jobs:
       # linux/arm64, i386-bigfix95 runs linux/386, ppc64le-deb runs
       # linux/ppc64le) on the amd64 runner
       - name: Set up QEMU for multi-arch containers
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Run e2e test suite
         # default shell is bash with pipefail, so tee does not mask a failure
