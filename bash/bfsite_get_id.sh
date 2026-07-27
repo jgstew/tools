@@ -1,3 +1,4 @@
+# Related: https://github.com/jgstew/tools/blob/master/SQL/BigFix_ExternalSites_SiteIDs.sql
 URL='https://sync.bigfix.com/cgi-bin/bfgather/patchesforubuntu2404'
 curl -sSL "$URL" -o /tmp/site.smime
 
