@@ -3,9 +3,9 @@
 # generate_deploy_script.sh
 #
 # Reads clientsettings.cfg (plain text) and actionsite.afxm (binary) from the
-# current directory, and emits a new self-contained script, deploy_files.sh,
+# current directory, and emits a new self-contained script, deploy_bigfix_macos.sh,
 # that will recreate both files in whatever directory it's run from -- but
-# only if they don't already exist there.
+# only if they don't already exist there. Then it will download bigfix macos installer, validate it's sha256, and install it.
 
 set -euo pipefail
 
