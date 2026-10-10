@@ -14,14 +14,18 @@ https://github.com/jgstew/jgstew.github.io/blob/master/images/BigFix/BigFix_logo
     stem slot       x = -70 .. -32 (relative to centre), from centre up to edge
     dot             r = 32           (slot's right edge is tangent to the dot)
 
-Layout:
+Layout (default, double-sided):
     face layer  (--top thick): blue ring, white counter+slot, green dot
-    white base  (--base thick) behind the face
+    white core  (--base thick)
+    face layer  (--top thick), mirrored through the core
 
-By default the coin is built face-down: the face layer sits at z=0 so all
-three colours print against the build plate, and every part touches the bed
-(so slicers that drop each part to the bed independently still get it right).
---face-up puts the white base on the bed instead and allows --dot-raise.
+The bottom face sits at z=0 so it prints against the build plate; the top
+face is its mirror image, so the coin reads as a "b" from either side.
+
+--single-sided builds one face plus a white base, face-down (the face at z=0,
+so every part touches the bed). --face-up puts the white base on the bed
+instead. --dot-raise raises the green dot on the upward face, so it works
+double-sided or --face-up, but not single-sided face-down.
 
 Outputs:
     .3mf  Bambu Studio ready: one object, three parts pre-assigned to
@@ -75,8 +79,14 @@ COLORS = {
 }
 
 
-def build(diameter, base, top, dot_raise, proportions, face_down=True):
-    """Return {"white", "blue", "green"} solids that tile the coin without overlap."""
+def build(diameter, base, top, dot_raise, proportions, layout="double"):
+    """Return {"white", "blue", "green"} solids that tile the coin without overlap.
+
+    layout:
+        "double"     face (at z=0, face-down) + white core + face on top
+        "face-down"  face (at z=0) + white base
+        "face-up"    white base (at z=0) + face
+    """
     p = PROPORTIONS[proportions]
     R = diameter / 2
     r_counter = R * p["counter"]
@@ -88,21 +98,37 @@ def build(diameter, base, top, dot_raise, proportions, face_down=True):
         # Cylinder is centred on its height by default; shift so it spans z0..z0+h.
         return Pos(0, 0, z0 + h / 2) * Cylinder(r, h)
 
-    z_top = base
-    # The "b" counter: hole + stem slot (from centre straight up past the edge, +Y).
-    slot = Pos(slot_cx, R / 2 + 0.5, z_top + top / 2) * Box(slot_w, R + 1, top)
-    counter = disc(r_counter, top, z_top) + slot
+    def face(z0, raise_=0.0):
+        """One logo face layer spanning z0..z0+top, reading as a "b" from above."""
+        # The "b" counter: hole + stem slot (from centre straight up past the edge, +Y).
+        slot = Pos(slot_cx, R / 2 + 0.5, z0 + top / 2) * Box(slot_w, R + 1, top)
+        counter = disc(r_counter, top, z0) + slot
+        dot = disc(r_dot, top + raise_, z0)
+        return {
+            "white": (counter & disc(R, top, z0)) - dot,
+            "blue": disc(R, top, z0) - counter,
+            "green": dot,
+        }
 
-    blue = disc(R, top, z_top) - counter
-    dot = disc(r_dot, top + dot_raise, z_top)
-    white = disc(R, base, 0) + (counter & disc(R, top, z_top)) - dot
+    def flipped(shape, height):
+        # Turn over (a rotation, not a mirror, so the logo still reads correctly
+        # from that side) and sit it back on z=0.
+        return Pos(0, 0, height) * Rot(180, 0, 0) * shape
 
-    parts = {"white": white, "blue": blue, "green": dot}
-    if face_down:
-        # Turn the coin over (a rotation, not a mirror, so the logo still reads
-        # correctly from the face side) and sit it back on z=0.
-        flip = Pos(0, 0, base + top + dot_raise) * Rot(180, 0, 0)
-        parts = {name: flip * shape for name, shape in parts.items()}
+    if layout == "double":
+        # Bottom face: identical to the face-down single-sided coin's face.
+        bottom = {n: flipped(s, top) for n, s in face(0).items()}
+        # Top face: the same layer un-flipped, i.e. the bottom face mirrored
+        # through the core, so the coin reads as a "b" from either side.
+        upper = face(top + base, dot_raise)
+        parts = {n: bottom[n] + upper[n] for n in bottom}
+        parts["white"] = parts["white"] + disc(R, base, top)
+    else:
+        parts = face(base, dot_raise)
+        parts["white"] = parts["white"] + disc(R, base, 0)
+        if layout == "face-down":
+            parts = {n: flipped(s, base + top + dot_raise) for n, s in parts.items()}
+
     for name, shape in parts.items():
         shape.label = name
         hex_rgb = COLORS[name].lstrip("#")
@@ -230,7 +256,7 @@ def main():
         "--base",
         type=float,
         default=1.2,
-        help="white base thickness in mm (default 1.2)",
+        help="white base/core thickness in mm (default 1.2)",
     )
     ap.add_argument(
         "--top",
@@ -242,13 +268,18 @@ def main():
         "--dot-raise",
         type=float,
         default=0.0,
-        help="extra height of the green dot above the top layer in mm (default 0)",
+        help="extra height of the green dot above the top face in mm (default 0)",
+    )
+    ap.add_argument(
+        "--single-sided",
+        action="store_true",
+        help="logo on one side only, built face-down (default is double-sided)",
     )
     ap.add_argument("--proportions", choices=PROPORTIONS, default="devsite")
     ap.add_argument(
         "--face-up",
         action="store_true",
-        help="build with the white base on the bed instead of the face (default face-down)",
+        help="single-sided with the white base on the bed instead of the face",
     )
     ap.add_argument(
         "--angular-deflection",
@@ -260,8 +291,17 @@ def main():
         "--out", type=Path, default=Path("out"), help="output folder (default ./out)"
     )
     args = ap.parse_args()
-    if args.dot_raise and not args.face_up:
-        ap.error("--dot-raise needs --face-up (a raised dot cannot print face-down)")
+    if args.face_up:
+        layout = "face-up"
+    elif args.single_sided:
+        layout = "face-down"
+    else:
+        layout = "double"
+    if args.dot_raise and layout == "face-down":
+        ap.error(
+            "--dot-raise cannot be used with --single-sided face-down"
+            " (a raised dot cannot print against the bed); add --face-up"
+        )
 
     parts = build(
         args.diameter,
@@ -269,10 +309,11 @@ def main():
         args.top,
         args.dot_raise,
         args.proportions,
-        face_down=not args.face_up,
+        layout=layout,
     )
     args.out.mkdir(parents=True, exist_ok=True)
-    stem = args.out / f"bigfix_logo_{args.proportions}_{args.diameter:g}mm"
+    suffix = "_double" if layout == "double" else ""
+    stem = args.out / f"bigfix_logo_{args.proportions}_{args.diameter:g}mm{suffix}"
 
     assembly = Compound(label="bigfix_logo", children=list(parts.values()))
     export_step(assembly, f"{stem}.step")

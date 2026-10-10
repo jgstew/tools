@@ -1,6 +1,7 @@
 *.msi
 test-ca-out/
 .venv/
+Python/bigfix_logo_3d/out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -26,33 +26,40 @@ python bigfix_logo_3d.py --diameter 40
 | Option | Default | Meaning |
 |---|---|---|
 | `--diameter` | `40` | Outer diameter in mm |
-| `--base` | `1.2` | White base thickness in mm |
+| `--base` | `1.2` | White base thickness in mm (the core between the faces when double-sided) |
 | `--top` | `0.6` | Coloured face layer thickness in mm (5 layers at 0.12 mm) |
-| `--face-up` | off | Put the white base on the bed instead of the face |
-| `--dot-raise` | `0` | Extra height of the green dot above the face in mm (needs `--face-up`) |
+| `--single-sided` | off | Logo on one side only, built face-down (the default is double-sided) |
+| `--face-up` | off | Single-sided with the white base on the bed instead of the face |
+| `--dot-raise` | `0` | Extra height of the green dot on the upward face in mm (double-sided or `--face-up` only) |
 | `--proportions` | `devsite` | `devsite` or `bigfix-svg` (see Geometry) |
 | `--angular-deflection` | `0.02` | Mesh angular tolerance in radians; smaller is finer |
 | `--out` | `./out` | Output folder |
 
 ## Outputs
 
-For `--diameter 40` with default proportions, written to `out/`:
+For `--diameter 40` with default proportions, written to `out/` (double-sided files end in `_double`, for example `bigfix_logo_devsite_40mm_double.3mf`):
 
 - `bigfix_logo_devsite_40mm.3mf` - **use this for printing.** One object made of three parts, already assigned to filaments 1, 2 and 3. Uses ~600 segments per circle.
 - `bigfix_logo_devsite_40mm.step` - the same three solids with exact arcs, for CAD. Slicers ignore STEP colours, so every part imports on filament 1.
 - `bigfix_logo_devsite_40mm_{white,blue,green}.stl` - one mesh per colour.
 
-By default the coin is built **face-down**: the coloured face layer is at z=0, so all three colours print against the build plate, with the white base on top.
+By default the coin is **double-sided**, built from three layers:
 
-The flip is a rotation, not a mirror, so the logo reads correctly once the coin is turned over. Every part touches the bed, so the layout comes out right even if a slicer drops each part to the bed separately.
+1. The bottom face at z=0, printed against the build plate. This is the same face as the single-sided face-down coin.
+2. A solid white core, `--base` thick.
+3. The top face, which mirrors the bottom face through the core.
+
+Because the top face is a mirror image, the coin reads as a "b" from either side. Turn it over top-to-bottom (stem end to round end) to see both sides upright. With the defaults the coin is 2.4 mm thick (0.6 + 1.2 + 0.6).
+
+With `--single-sided`, the coin is built **face-down**: the coloured face layer is at z=0, so all three colours print against the build plate, with the white base on top. The flip is a rotation, not a mirror, so the logo reads correctly once the coin is turned over. Every part touches the bed, so the layout comes out right even if a slicer drops each part to the bed separately.
 
 The three parts tile the coin exactly, with no overlaps:
 
 | Part | Filament | Colour | Contents |
 |---|---|---|---|
-| white | 1 | `#FFFFFF` | Base disc, plus the counter and stem slot in the face layer |
-| blue | 2 | `#0045D9` | Outer ring in the face layer |
-| green | 3 | `#ABC450` | Centre dot |
+| white | 1 | `#FFFFFF` | Base disc or core, plus the counter and stem slot in each face layer |
+| blue | 2 | `#0045D9` | Outer ring in each face layer |
+| green | 3 | `#ABC450` | Centre dot in each face layer |
 
 ## Printing in Bambu Studio
 
