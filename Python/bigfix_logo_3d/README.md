@@ -37,23 +37,30 @@ python bigfix_logo_3d.py --diameter 40
 
 For `--diameter 40` with default proportions, written to `out/`:
 
-- `bigfix_logo_devsite_40mm.step` - three coloured, named solids with exact arcs. **Preferred.**
-- `bigfix_logo_devsite_40mm.3mf` - the same three bodies as a fine mesh.
+- `bigfix_logo_devsite_40mm.3mf` - **use this for printing.** One object made of three parts, already assigned to filaments 1, 2 and 3. Uses ~600 segments per circle.
+- `bigfix_logo_devsite_40mm.step` - the same three solids with exact arcs, for CAD. Slicers ignore STEP colours, so every part imports on filament 1.
 - `bigfix_logo_devsite_40mm_{white,blue,green}.stl` - one mesh per colour.
 
-The three bodies tile the coin exactly, with no overlaps:
+The three parts tile the coin exactly, with no overlaps:
 
-- **white**: base disc, plus the counter and stem slot in the top layer
-- **blue**: the outer ring in the top layer
-- **green**: the centre dot
+| Part | Filament | Colour | Contents |
+|---|---|---|---|
+| white | 1 | `#FFFFFF` | Base disc, plus the counter and stem slot in the top layer |
+| blue | 2 | `#0045D9` | Outer ring in the top layer |
+| green | 3 | `#ABC450` | Centre dot |
 
-## Printing in Bambu Studio / OrcaSlicer
+## Printing in Bambu Studio
 
-1. Import the `.step` file. When asked, load it as **a single object with multiple parts**.
-2. Assign a filament to each part: white, blue and green.
-3. Optional: lower the STEP import tolerance (angle/linear deflection) for even smoother circles.
+1. Open or import the `.3mf` file. It loads as one object with three parts, each already on its own filament.
+   - If your project has fewer than 3 filaments, Bambu Studio adds the missing slots.
+   - Newer Bambu Studio versions may show a colour-mapping dialog. Accept it to match the parts to the filaments in your AMS.
+2. Set filaments 1, 2 and 3 to white, blue and green, or map them to your AMS slots.
 
-The 3MF and STLs load the same way, but they don't carry any filament assignments.
+Bambu Studio ignores the material colours in a standard 3MF. So the script also writes `Metadata/model_settings.config`, which is the file Bambu itself uses to store each part's filament (`extruder`).
+
+To use the STEP or STLs instead, add the parts to one object and change each part's filament by hand.
+
+OrcaSlicer is a fork of Bambu Studio and reads the same `model_settings.config`, but this hasn't been tested.
 
 ## Geometry
 
