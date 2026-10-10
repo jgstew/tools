@@ -27,8 +27,9 @@ python bigfix_logo_3d.py --diameter 40
 |---|---|---|
 | `--diameter` | `40` | Outer diameter in mm |
 | `--base` | `1.2` | White base thickness in mm |
-| `--top` | `0.6` | Coloured top layer thickness in mm (5 layers at 0.12 mm) |
-| `--dot-raise` | `0` | Extra height of the green dot above the top layer in mm |
+| `--top` | `0.6` | Coloured face layer thickness in mm (5 layers at 0.12 mm) |
+| `--face-up` | off | Put the white base on the bed instead of the face |
+| `--dot-raise` | `0` | Extra height of the green dot above the face in mm (needs `--face-up`) |
 | `--proportions` | `devsite` | `devsite` or `bigfix-svg` (see Geometry) |
 | `--angular-deflection` | `0.02` | Mesh angular tolerance in radians; smaller is finer |
 | `--out` | `./out` | Output folder |
@@ -41,12 +42,16 @@ For `--diameter 40` with default proportions, written to `out/`:
 - `bigfix_logo_devsite_40mm.step` - the same three solids with exact arcs, for CAD. Slicers ignore STEP colours, so every part imports on filament 1.
 - `bigfix_logo_devsite_40mm_{white,blue,green}.stl` - one mesh per colour.
 
+By default the coin is built **face-down**: the coloured face layer is at z=0, so all three colours print against the build plate, with the white base on top.
+
+The flip is a rotation, not a mirror, so the logo reads correctly once the coin is turned over. Every part touches the bed, so the layout comes out right even if a slicer drops each part to the bed separately.
+
 The three parts tile the coin exactly, with no overlaps:
 
 | Part | Filament | Colour | Contents |
 |---|---|---|---|
-| white | 1 | `#FFFFFF` | Base disc, plus the counter and stem slot in the top layer |
-| blue | 2 | `#0045D9` | Outer ring in the top layer |
+| white | 1 | `#FFFFFF` | Base disc, plus the counter and stem slot in the face layer |
+| blue | 2 | `#0045D9` | Outer ring in the face layer |
 | green | 3 | `#ABC450` | Centre dot |
 
 ## Printing in Bambu Studio

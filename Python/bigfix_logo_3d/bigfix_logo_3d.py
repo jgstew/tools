@@ -14,10 +14,14 @@ https://github.com/jgstew/jgstew.github.io/blob/master/images/BigFix/BigFix_logo
     stem slot       x = -70 .. -32 (relative to centre), from centre up to edge
     dot             r = 32           (slot's right edge is tangent to the dot)
 
-Layout (bottom to top):
-    white base disc  (--base thick)
-    top layer        (--top thick): blue ring, white counter+slot, green dot
-    optional green dot raise (--dot-raise) above the top layer
+Layout:
+    face layer  (--top thick): blue ring, white counter+slot, green dot
+    white base  (--base thick) behind the face
+
+By default the coin is built face-down: the face layer sits at z=0 so all
+three colours print against the build plate, and every part touches the bed
+(so slicers that drop each part to the bed independently still get it right).
+--face-up puts the white base on the bed instead and allows --dot-raise.
 
 Outputs:
     .3mf  Bambu Studio ready: one object, three parts pre-assigned to
@@ -40,6 +44,7 @@ from build123d import (
     Compound,
     Cylinder,
     Pos,
+    Rot,
     export_step,
     export_stl,
 )
@@ -70,7 +75,7 @@ COLORS = {
 }
 
 
-def build(diameter, base, top, dot_raise, proportions):
+def build(diameter, base, top, dot_raise, proportions, face_down=True):
     """Return {"white", "blue", "green"} solids that tile the coin without overlap."""
     p = PROPORTIONS[proportions]
     R = diameter / 2
@@ -93,6 +98,11 @@ def build(diameter, base, top, dot_raise, proportions):
     white = disc(R, base, 0) + (counter & disc(R, top, z_top)) - dot
 
     parts = {"white": white, "blue": blue, "green": dot}
+    if face_down:
+        # Turn the coin over (a rotation, not a mirror, so the logo still reads
+        # correctly from the face side) and sit it back on z=0.
+        flip = Pos(0, 0, base + top + dot_raise) * Rot(180, 0, 0)
+        parts = {name: flip * shape for name, shape in parts.items()}
     for name, shape in parts.items():
         shape.label = name
         hex_rgb = COLORS[name].lstrip("#")
@@ -236,6 +246,11 @@ def main():
     )
     ap.add_argument("--proportions", choices=PROPORTIONS, default="devsite")
     ap.add_argument(
+        "--face-up",
+        action="store_true",
+        help="build with the white base on the bed instead of the face (default face-down)",
+    )
+    ap.add_argument(
         "--angular-deflection",
         type=float,
         default=0.02,
@@ -245,8 +260,17 @@ def main():
         "--out", type=Path, default=Path("out"), help="output folder (default ./out)"
     )
     args = ap.parse_args()
+    if args.dot_raise and not args.face_up:
+        ap.error("--dot-raise needs --face-up (a raised dot cannot print face-down)")
 
-    parts = build(args.diameter, args.base, args.top, args.dot_raise, args.proportions)
+    parts = build(
+        args.diameter,
+        args.base,
+        args.top,
+        args.dot_raise,
+        args.proportions,
+        face_down=not args.face_up,
+    )
     args.out.mkdir(parents=True, exist_ok=True)
     stem = args.out / f"bigfix_logo_{args.proportions}_{args.diameter:g}mm"
 
