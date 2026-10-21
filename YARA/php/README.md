@@ -15,7 +15,7 @@ real results.
 | `php_detect.yar` | Main rules. Detects PHP and carries the **exact version** in the matched string (`yara -s`). |
 | `php_version_branches.yar` | One rule per branch (`PHP_8_2`, `PHP_7_4`, …). The **rule name is the version** - for engines that only report rule names (osquery, EDRs). Generated. |
 | `gen_php_branches.py` | Generates `php_version_branches.yar`. Edit this, not the `.yar`. |
-| `php_versions.awk` | Turns `yara -s php_detect.yar` output into `path<TAB>version`. |
+| `php_versions.awk` | Turns `yara -s php_detect.yar` output into `path<TAB>version`; matched files with no version string get `unknown`. |
 
 Both `.yar` files use no YARA modules (`pe`, `elf`, `macho`), so they work in
 embedded engines built without them, and their rule names don't collide - load

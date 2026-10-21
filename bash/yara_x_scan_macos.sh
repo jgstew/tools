@@ -8,7 +8,12 @@
 #   4. scans TARGET_PATH (recursively) with the YARA rule embedded below,
 #      staying on TARGET_PATH's volume: other mounts (DMGs, network shares,
 #      external disks, autofs, Time Machine snapshots) are skipped
-#   5. writes results + a log to OUTPUT_DIR
+#   5. writes results + a log to OUTPUT_DIR; for text format:
+#        yara_results_<host>_<time>.raw.text  full yr output (rules, meta, strings)
+#        yara_results_<host>_<time>.text      "path<TAB>version", one per line
+#
+#        Files matched with no version string, e.g. Linux PHP extensions,
+#        are listed with version "unknown".
 #
 # Run with sudo (and give the terminal / agent Full Disk Access) for a full
 # scan; otherwise protected files are logged as unreadable and skipped.
@@ -40,7 +45,7 @@ OUTPUT_FORMAT="text"
 KEEP_BINARY=0
 
 usage() {
-  sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 log() {
@@ -90,9 +95,14 @@ trap cleanup EXIT
 
 mkdir -p "$OUTPUT_DIR"
 TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
-RESULT_EXT="txt"
-[ "$OUTPUT_FORMAT" = "text" ] || RESULT_EXT="$OUTPUT_FORMAT"
-RESULT_FILE="${OUTPUT_DIR}/yara_results_$(hostname -s)_${TIMESTAMP}.${RESULT_EXT}"
+RESULT_BASE="${OUTPUT_DIR}/yara_results_$(hostname -s)_${TIMESTAMP}"
+SUMMARY_FILE=""
+if [ "$OUTPUT_FORMAT" = "text" ]; then
+  RESULT_FILE="${RESULT_BASE}.raw.text"
+  SUMMARY_FILE="${RESULT_BASE}.text"
+else
+  RESULT_FILE="${RESULT_BASE}.${OUTPUT_FORMAT}"
+fi
 LOG_FILE="${OUTPUT_DIR}/yara_scan_$(hostname -s)_${TIMESTAMP}.log"
 
 # ---- download -------------------------------------------------------------
@@ -238,6 +248,22 @@ rule PHP_Build_Artifact
 }
 YARA_RULE
 
+# ---- embedded version extractor (text format) -----------------------------
+# Copy of YARA/php/php_versions.awk - keep in sync.
+VERSIONS_AWK="${WORK_DIR}/php_versions.awk"
+cat > "$VERSIONS_AWK" <<'AWK_SCRIPT'
+# rule line: "<RULE> <path>", or with yr --print-meta "<RULE> [meta...] <path>"
+/^PHP_/ { file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file] = 1; next }
+
+# string line: "0xOFFSET:$id: <matched text>"
+/:\$(ver|pv|cfg_ver|hdr_ver): / {
+  v = $0; gsub(/\\x00/, "", v); sub(/^[^ ]+ /, "", v)
+  if (match(v, /[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*/)) { print file "\t" substr(v, RSTART, RLENGTH); versioned[file] = 1 }
+}
+
+END { for (f in seen) if (!(f in versioned)) print f "\tunknown" }
+AWK_SCRIPT
+
 # ---- build list of files to scan ------------------------------------------
 # yr has no "stay on one filesystem" option, so find builds the file list:
 #  -xdev       don't cross into other mounts (DMGs, network shares, external
@@ -277,6 +303,11 @@ SCAN_RC=0
 if [ "$SCAN_RC" -ne 0 ]; then
   log "ERROR: yr exited with code $SCAN_RC (see $LOG_FILE)"
   exit 4
+fi
+
+if [ -n "$SUMMARY_FILE" ]; then
+  awk -f "$VERSIONS_AWK" "$RESULT_FILE" | sort -u >"$SUMMARY_FILE"
+  log "Versions: $SUMMARY_FILE ($(wc -l <"$SUMMARY_FILE" | tr -d ' ') path(s))"
 fi
 
 if [ "$KEEP_BINARY" -eq 1 ]; then
