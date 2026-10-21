@@ -130,9 +130,8 @@ xattr -d com.apple.quarantine "$YR" 2>/dev/null || true
 log "Unpacked $("$YR" --version)"
 
 # ---- embedded YARA rule ---------------------------------------------------
-# TODO: replace the placeholder rule below with the real detection rule (TBD).
-# The placeholder matches the harmless EICAR antivirus test string so the
-# pipeline can be tested end to end.
+# PHP install detection + version. Copy of YARA/php/php_detect.yar - keep in
+# sync. The version is in the printed strings ($ver, $pv, $cfg_ver, $hdr_ver).
 RULE_FILE="${WORK_DIR}/embedded_rule.yar"
 cat > "$RULE_FILE" <<'YARA_RULE'
 /*

@@ -48,6 +48,13 @@ yara -s -r php_detect.yar /opt 2>/dev/null | awk -f php_versions.awk | sort -u
 /opt/lampp/bin/php                  8.1.2
 ```
 
+YARA-X (`yr`) works the same; the awk filter also handles its `--print-meta` output.
+[`bash/yara_x_scan_macos.sh`](../../bash/yara_x_scan_macos.sh) embeds `php_detect.yar` and does this as a self-contained macOS scan.
+
+```bash
+yr scan --recursive --print-strings php_detect.yar /opt | awk -f php_versions.awk | sort -u
+```
+
 Windows (same flags; awk via Git Bash/WSL, or read the `$ver:` / `$pv:` lines directly):
 
 ```bat
@@ -139,6 +146,12 @@ correct version:
 Not matched (correct): third-party DLLs shipped in the Windows zip (OpenSSL,
 ICU, libpq, …), `deplister.exe`, a log file containing an `X-Powered-By: PHP/`
 header, non-PHP binaries.
+
+False-positive sweep: both rule files over a developer Mac's `/usr`,
+`/opt/homebrew` and `/Applications` (813,213 files, incl. Electron apps and .NET
+assemblies) - **0 hits**. An earlier version of the
+branch rules matched `ProductVersion 7.0.*` in any PE, flagging every .NET 7
+DLL as `PHP_7_0`; branch rules now require `ProductName = PHP` for that check.
 
 ## Limitations
 
