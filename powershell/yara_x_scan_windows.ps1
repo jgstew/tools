@@ -433,12 +433,28 @@ function Invoke-NativeToFile
     }
 }
 
+function ConvertTo-ExtendedPath
+{
+    # C:\x -> \\?\C:\x, \\server\share -> \\?\UNC\server\share. The prefix turns off
+    # Win32 path parsing: no MAX_PATH (260) limit, even with LongPathsEnabled=0
+    # and on .NET Framework, and trailing dots/spaces in names are kept.
+    param([Parameter(Mandatory = $true)][string]$Path)
+    if ($Path.StartsWith('\\?\')) { return $Path }
+    if ($Path.StartsWith('\\')) { return '\\?\UNC\' + $Path.Substring(2) }
+    return '\\?\' + $Path
+}
+
 function Get-ScanFile
 {
     <#
     Walks $Root with an explicit stack (fast, and one unreadable folder doesn't
     stop the walk) and writes the files to scan to $ListWriter, one per line.
     Returns counters for the skips.
+
+    A folder that fails with "not found" / "path too long" before any entry was
+    read (path over 260 chars, or a name ending in '.' or ' ') is listed again
+    with the \\?\ prefix; everything below it keeps the prefix, which yr
+    accepts, so those paths appear as \\?\C:\... in the results.
     #>
     param(
         [Parameter(Mandatory = $true)][string]$Root,
@@ -455,76 +471,97 @@ function Get-ScanFile
     $dirAttr = [int][System.IO.FileAttributes]::Directory
     $reparseAttr = [int][System.IO.FileAttributes]::ReparsePoint
 
+    # Windows only: retry a folder that "doesn't exist" or is "too long" with the
+    # \\?\ prefix (see Get-ScanFile help); never on other OSes or twice
+    $canExtend = [System.IO.Path]::DirectorySeparatorChar -eq '\'
+
     $stack = New-Object -TypeName 'System.Collections.Generic.Stack[string]'
     $stack.Push($Root)
     while ($stack.Count -gt 0)
     {
         $dir = $stack.Pop()
         $isDriveRoot = $dir -eq [System.IO.Path]::GetPathRoot($dir)
-        try
+        $attempt = $dir
+        $seen = 0
+        while ($null -ne $attempt)
         {
-            $dirInfo = New-Object -TypeName System.IO.DirectoryInfo -ArgumentList $dir
-            # Lazy enumeration: Attributes and Length come from the directory
-            # listing itself, no extra per-file system call
-            foreach ($entry in $dirInfo.EnumerateFileSystemInfos())
+            $retry = $null
+            try
             {
-                $attr = [int]$entry.Attributes
-                if ($attr -band $dirAttr)
+                $dirInfo = New-Object -TypeName System.IO.DirectoryInfo -ArgumentList $attempt
+                # Lazy enumeration: Attributes and Length come from the directory
+                # listing itself, no extra per-file system call
+                foreach ($entry in $dirInfo.EnumerateFileSystemInfos())
                 {
-                    if ($null -ne $SkipDirs -and $SkipDirs.Contains($entry.FullName)) { continue }
-                    # Junctions, directory symlinks and volume mount points have a
-                    # LinkType; other reparse folders (OneDrive) are real folders.
-                    # LinkType is a PowerShell extended property (5.0+); if it is
-                    # missing, treat every reparse folder as a link to be safe.
-                    if ($attr -band $reparseAttr)
+                    $seen++
+                    $attr = [int]$entry.Attributes
+                    if ($attr -band $dirAttr)
                     {
-                        $linkType = $entry.PSObject.Properties['LinkType']
-                        if ($null -eq $linkType -or $linkType.Value)
+                        if ($null -ne $SkipDirs -and $SkipDirs.Contains($entry.FullName)) { continue }
+                        # Junctions, directory symlinks and volume mount points have a
+                        # LinkType; other reparse folders (OneDrive) are real folders.
+                        # LinkType is a PowerShell extended property (5.0+); if it is
+                        # missing, treat every reparse folder as a link to be safe.
+                        if ($attr -band $reparseAttr)
                         {
-                            $stats.LinksSkipped++
+                            $linkType = $entry.PSObject.Properties['LinkType']
+                            if ($null -eq $linkType -or $linkType.Value)
+                            {
+                                $stats.LinksSkipped++
+                                continue
+                            }
+                        }
+                        if ($SkipCloud -and ($attr -band $CloudAttributeMask))
+                        {
+                            $stats.CloudSkipped++
                             continue
                         }
+                        $stack.Push($entry.FullName)
+                        continue
                     }
+
                     if ($SkipCloud -and ($attr -band $CloudAttributeMask))
                     {
                         $stats.CloudSkipped++
                         continue
                     }
-                    $stack.Push($entry.FullName)
-                    continue
-                }
-
-                if ($SkipCloud -and ($attr -band $CloudAttributeMask))
-                {
-                    $stats.CloudSkipped++
-                    continue
-                }
-                if ($isDriveRoot -and $null -ne $SkipRootFiles -and $SkipRootFiles.Contains($entry.Name)) { continue }
-                if ($null -ne $SkipExtensions)
-                {
-                    $ext = $entry.Extension
-                    if ($ext.Length -gt 1 -and $SkipExtensions.Contains($ext.Substring(1)))
+                    if ($isDriveRoot -and $null -ne $SkipRootFiles -and $SkipRootFiles.Contains($entry.Name)) { continue }
+                    if ($null -ne $SkipExtensions)
                     {
-                        $stats.ExtSkipped++
+                        $ext = $entry.Extension
+                        if ($ext.Length -gt 1 -and $SkipExtensions.Contains($ext.Substring(1)))
+                        {
+                            $stats.ExtSkipped++
+                            continue
+                        }
+                    }
+                    if ($MaxBytes -gt 0 -and $entry.Length -ge $MaxBytes)
+                    {
+                        $LogWriter.WriteLine("skipped (>= $($MaxBytes / 1MB) MB): $($entry.FullName)")
+                        $stats.SizeSkipped++
                         continue
                     }
+                    $ListWriter.WriteLine($entry.FullName)
+                    $stats.Listed++
                 }
-                if ($MaxBytes -gt 0 -and $entry.Length -ge $MaxBytes)
-                {
-                    $LogWriter.WriteLine("skipped (>= $($MaxBytes / 1MB) MB): $($entry.FullName)")
-                    $stats.SizeSkipped++
-                    continue
-                }
-                $ListWriter.WriteLine($entry.FullName)
-                $stats.Listed++
             }
-        }
-        catch
-        {
-            # Access denied, path too long, folder removed during the walk, ...
-            # Files listed before the error are kept.
-            $LogWriter.WriteLine("error listing ${dir}: $($_.Exception.Message)")
-            $stats.Errors++
+            catch
+            {
+                $cause = $_.Exception.GetBaseException()
+                if ($canExtend -and $seen -eq 0 -and -not $attempt.StartsWith('\\?\') -and
+                    ($cause -is [System.IO.DirectoryNotFoundException] -or $cause -is [System.IO.PathTooLongException]))
+                {
+                    $retry = ConvertTo-ExtendedPath -Path $attempt
+                }
+                else
+                {
+                    # Access denied, folder removed during the walk, ...
+                    # Files listed before the error are kept.
+                    $LogWriter.WriteLine("error listing ${attempt}: $($_.Exception.Message)")
+                    $stats.Errors++
+                }
+            }
+            $attempt = $retry
         }
     }
     return $stats
