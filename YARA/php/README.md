@@ -49,7 +49,9 @@ yara -s -r php_detect.yar /opt 2>/dev/null | awk -f php_versions.awk | sort -u
 ```
 
 YARA-X (`yr`) works the same; the awk filter also handles its `--print-meta` output.
-[`bash/yara_x_scan_macos.sh`](../../bash/yara_x_scan_macos.sh) embeds `php_detect.yar` and does this as a self-contained macOS scan.
+[`bash/yara_x_scan_macos.sh`](../../bash/yara_x_scan_macos.sh) embeds `php_detect.yar` and does this as a self-contained macOS scan;
+[`bash/yara_x_scan_linux.sh`](../../bash/yara_x_scan_linux.sh) is the Linux counterpart (all local disk filesystems, same output files).
+[`powershell/yara_x_scan_windows.ps1`](../../powershell/yara_x_scan_windows.ps1) is the Windows counterpart (all local fixed drives, same output files and exit codes; Windows PowerShell 5.1 and PowerShell 7).
 
 ```bash
 yr scan --recursive --print-strings php_detect.yar /opt | awk -f php_versions.awk | sort -u

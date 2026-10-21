@@ -68,8 +68,9 @@ SKIP_NONBINARY=1
 SKIP_CLOUD=1
 
 # Extensions of files that can't start with an executable header and aren't
-# php-config / php_version.h. Matched case-insensitively against the path end.
-NONBINARY_EXT_RE='\.(jpg|jpeg|png|gif|heic|tif|tiff|bmp|webp|ico|icns|svg|svgz|mov|mp4|m4v|avi|mkv|mp3|m4a|aac|wav|aiff|caf|flac|pdf|zip|gz|tgz|xz|bz2|zst|7z|rar|dmg|pkg|xip|iso|jar|whl|docx|xlsx|pptx|doc|xls|ppt|pages|numbers|key|txt|md|rst|json|js|mjs|cjs|ts|tsx|jsx|map|css|scss|html|htm|xml|plist|strings|nib|car|py|pyc|rb|php|java|class|go|rs|c|cc|cpp|hpp|m|swift|yml|yaml|toml|ini|csv|tsv|log|sqlite|db|sqlite-wal|sqlite-shm|ttf|otf|woff|woff2|mo|po|lock|sum)$'  # codespell:ignore caf
+# php-config / php_version.h. Compared case-insensitively with the text after
+# the last "." of the file name.
+NONBINARY_EXTS='jpg jpeg png gif heic tif tiff bmp webp ico icns svg svgz mov mp4 m4v avi mkv mp3 m4a aac wav aiff caf flac pdf zip gz tgz xz bz2 zst 7z rar dmg pkg xip iso jar whl docx xlsx pptx doc xls ppt pages numbers key txt md rst json js mjs cjs ts tsx jsx map css scss html htm xml plist strings nib car py pyc rb php java class go rs c cc cpp hpp m swift yml yaml toml ini csv tsv log sqlite db sqlite-wal sqlite-shm ttf otf woff woff2 mo po lock sum'  # codespell:ignore caf
 
 usage() {
   awk 'NR > 1 && /^# Release:/ { exit } NR > 1 { sub(/^# ?/, ""); print }' "$0"
@@ -378,7 +379,14 @@ if [ "$SIZE_SKIPPED" -gt 0 ]; then
   log "Skipped $SIZE_SKIPPED file(s) of ${MAX_MB} MB or more (listed in $LOG_FILE)"
 fi
 if [ "$SKIP_NONBINARY" -eq 1 ]; then
-  grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" | grep -Eiv "$NONBINARY_EXT_RE" >"$SCAN_LIST" || true
+  # Extension lookup in awk, ~3x faster than macOS grep -Eiv with a 100-way
+  # alternation (20 s vs 64 s for 4.1M paths) and the same result
+  awk -v exts="$NONBINARY_EXTS" '
+    BEGIN { n = split(exts, a, " "); for (i = 1; i <= n; i++) skip[a[i]] = 1 }
+    /^SKIPPED_SIZE\t/ { next }
+    { f = $0; sub(/.*\//, "", f)
+      if (match(f, /\.[^.]*$/) && (tolower(substr(f, RSTART + 1)) in skip)) next
+      print }' "$FIND_LIST" >"$SCAN_LIST"
   NONBINARY_SKIPPED=$(( $(wc -l <"$FIND_LIST") - SIZE_SKIPPED - $(wc -l <"$SCAN_LIST") ))
   log "Skipped $NONBINARY_SKIPPED non-executable file type(s) (use -E to include)"
 else
