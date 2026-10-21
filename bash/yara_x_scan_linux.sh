@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#### Usage: ./yara_x_scan_linux.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-m MAX_MB] [-E] [-D] [-B]
+#### Usage: ./yara_x_scan_linux.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-a YR_ARCHIVE] [-m MAX_MB] [-E] [-D] [-B]
 #
 # Self-contained YARA-X scan for Linux (Linux counterpart of yara_x_scan_macos.sh):
 #   1. downloads the YARA-X CLI (yr) release for this CPU architecture
@@ -28,6 +28,9 @@
 #   -o OUTPUT_DIR   folder to write results into      (default: ./yara_results)
 #   -f FORMAT       yr output format: text|json|ndjson (default: text)
 #   -k              keep the downloaded yr binary in OUTPUT_DIR/bin for reuse
+#   -a YR_ARCHIVE   use a local yr release archive instead of downloading: the
+#                   file, or a folder holding it under its release name (e.g. a
+#                   BigFix prefetch folder); its SHA256 is still checked
 #   -m MAX_MB       skip files of MAX_MB MB or larger, 0 = no limit (default: 512)
 #   -E              also scan file types that can't be executables
 #   -D              also scan container storage
@@ -75,6 +78,7 @@ TARGET_PATH="/"
 OUTPUT_DIR="$PWD/yara_results"
 OUTPUT_FORMAT="text"
 KEEP_BINARY=0
+YR_ARCHIVE=""
 MAX_MB=512
 SKIP_NONBINARY=1
 SKIP_CONTAINERS=1
@@ -96,12 +100,13 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
 }
 
-while getopts ":t:o:f:km:EDBh" opt; do
+while getopts ":t:o:f:ka:m:EDBh" opt; do
   case "$opt" in
     t) TARGET_PATH="$OPTARG" ;;
     o) OUTPUT_DIR="$OPTARG" ;;
     f) OUTPUT_FORMAT="$OPTARG" ;;
     k) KEEP_BINARY=1 ;;
+    a) YR_ARCHIVE="$OPTARG" ;;
     m) MAX_MB="$OPTARG" ;;
     E) SKIP_NONBINARY=0 ;;
     D) SKIP_CONTAINERS=0 ;;
@@ -173,13 +178,22 @@ fi
 LOG_FILE="${OUTPUT_DIR}/yara_scan_${HOST}_${TIMESTAMP}.log"
 
 # ---- download -------------------------------------------------------------
-log "Downloading $ASSET_URL"
 DOWNLOAD_RC=0
-if command -v curl >/dev/null 2>&1; then
+if [ -n "$YR_ARCHIVE" ]; then
+  [ -d "$YR_ARCHIVE" ] && YR_ARCHIVE="${YR_ARCHIVE%/}/${ASSET_NAME}"
+  if [ ! -f "$YR_ARCHIVE" ]; then
+    log "ERROR: yr archive not found: $YR_ARCHIVE"
+    exit 3
+  fi
+  log "Using local archive $YR_ARCHIVE"
+  cp "$YR_ARCHIVE" "${WORK_DIR}/${ASSET_NAME}" || DOWNLOAD_RC=$?
+elif command -v curl >/dev/null 2>&1; then
+  log "Downloading $ASSET_URL"
   curl --fail --silent --show-error --location \
     --retry 3 --retry-delay 2 --connect-timeout 30 \
     --output "${WORK_DIR}/${ASSET_NAME}" "$ASSET_URL" || DOWNLOAD_RC=$?
 elif command -v wget >/dev/null 2>&1; then
+  log "Downloading $ASSET_URL"
   wget -q -T 30 -t 3 -O "${WORK_DIR}/${ASSET_NAME}" "$ASSET_URL" || DOWNLOAD_RC=$?
 else
   log "ERROR: need curl or wget to download yr"

@@ -82,6 +82,11 @@
 .PARAMETER KeepBinary
     Keep the downloaded yr.exe in OutputDir\bin for reuse.
 
+.PARAMETER YaraXArchive
+    Use a local yr release zip instead of downloading: the file, or a folder
+    holding it under its release name (e.g. a BigFix prefetch folder). Its
+    SHA256 is still checked.
+
 .PARAMETER MaxMB
     Skip files of MaxMB MB or larger; 0 = no limit. Default: 512
 
@@ -131,6 +136,8 @@ param(
     [string]$Format = 'text',
 
     [switch]$KeepBinary,
+
+    [string]$YaraXArchive,
 
     [string]$MaxMB = '512',
 
@@ -335,38 +342,59 @@ function Test-PathWithin
 
 function Get-YaraX
 {
-    # Downloads, verifies and unpacks yr.exe into $WorkDir; returns its path.
-    # Throws on any failure (the caller maps that to exit code 3).
-    param([Parameter(Mandatory = $true)][string]$WorkDir)
+    # Downloads (or copies -ArchivePath), verifies and unpacks yr.exe into
+    # $WorkDir; returns its path. Throws on any failure (the caller maps that
+    # to exit code 3).
+    param(
+        [Parameter(Mandatory = $true)][string]$WorkDir,
+        [string]$ArchivePath
+    )
 
     $zipPath = Join-Path -Path $WorkDir -ChildPath $YaraXAsset
 
-    # Windows PowerShell 5.1 may default to TLS 1.0/1.1, which GitHub refuses
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
-
-    Write-ScanLog "Downloading $YaraXUrl"
-    $oldProgress = $ProgressPreference
-    $ProgressPreference = 'SilentlyContinue'  # the progress bar makes 5.1 downloads very slow
-    try
+    if ($ArchivePath)
     {
-        for ($attempt = 1; $attempt -le 3; $attempt++)
+        # A folder holding the zip under its release name (BigFix prefetch), or the zip itself
+        if (Test-Path -LiteralPath $ArchivePath -PathType Container)
         {
-            try
+            $ArchivePath = Join-Path -Path $ArchivePath -ChildPath $YaraXAsset
+        }
+        if (-not (Test-Path -LiteralPath $ArchivePath -PathType Leaf))
+        {
+            throw "yr archive not found: $ArchivePath"
+        }
+        Write-ScanLog "Using local archive $ArchivePath"
+        Copy-Item -LiteralPath $ArchivePath -Destination $zipPath -Force
+    }
+    else
+    {
+        # Windows PowerShell 5.1 may default to TLS 1.0/1.1, which GitHub refuses
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
+
+        Write-ScanLog "Downloading $YaraXUrl"
+        $oldProgress = $ProgressPreference
+        $ProgressPreference = 'SilentlyContinue'  # the progress bar makes 5.1 downloads very slow
+        try
+        {
+            for ($attempt = 1; $attempt -le 3; $attempt++)
             {
-                Invoke-WebRequest -Uri $YaraXUrl -OutFile $zipPath -UseBasicParsing -TimeoutSec 120
-                break
-            }
-            catch
-            {
-                if ($attempt -eq 3) { throw "download failed: $($_.Exception.Message)" }
-                Write-ScanLog "Download attempt $attempt failed ($($_.Exception.Message)), retrying"
-                Start-Sleep -Seconds (2 * $attempt)
+                try
+                {
+                    Invoke-WebRequest -Uri $YaraXUrl -OutFile $zipPath -UseBasicParsing -TimeoutSec 120
+                    break
+                }
+                catch
+                {
+                    if ($attempt -eq 3) { throw "download failed: $($_.Exception.Message)" }
+                    Write-ScanLog "Download attempt $attempt failed ($($_.Exception.Message)), retrying"
+                    Start-Sleep -Seconds (2 * $attempt)
+                }
             }
         }
-    }
-    finally
-    {
-        $ProgressPreference = $oldProgress
+        finally
+        {
+            $ProgressPreference = $oldProgress
+        }
     }
 
     $actual = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -638,6 +666,7 @@ function Invoke-Main
         [string]$OutputDir,
         [string]$Format,
         [switch]$KeepBinary,
+        [string]$YaraXArchive,
         [string]$MaxMB,
         [switch]$IncludeSystemPaths,
         [switch]$IncludeNonBinary,
@@ -740,7 +769,7 @@ function Invoke-Main
         # ---- download, verify, unpack -------------------------------------------
         try
         {
-            $yr = Get-YaraX -WorkDir $workDir
+            $yr = Get-YaraX -WorkDir $workDir -ArchivePath $YaraXArchive
             $yrVersion = (& $yr --version 2>&1 | Out-String).Trim()
             if ($LASTEXITCODE -ne 0) { throw "yr --version failed: $yrVersion" }
             Write-ScanLog "Unpacked $yrVersion"
@@ -916,6 +945,7 @@ if ($MyInvocation.InvocationName -ne '.')
         OutputDir          = $OutputDir
         Format             = $Format
         KeepBinary         = $KeepBinary
+        YaraXArchive       = $YaraXArchive
         MaxMB              = $MaxMB
         IncludeSystemPaths = $IncludeSystemPaths
         IncludeNonBinary   = $IncludeNonBinary

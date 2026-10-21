@@ -16,6 +16,7 @@ real results.
 | `php_version_branches.yar` | One rule per branch (`PHP_8_2`, `PHP_7_4`, …). The **rule name is the version** - for engines that only report rule names (osquery, EDRs). Generated. |
 | `gen_php_branches.py` | Generates `php_version_branches.yar`. Edit this, not the `.yar`. |
 | `php_versions.awk` | Turns `yara -s php_detect.yar` output into `path<TAB>version`; matched files with no version string get `unknown`. |
+| `make_bigfix_content.py` | Generates the BigFix tasks and analysis (see [BigFix](#bigfix)) from the three scan scripts. |
 
 Both `.yar` files use no YARA modules (`pe`, `elf`, `macho`), so they work in
 embedded engines built without them, and their rule names don't collide - load
@@ -110,6 +111,29 @@ Whole-filesystem scans work but are slow. Typical PHP locations:
 | Windows | `C:\php*`, `C:\xampp`, `C:\wamp*`, `C:\laragon`, `C:\tools`, `C:\Program Files\PHP`, `C:\Program Files (x86)` |
 
 Add `-p <threads>` and an `--timeout` for big trees; skip `/proc`, `/sys`, network mounts.
+
+### BigFix
+
+`make_bigfix_content.py` turns the three scan scripts into BigFix content in a
+[bigfix-content](https://github.com/jgstew/bigfix-content) checkout next to this repo:
+
+| File | What it does |
+|---|---|
+| `fixlet/Scan for PHP Installs with YARA-X - macOS.bes` | Prefetches the `yr` archive for the CPU, copies it, the embedded script and a small wrapper to `__BESData/__Global/yara_php_scan`, and starts the wrapper with `run`. The wrapper scans in the background and copies the `path<TAB>version` summary to `__BESData/__Global/Logs/yara_results_php.text` (console output: `yara_scan_php.log`). |
+| `fixlet/Scan for PHP Installs with YARA-X - Linux.bes` | Same, Linux x86_64 / aarch64. |
+| `fixlet/Scan for PHP Installs with YARA-X - Windows.bes` | Same, Windows 10 / Server 2016+ x64, 64-bit PowerShell 5.1+. |
+| `analyses/PHP Installs from YARA-X Scan - Universal.bes` | Reports a summary once a day: the distinct versions, the number of files, and the scan time. |
+
+`run` (not `wait`) keeps the BigFix agent free for other actions during the scan,
+and the work folder isn't `__Download` (the client clears it when the action ends).
+The tasks are relevant again once the results file is a day old, but not while a
+scan is running (`scan.running` marker, ignored after 12 hours). The scripts get
+the prefetched archive with `-a` (bash) / `-YaraXArchive` (PowerShell) and still
+check its SHA256. After changing a script, regenerate:
+
+```bash
+python3 make_bigfix_content.py
+```
 
 ## API build ID → branch
 
