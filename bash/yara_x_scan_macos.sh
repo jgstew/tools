@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#### Usage: ./yara_x_scan_macos.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k]
+#### Usage: ./yara_x_scan_macos.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-m MAX_MB] [-S] [-E] [-C]
 #
 # Self-contained YARA-X scan for macOS:
 #   1. downloads the YARA-X CLI (yr) release for this CPU architecture
@@ -23,7 +23,26 @@
 #   -o OUTPUT_DIR   folder to write results into      (default: ./yara_results)
 #   -f FORMAT       yr output format: text|json|ndjson (default: text)
 #   -k              keep the downloaded yr binary in OUTPUT_DIR/bin for reuse
+#   -m MAX_MB       skip files of MAX_MB MB or larger, 0 = no limit (default: 512)
+#   -S              also scan the sealed macOS system paths
+#   -E              also scan file types that can't be executables
+#   -C              also scan cloud-drive folders
 #   -h              show this help
+#
+# Skipped by default (none of these can hold a likely PHP install; each skip
+# is reported while running, files over the size cap are listed in the log):
+#   - files of 512 MB or more: PHP builds are ~20 MB, the largest known
+#     (FrankenPHP, static PHP in Go) ~180 MB; this cuts VM disks, Docker.raw,
+#     model weights, media
+#   - on macOS 12+ (no bundled PHP): /System, /bin, /sbin, /usr except
+#     /usr/local, /Library/Apple - the read-only sealed system volume
+#   - images, media, archives, documents, fonts, web/source/text files: the
+#     rules only match executables (by header) and php-config/php_version.h;
+#     files with no extension, .dylib, .so, .dll, .exe, .h, .o are kept
+#   - ~/Library/CloudStorage, ~/Library/Mobile Documents (iCloud): reading
+#     online-only files would download them
+# A skip whose folder contains TARGET_PATH is turned off automatically, and
+# none apply when TARGET_PATH is a single file.
 #
 # Exit codes: 0 = scan ran, no matches; 1 = scan ran, matches found;
 #             2 = usage error; 3 = download/verify/unpack error; 4 = scan error
@@ -43,21 +62,33 @@ TARGET_PATH="/"
 OUTPUT_DIR="$PWD/yara_results"
 OUTPUT_FORMAT="text"
 KEEP_BINARY=0
+MAX_MB=512
+SKIP_SEALED=1
+SKIP_NONBINARY=1
+SKIP_CLOUD=1
+
+# Extensions of files that can't start with an executable header and aren't
+# php-config / php_version.h. Matched case-insensitively against the path end.
+NONBINARY_EXT_RE='\.(jpg|jpeg|png|gif|heic|tif|tiff|bmp|webp|ico|icns|svg|svgz|mov|mp4|m4v|avi|mkv|mp3|m4a|aac|wav|aiff|caf|flac|pdf|zip|gz|tgz|xz|bz2|zst|7z|rar|dmg|pkg|xip|iso|jar|whl|docx|xlsx|pptx|doc|xls|ppt|pages|numbers|key|txt|md|rst|json|js|mjs|cjs|ts|tsx|jsx|map|css|scss|html|htm|xml|plist|strings|nib|car|py|pyc|rb|php|java|class|go|rs|c|cc|cpp|hpp|m|swift|yml|yaml|toml|ini|csv|tsv|log|sqlite|db|sqlite-wal|sqlite-shm|ttf|otf|woff|woff2|mo|po|lock|sum)$'  # codespell:ignore caf
 
 usage() {
-  sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'
+  awk 'NR > 1 && /^# Release:/ { exit } NR > 1 { sub(/^# ?/, ""); print }' "$0"
 }
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
 }
 
-while getopts ":t:o:f:kh" opt; do
+while getopts ":t:o:f:km:SECh" opt; do
   case "$opt" in
     t) TARGET_PATH="$OPTARG" ;;
     o) OUTPUT_DIR="$OPTARG" ;;
     f) OUTPUT_FORMAT="$OPTARG" ;;
     k) KEEP_BINARY=1 ;;
+    m) MAX_MB="$OPTARG" ;;
+    S) SKIP_SEALED=0 ;;
+    E) SKIP_NONBINARY=0 ;;
+    C) SKIP_CLOUD=0 ;;
     h) usage; exit 0 ;;
     :) echo "Option -$OPTARG requires an argument." >&2; usage; exit 2 ;;
     \?) echo "Unknown option: -$OPTARG" >&2; usage; exit 2 ;;
@@ -67,6 +98,10 @@ done
 case "$OUTPUT_FORMAT" in
   text|json|ndjson) ;;
   *) echo "Invalid format '$OUTPUT_FORMAT' (use text, json or ndjson)." >&2; exit 2 ;;
+esac
+
+case "$MAX_MB" in
+  ''|*[!0-9]*) echo "Invalid -m '$MAX_MB' (whole number of MB, 0 = no limit)." >&2; exit 2 ;;
 esac
 
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -272,7 +307,8 @@ AWK_SCRIPT
 #  -type f     regular files only; symlinks are not followed
 #  prunes      /System/Volumes (Data would be scanned twice via its firmlinks,
 #              the rest are separate system volumes), /dev, and this script's
-#              own output/work folders (old results contain matched strings)
+#              own output/work folders (old results contain matched strings),
+#              plus the default skips described in the header
 # Paths are resolved with pwd -P because /var, /tmp are symlinks to /private.
 if [ "$(id -u)" -ne 0 ]; then
   log "WARNING: not running as root - protected files will be skipped (see log)"
@@ -281,13 +317,73 @@ OUTPUT_DIR_REAL="$(cd "$OUTPUT_DIR" && pwd -P)"
 WORK_DIR_REAL="$(cd "$WORK_DIR" && pwd -P)"
 if [ -d "$TARGET_PATH" ]; then
   TARGET_PATH="$(cd "$TARGET_PATH" && pwd -P)"
+else
+  TARGET_PATH="$(cd "$(dirname "$TARGET_PATH")" && pwd -P)/$(basename "$TARGET_PATH")"
 fi
+
+# path_within PATH DIR: PATH is DIR or somewhere below it
+path_within() { case "$1/" in "$2"/*) return 0 ;; esac; return 1; }
+
+# An explicitly named file is always scanned
+if [ -f "$TARGET_PATH" ]; then
+  MAX_MB=0; SKIP_SEALED=0; SKIP_NONBINARY=0; SKIP_CLOUD=0
+fi
+
+if [ "$SKIP_SEALED" -eq 1 ]; then
+  MACOS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
+  if [ "$MACOS_MAJOR" -lt 12 ]; then
+    log "macOS $MACOS_MAJOR may have bundled PHP in /usr/bin - scanning system paths"
+    SKIP_SEALED=0
+  fi
+  for d in /System /bin /sbin /Library/Apple /usr; do
+    if path_within "$TARGET_PATH" "$d" && ! path_within "$TARGET_PATH" /usr/local; then
+      SKIP_SEALED=0
+    fi
+  done
+fi
+if [ "$SKIP_CLOUD" -eq 1 ]; then
+  case "$TARGET_PATH/" in
+    */Library/CloudStorage/*|*/Library/Mobile\ Documents/*) SKIP_CLOUD=0 ;;
+  esac
+fi
+
+PRUNE=( -path /System/Volumes -o -path /dev -o -path "$OUTPUT_DIR_REAL" -o -path "$WORK_DIR_REAL" )
+if [ "$SKIP_SEALED" -eq 1 ]; then
+  # find's -path * also matches "/", hence both /usr/local exclusions
+  PRUNE+=( -o -path /System -o -path /bin -o -path /sbin -o -path /Library/Apple
+           -o \( -path '/usr/*' ! -path /usr/local ! -path '/usr/local/*' \) )
+  log "Skipping sealed system paths (use -S to include)"
+fi
+if [ "$SKIP_CLOUD" -eq 1 ]; then
+  PRUNE+=( -o -path '*/Library/CloudStorage' -o -path '*/Library/Mobile Documents' )
+  log "Skipping cloud-drive folders (use -C to include)"
+fi
+# Files at/over the cap are printed with a SKIPPED_SIZE tag, split out below
+SIZE_TEST=( -print )
+if [ "$MAX_MB" -gt 0 ]; then
+  SIZE_TEST=( \( -size -"$((MAX_MB * 1048576))"c -print -o -exec printf 'SKIPPED_SIZE\t%s\n' {} + \) )
+  log "Skipping files of ${MAX_MB} MB or more (use -m 0 to include)"
+fi
+
 SCAN_LIST="${WORK_DIR}/scan_list.txt"
+FIND_LIST="${WORK_DIR}/find_list.txt"
 log "Listing files under $TARGET_PATH (skipping other mounts)"
-find "$TARGET_PATH" -xdev \
-  \( -path /System/Volumes -o -path /dev \
-     -o -path "$OUTPUT_DIR_REAL" -o -path "$WORK_DIR_REAL" \) -prune \
-  -o -type f -print >"$SCAN_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
+find "$TARGET_PATH" -xdev \( "${PRUNE[@]}" \) -prune \
+  -o -type f "${SIZE_TEST[@]}" >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
+
+TAB=$'\t'
+SIZE_SKIPPED="$(grep -c "^SKIPPED_SIZE${TAB}" "$FIND_LIST" || true)"
+if [ "$SIZE_SKIPPED" -gt 0 ]; then
+  sed -n "s/^SKIPPED_SIZE${TAB}/skipped (>= ${MAX_MB} MB): /p" "$FIND_LIST" >>"$LOG_FILE"
+  log "Skipped $SIZE_SKIPPED file(s) of ${MAX_MB} MB or more (listed in $LOG_FILE)"
+fi
+if [ "$SKIP_NONBINARY" -eq 1 ]; then
+  grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" | grep -Eiv "$NONBINARY_EXT_RE" >"$SCAN_LIST" || true
+  NONBINARY_SKIPPED=$(( $(wc -l <"$FIND_LIST") - SIZE_SKIPPED - $(wc -l <"$SCAN_LIST") ))
+  log "Skipped $NONBINARY_SKIPPED non-executable file type(s) (use -E to include)"
+else
+  grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" >"$SCAN_LIST" || true
+fi
 log "Found $(wc -l <"$SCAN_LIST" | tr -d ' ') file(s) to scan"
 
 # ---- scan -----------------------------------------------------------------
@@ -317,7 +413,7 @@ if [ "$KEEP_BINARY" -eq 1 ]; then
 fi
 
 if [ -s "$LOG_FILE" ]; then
-  log "yr wrote $(wc -l <"$LOG_FILE" | tr -d ' ') warning/error line(s) to $LOG_FILE"
+  log "$(wc -l <"$LOG_FILE" | tr -d ' ') skip/warning/error line(s) in $LOG_FILE"
 else
   rm -f "$LOG_FILE"
 fi
