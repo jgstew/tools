@@ -17,6 +17,8 @@ real results.
 | `gen_php_branches.py` | Generates `php_version_branches.yar`. Edit this, not the `.yar`. |
 | `php_versions.awk` | Turns `yara -s php_detect.yar` output into `path<TAB>version`; matched files with no version string get `unknown`. |
 | `make_bigfix_content.py` | Generates the BigFix tasks and analysis (see [BigFix](#bigfix)) from the three scan scripts. |
+| `detect_running_php.md` | Which PHP is running / listening on a port: commands per OS and BigFix client relevance, with tested results. |
+| `gen_running_php_relevance.py` | Generates the one cross-platform relevance statement in `detect_running_php.md` that lists running and listening PHP. It flags likely PHP with evidence and adds versions from `yara_results_php.text`. |
 
 Both `.yar` files use no YARA modules (`pe`, `elf`, `macho`), so they work in
 embedded engines built without them, and their rule names don't collide - load
