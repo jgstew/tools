@@ -99,9 +99,10 @@ SKIP_SNAPSHOTS=1
 # Extensions of files that can't start with an executable header and aren't
 # php-config / php_version.h. Matched case-insensitively against the path end;
 # php_version.h is added back after this filter. The last line is Linux-only:
-# packages, static libraries (ar archives here), git packs, journald, disk images.
+# packages, static libraries (ar archives here), git packs, journald, disk images,
+# BigFix Fixlet files (.fxf, under the client's __BESData).
 NONBINARY_EXT_RE='\.(jpg|jpeg|png|gif|heic|tif|tiff|bmp|webp|ico|icns|svg|svgz|mov|mp4|m4v|avi|mkv|mp3|m4a|aac|wav|aiff|caf|flac|pdf|zip|gz|tgz|xz|bz2|zst|7z|rar|dmg|pkg|xip|iso|jar|whl|docx|xlsx|pptx|doc|xls|ppt|pages|numbers|key|txt|md|rst|json|js|mjs|cjs|ts|tsx|jsx|map|css|scss|html|htm|xml|plist|strings|nib|car|py|pyc|rb|php|java|class|go|rs|c|cc|cpp|h|hpp|m|swift|yml|yaml|toml|ini|csv|tsv|log|sqlite|db|sqlite-wal|sqlite-shm|ttf|otf|woff|woff2|mo|po|lock|sum|'  # codespell:ignore caf
-NONBINARY_EXT_RE+='deb|rpm|apk|tar|a|pack|idx|journal|wal|db-wal|db-shm|qcow2|img|vdi|vmdk)$'
+NONBINARY_EXT_RE+='deb|rpm|apk|tar|a|pack|idx|journal|wal|db-wal|db-shm|qcow2|img|vdi|vmdk|fxf)$'
 
 CONTAINER_DIRS=( /var/lib/docker /var/lib/containers /var/lib/containerd /var/lib/rancher
                  /var/lib/lxc /var/lib/lxd /var/snap/lxd )

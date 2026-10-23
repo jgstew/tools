@@ -39,7 +39,8 @@
         VM disks, WSL/Docker .vhdx, media. Use -MaxMB 0 to include.
       - Images, media, archives, installers, documents, fonts, web/source/text
         files, C headers other than php_version.h, debug symbols (.pdb), event
-        logs and databases: the rules only match executables (by header) and
+        logs, databases, component manifests, BigFix Fixlet files (.fxf) and
+        virtual disks: the rules only match executables (by header) and
         php-config/php_version.h. Files with no extension, .exe, .dll, .so, .o
         are kept. Use -IncludeNonBinary to include.
       - Empty files.
@@ -52,6 +53,15 @@
                                         components only, mostly hard links to
                                         System32 (double scan), 100k+ files
           \Windows\SoftwareDistribution Windows Update download cache
+          \Windows\servicing            component servicing store: manifests,
+                                        100k+ files on a server
+          \Windows\assembly, \Windows\Microsoft.NET  .NET framework and
+                                        native-image caches
+          \Program Files\WindowsApps, \Program Files (x86)\WindowsApps
+                                        Microsoft Store app packages
+          \ProgramData\Microsoft\Windows Defender  antivirus definitions
+          \Users\*\AppData\Local\BigFix\Enterprise Console  BigFix Console
+                                        cache (can be many GB)
           \$Recycle.Bin                 deleted files, not installs
           \System Volume Information    restore points/shadow copy data, not
                                         readable even as Administrator
@@ -185,8 +195,11 @@ $YaraXSha256  = 'eac36a58699b94d3732a7fe1d8453fe89e0077bb18ac2c99b4c2ee102a431f2
 
 # Same base list as NONBINARY_EXTS in bash/yara_x_scan_macos.sh: extensions of files
 # that can't start with an executable header and aren't php-config / php_version.h
-# (php_version.h is kept despite 'h'). The last line is Windows-only: debug
-# symbols, installers/cabinets, import libraries, event logs, ESE databases.
+# (php_version.h is kept despite 'h'). The last two lines are Windows-only: debug
+# symbols, installers/cabinets, import libraries, event logs, ESE databases;
+# then (measured on a server: none of these held an executable) component and
+# policy manifests, BigFix Fixlet files, VS extensions, app resources, crash
+# dumps, WebAssembly and virtual disks.
 $NonBinaryExtensions = @(
     'jpg', 'jpeg', 'png', 'gif', 'heic', 'tif', 'tiff', 'bmp', 'webp', 'ico', 'icns', 'svg', 'svgz',
     'mov', 'mp4', 'm4v', 'avi', 'mkv', 'mp3', 'm4a', 'aac', 'wav', 'aiff', 'caf', 'flac',  # codespell:ignore caf
@@ -196,11 +209,16 @@ $NonBinaryExtensions = @(
     'xml', 'plist', 'strings', 'nib', 'car', 'py', 'pyc', 'rb', 'php', 'java', 'class', 'go', 'rs',
     'c', 'cc', 'cpp', 'h', 'hpp', 'm', 'swift', 'yml', 'yaml', 'toml', 'ini', 'csv', 'tsv', 'log',
     'sqlite', 'db', 'sqlite-wal', 'sqlite-shm', 'ttf', 'otf', 'woff', 'woff2', 'mo', 'po', 'lock', 'sum',
-    'pdb', 'cab', 'msi', 'msp', 'nupkg', 'lib', 'cat', 'etl', 'evtx', 'edb', 'chm'
+    'pdb', 'cab', 'msi', 'msp', 'nupkg', 'lib', 'cat', 'etl', 'evtx', 'edb', 'chm',
+    'manifest', 'mum', 'mfl', 'adml', 'admx', 'fxf', 'vsix', 'pak', 'data', 'ttc', 'dmp', 'wasm', 'vhd', 'vhdx'
 )
 
 # System folders / files skipped on every scanned drive (see help for why)
-$SystemSkipDirs  = @('Windows\WinSxS', 'Windows\SoftwareDistribution', '$Recycle.Bin', 'System Volume Information')
+$SystemSkipDirs  = @('Windows\WinSxS', 'Windows\SoftwareDistribution', 'Windows\servicing', 'Windows\assembly',
+                     'Windows\Microsoft.NET', 'Program Files\WindowsApps', 'Program Files (x86)\WindowsApps',
+                     'ProgramData\Microsoft\Windows Defender', '$Recycle.Bin', 'System Volume Information')
+# Skipped in every user profile on a scanned drive (see help)
+$ProfileSkipDirs = @('AppData\Local\BigFix\Enterprise Console')
 $SystemSkipFiles = @('pagefile.sys', 'hiberfil.sys', 'swapfile.sys')
 
 # FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS.
@@ -845,7 +863,7 @@ function Invoke-Main
         }
         if (-not $IncludeSystemPaths)
         {
-            Write-ScanLog "Skipping system folders: $($SystemSkipDirs -join ', ') (use -IncludeSystemPaths to include)"
+            Write-ScanLog "Skipping system folders: $($SystemSkipDirs -join ', '), Users\*\$($ProfileSkipDirs -join ', Users\*\') (use -IncludeSystemPaths to include)"
         }
         # powershell.exe -File passes "A,B" as one string, so split on commas here
         $excludeDirs = @()
@@ -890,9 +908,13 @@ function Invoke-Main
                 if (-not $IncludeSystemPaths)
                 {
                     $root = [System.IO.Path]::GetPathRoot($target)
-                    foreach ($rel in $SystemSkipDirs)
+                    $systemDirs = @($SystemSkipDirs | ForEach-Object { Join-Path -Path $root -ChildPath $_ })
+                    foreach ($userProfile in @(Get-ChildItem -LiteralPath (Join-Path -Path $root -ChildPath 'Users') -Directory -Force -ErrorAction SilentlyContinue))
                     {
-                        $d = Join-Path -Path $root -ChildPath $rel
+                        $systemDirs += @($ProfileSkipDirs | ForEach-Object { Join-Path -Path $userProfile.FullName -ChildPath $_ })
+                    }
+                    foreach ($d in $systemDirs)
+                    {
                         # A skip whose folder contains the target is turned off
                         if (-not (Test-PathWithin -Child $target -Parent $d)) { [void]$skipDirs.Add($d) }
                     }
