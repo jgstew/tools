@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#### Usage: ./yara_x_scan_linux.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-a YR_ARCHIVE] [-m MAX_MB] [-E] [-D] [-B]
+#### Usage: ./yara_x_scan_linux.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-a YR_ARCHIVE] [-m MAX_MB] [-T THREADS] [-x DIR]... [-E] [-D] [-B]
 #
 # Self-contained YARA-X scan for Linux (Linux counterpart of yara_x_scan_macos.sh):
 #   1. downloads the YARA-X CLI (yr) release for this CPU architecture
@@ -32,6 +32,11 @@
 #                   file, or a folder holding it under its release name (e.g. a
 #                   BigFix prefetch folder); its SHA256 is still checked
 #   -m MAX_MB       skip files of MAX_MB MB or larger, 0 = no limit (default: 512)
+#   -T THREADS      yr scan threads                   (default: 2)
+#   -x DIR          also skip this folder; repeat for more (a find -path
+#                   pattern such as '*/node_modules' works too, but a
+#                   filesystem mounted below a matching folder is still
+#                   scanned: name its mount point with its own -x)
 #   -E              also scan file types that can't be executables
 #   -D              also scan container storage
 #   -B              also scan filesystem snapshots
@@ -43,9 +48,11 @@
 #   - files of 512 MB or more: PHP builds are ~20 MB, the largest known
 #     (FrankenPHP, static PHP in Go) ~180 MB; this cuts VM disks, model
 #     weights, media
-#   - images, media, archives, documents, fonts, web/source/text files: the
+#   - images, media, archives, packages, documents, fonts, web/source/text
+#     files, C headers other than php_version.h, logs and databases: the
 #     rules only match executables (by header) and php-config/php_version.h;
-#     files with no extension, .so, .dll, .exe, .h, .o are kept
+#     files with no extension, .so, .dll, .exe, .o are kept
+#   - empty files
 #   - container storage: /var/lib/docker, /var/lib/containers,
 #     /var/lib/containerd, /var/lib/rancher, /var/lib/lxc, /var/lib/lxd,
 #     /var/snap/lxd, ~/.local/share/containers - PHP inside images isn't a host
@@ -54,6 +61,9 @@
 #     that would repeat every distro PHP
 # A skip whose folder contains TARGET_PATH is turned off automatically, and
 # none apply when TARGET_PATH is a single file.
+#
+# find and yr run at low priority (nice 10, and ionice best-effort 7 where
+# available) and yr uses 2 threads (-T), so a full scan doesn't take over the machine.
 #
 # Exit codes: 0 = scan ran, no matches; 1 = scan ran, matches found;
 #             2 = usage error; 3 = download/verify/unpack error; 4 = scan error
@@ -80,13 +90,18 @@ OUTPUT_FORMAT="text"
 KEEP_BINARY=0
 YR_ARCHIVE=""
 MAX_MB=512
+THREADS=2
+EXCLUDE_DIRS=()
 SKIP_NONBINARY=1
 SKIP_CONTAINERS=1
 SKIP_SNAPSHOTS=1
 
 # Extensions of files that can't start with an executable header and aren't
-# php-config / php_version.h. Matched case-insensitively against the path end.
-NONBINARY_EXT_RE='\.(jpg|jpeg|png|gif|heic|tif|tiff|bmp|webp|ico|icns|svg|svgz|mov|mp4|m4v|avi|mkv|mp3|m4a|aac|wav|aiff|caf|flac|pdf|zip|gz|tgz|xz|bz2|zst|7z|rar|dmg|pkg|xip|iso|jar|whl|docx|xlsx|pptx|doc|xls|ppt|pages|numbers|key|txt|md|rst|json|js|mjs|cjs|ts|tsx|jsx|map|css|scss|html|htm|xml|plist|strings|nib|car|py|pyc|rb|php|java|class|go|rs|c|cc|cpp|hpp|m|swift|yml|yaml|toml|ini|csv|tsv|log|sqlite|db|sqlite-wal|sqlite-shm|ttf|otf|woff|woff2|mo|po|lock|sum)$'  # codespell:ignore caf
+# php-config / php_version.h. Matched case-insensitively against the path end;
+# php_version.h is added back after this filter. The last line is Linux-only:
+# packages, static libraries (ar archives here), git packs, journald, disk images.
+NONBINARY_EXT_RE='\.(jpg|jpeg|png|gif|heic|tif|tiff|bmp|webp|ico|icns|svg|svgz|mov|mp4|m4v|avi|mkv|mp3|m4a|aac|wav|aiff|caf|flac|pdf|zip|gz|tgz|xz|bz2|zst|7z|rar|dmg|pkg|xip|iso|jar|whl|docx|xlsx|pptx|doc|xls|ppt|pages|numbers|key|txt|md|rst|json|js|mjs|cjs|ts|tsx|jsx|map|css|scss|html|htm|xml|plist|strings|nib|car|py|pyc|rb|php|java|class|go|rs|c|cc|cpp|h|hpp|m|swift|yml|yaml|toml|ini|csv|tsv|log|sqlite|db|sqlite-wal|sqlite-shm|ttf|otf|woff|woff2|mo|po|lock|sum|'  # codespell:ignore caf
+NONBINARY_EXT_RE+='deb|rpm|apk|tar|a|pack|idx|journal|wal|db-wal|db-shm|qcow2|img|vdi|vmdk)$'
 
 CONTAINER_DIRS=( /var/lib/docker /var/lib/containers /var/lib/containerd /var/lib/rancher
                  /var/lib/lxc /var/lib/lxd /var/snap/lxd )
@@ -100,7 +115,7 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
 }
 
-while getopts ":t:o:f:ka:m:EDBh" opt; do
+while getopts ":t:o:f:ka:m:T:x:EDBh" opt; do
   case "$opt" in
     t) TARGET_PATH="$OPTARG" ;;
     o) OUTPUT_DIR="$OPTARG" ;;
@@ -108,6 +123,8 @@ while getopts ":t:o:f:ka:m:EDBh" opt; do
     k) KEEP_BINARY=1 ;;
     a) YR_ARCHIVE="$OPTARG" ;;
     m) MAX_MB="$OPTARG" ;;
+    T) THREADS="$OPTARG" ;;
+    x) [ "$OPTARG" = / ] && EXCLUDE_DIRS+=( / ) || EXCLUDE_DIRS+=( "${OPTARG%/}" ) ;;
     E) SKIP_NONBINARY=0 ;;
     D) SKIP_CONTAINERS=0 ;;
     B) SKIP_SNAPSHOTS=0 ;;
@@ -124,6 +141,10 @@ esac
 
 case "$MAX_MB" in
   ''|*[!0-9]*) echo "Invalid -m '$MAX_MB' (whole number of MB, 0 = no limit)." >&2; exit 2 ;;
+esac
+
+case "$THREADS" in
+  ''|*[!0-9]*|0) echo "Invalid -T '$THREADS' (number of threads, 1 or more)." >&2; exit 2 ;;
 esac
 
 if [ "$(uname -s)" != "Linux" ]; then
@@ -385,8 +406,9 @@ fi
 path_within() { [ "$2" = / ] && return 0; case "$1/" in "$2"/*) return 0 ;; esac; return 1; }
 
 # An explicitly named file is always scanned
+NONEMPTY=( -size +0c )
 if [ -f "$TARGET_PATH" ]; then
-  MAX_MB=0; SKIP_NONBINARY=0; SKIP_CONTAINERS=0; SKIP_SNAPSHOTS=0
+  MAX_MB=0; SKIP_NONBINARY=0; SKIP_CONTAINERS=0; SKIP_SNAPSHOTS=0; NONEMPTY=()
 fi
 
 if [ "$SKIP_CONTAINERS" -eq 1 ]; then
@@ -414,6 +436,26 @@ if [ "$SKIP_SNAPSHOTS" -eq 1 ]; then
   PRUNE_DIRS+=( "${SNAPSHOT_DIRS[@]}" )
   for d in "${SNAPSHOT_DIRS[@]}"; do PRUNE+=( -o -path "$d" ); done
   log "Skipping filesystem snapshots (use -B to include)"
+fi
+# -x: find prints resolved paths, so an existing folder is resolved like
+# TARGET_PATH. A skip that is or contains TARGET_PATH would prune the whole
+# walk, so like the other skips it is turned off. PRUNE_DIRS also keeps
+# filesystems mounted below an excluded folder out (literal folders only).
+# ${a[@]+"${a[@]}"}: bash before 4.4 calls an empty array unbound under set -u
+for d in ${EXCLUDE_DIRS[@]+"${EXCLUDE_DIRS[@]}"}; do
+  if [ -d "$d" ]; then d="$(cd "$d" && pwd -P)"; fi
+  # $d unquoted on purpose: it may be a pattern such as */node_modules
+  # shellcheck disable=SC2254
+  case "$TARGET_PATH/" in ${d%/}/*) log "Not skipping $d (-x): it contains $TARGET_PATH"; continue ;; esac
+  PRUNE_DIRS+=( "$d" )
+  PRUNE+=( -o -path "$d" )
+  log "Skipping $d (-x)"
+done
+
+# Low priority for the walk and the scan; ionice is optional (util-linux)
+LOW_PRIORITY=( nice -n 10 )
+if command -v ionice >/dev/null 2>&1 && ionice -c 2 -n 7 true >/dev/null 2>&1; then
+  LOW_PRIORITY+=( ionice -c 2 -n 7 )
 fi
 
 # Start points: TARGET_PATH, plus each local disk filesystem mounted below it.
@@ -472,8 +514,8 @@ fi
 SCAN_LIST="${WORK_DIR}/scan_list.txt"
 FIND_LIST="${WORK_DIR}/find_list.txt"
 log "Listing files under $TARGET_PATH"
-find "${ROOTS[@]}" -xdev \( "${PRUNE[@]}" \) -prune \
-  -o -type f "${SIZE_TEST[@]}" >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
+"${LOW_PRIORITY[@]}" find "${ROOTS[@]}" -xdev \( "${PRUNE[@]}" \) -prune \
+  -o -type f ${NONEMPTY[@]+"${NONEMPTY[@]}"} "${SIZE_TEST[@]}" >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
 
 TAB=$'\t'
 SIZE_SKIPPED="$(grep -c "^SKIPPED_SIZE${TAB}" "$FIND_LIST" || true)"
@@ -483,6 +525,8 @@ if [ "$SIZE_SKIPPED" -gt 0 ]; then
 fi
 if [ "$SKIP_NONBINARY" -eq 1 ]; then
   grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" | grep -Eiv "$NONBINARY_EXT_RE" >"$SCAN_LIST" || true
+  # the .h skip above also drops php_version.h, which the rules do match
+  grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" | grep '/php_version\.h$' >>"$SCAN_LIST" || true
   NONBINARY_SKIPPED=$(( $(wc -l <"$FIND_LIST") - SIZE_SKIPPED - $(wc -l <"$SCAN_LIST") ))
   log "Skipped $NONBINARY_SKIPPED non-executable file type(s) (use -E to include)"
 else
@@ -529,10 +573,10 @@ fi
 log "Found $(wc -l <"$SCAN_LIST" | tr -d ' ') file(s) to scan"
 
 # ---- scan -----------------------------------------------------------------
-log "Scanning..."
+log "Scanning with $THREADS thread(s) at low priority..."
 log "Results: $RESULT_FILE"
 SCAN_RC=0
-"$YR" scan --scan-list --print-meta --print-strings \
+"${LOW_PRIORITY[@]}" "$YR" scan --scan-list --print-meta --print-strings --threads "$THREADS" \
   --output-format "$OUTPUT_FORMAT" \
   "$RULE_FILE" "$SCAN_LIST" >"$RESULT_FILE" 2>>"$LOG_FILE" || SCAN_RC=$?
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#### Usage: ./yara_x_scan_macos.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-a YR_ARCHIVE] [-m MAX_MB] [-S] [-E] [-C]
+#### Usage: ./yara_x_scan_macos.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-a YR_ARCHIVE] [-m MAX_MB] [-T THREADS] [-x DIR]... [-S] [-E] [-C]
 #
 # Self-contained YARA-X scan for macOS:
 #   1. downloads the YARA-X CLI (yr) release for this CPU architecture
@@ -27,6 +27,9 @@
 #                   file, or a folder holding it under its release name (e.g. a
 #                   BigFix prefetch folder); its SHA256 is still checked
 #   -m MAX_MB       skip files of MAX_MB MB or larger, 0 = no limit (default: 512)
+#   -T THREADS      yr scan threads                   (default: 2)
+#   -x DIR          also skip this folder; repeat for more (a find -path
+#                   pattern such as '*/node_modules' works too)
 #   -S              also scan the sealed macOS system paths
 #   -E              also scan file types that can't be executables
 #   -C              also scan cloud-drive folders
@@ -39,13 +42,20 @@
 #     model weights, media
 #   - on macOS 12+ (no bundled PHP): /System, /bin, /sbin, /usr except
 #     /usr/local, /Library/Apple - the read-only sealed system volume
-#   - images, media, archives, documents, fonts, web/source/text files: the
-#     rules only match executables (by header) and php-config/php_version.h;
-#     files with no extension, .dylib, .so, .dll, .exe, .h, .o are kept
-#   - ~/Library/CloudStorage, ~/Library/Mobile Documents (iCloud): reading
-#     online-only files would download them
+#   - images, media, archives, documents, fonts, web/source/text files, C
+#     headers other than php_version.h, Xcode/SDK data (.swiftmodule, .tbd,
+#     ...), logs and databases: the rules only match executables (by header)
+#     and php-config/php_version.h; files with no extension, .dylib, .so,
+#     .dll, .exe, .a, .o are kept
+#   - empty files
+#   - ~/Library/CloudStorage, ~/Library/Mobile Documents (iCloud), and
+#     online-only (dataless) files anywhere, e.g. iCloud "Desktop & Documents":
+#     reading them would download them
 # A skip whose folder contains TARGET_PATH is turned off automatically, and
 # none apply when TARGET_PATH is a single file.
+#
+# find and yr run at low priority (nice 10) and yr uses 2 threads (-T), so a
+# full scan doesn't take over the machine.
 #
 # Exit codes: 0 = scan ran, no matches; 1 = scan ran, matches found;
 #             2 = usage error; 3 = download/verify/unpack error; 4 = scan error
@@ -67,14 +77,20 @@ OUTPUT_FORMAT="text"
 KEEP_BINARY=0
 YR_ARCHIVE=""
 MAX_MB=512
+THREADS=2
+EXCLUDE_DIRS=()
 SKIP_SEALED=1
 SKIP_NONBINARY=1
 SKIP_CLOUD=1
 
 # Extensions of files that can't start with an executable header and aren't
 # php-config / php_version.h. Compared case-insensitively with the text after
-# the last "." of the file name.
-NONBINARY_EXTS='jpg jpeg png gif heic tif tiff bmp webp ico icns svg svgz mov mp4 m4v avi mkv mp3 m4a aac wav aiff caf flac pdf zip gz tgz xz bz2 zst 7z rar dmg pkg xip iso jar whl docx xlsx pptx doc xls ppt pages numbers key txt md rst json js mjs cjs ts tsx jsx map css scss html htm xml plist strings nib car py pyc rb php java class go rs c cc cpp hpp m swift yml yaml toml ini csv tsv log sqlite db sqlite-wal sqlite-shm ttf otf woff woff2 mo po lock sum'  # codespell:ignore caf
+# the last "." of the file name; php_version.h is kept despite "h". The second
+# line was measured on a Mac (no executables among them): Xcode/SDK, unified
+# logs, Chromium/app resources and SQLite/LMDB side files, ~half of the files
+# left after the first line. Not .a: macOS static libraries can be universal binaries.
+NONBINARY_EXTS='jpg jpeg png gif heic tif tiff bmp webp ico icns svg svgz mov mp4 m4v avi mkv mp3 m4a aac wav aiff caf flac pdf zip gz tgz xz bz2 zst 7z rar dmg pkg xip iso jar whl docx xlsx pptx doc xls ppt pages numbers key txt md rst json js mjs cjs ts tsx jsx map css scss html htm xml plist strings nib car py pyc rb php java class go rs c cc cpp h hpp m swift yml yaml toml ini csv tsv log sqlite db sqlite-wal sqlite-shm ttf otf woff woff2 mo po lock sum'  # codespell:ignore caf
+NONBINARY_EXTS="$NONBINARY_EXTS swiftmodule swiftdoc swiftinterface swiftsourceinfo tbd modulemap apinotes pcm metallib tracev3 bnnsir pak fxf data bom db-wal db-shm mdb"
 
 usage() {
   awk 'NR > 1 && /^# Release:/ { exit } NR > 1 { sub(/^# ?/, ""); print }' "$0"
@@ -84,7 +100,7 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
 }
 
-while getopts ":t:o:f:ka:m:SECh" opt; do
+while getopts ":t:o:f:ka:m:T:x:SECh" opt; do
   case "$opt" in
     t) TARGET_PATH="$OPTARG" ;;
     o) OUTPUT_DIR="$OPTARG" ;;
@@ -92,6 +108,8 @@ while getopts ":t:o:f:ka:m:SECh" opt; do
     k) KEEP_BINARY=1 ;;
     a) YR_ARCHIVE="$OPTARG" ;;
     m) MAX_MB="$OPTARG" ;;
+    T) THREADS="$OPTARG" ;;
+    x) [ "$OPTARG" = / ] && EXCLUDE_DIRS+=( / ) || EXCLUDE_DIRS+=( "${OPTARG%/}" ) ;;
     S) SKIP_SEALED=0 ;;
     E) SKIP_NONBINARY=0 ;;
     C) SKIP_CLOUD=0 ;;
@@ -108,6 +126,10 @@ esac
 
 case "$MAX_MB" in
   ''|*[!0-9]*) echo "Invalid -m '$MAX_MB' (whole number of MB, 0 = no limit)." >&2; exit 2 ;;
+esac
+
+case "$THREADS" in
+  ''|*[!0-9]*|0) echo "Invalid -T '$THREADS' (number of threads, 1 or more)." >&2; exit 2 ;;
 esac
 
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -341,8 +363,9 @@ fi
 path_within() { case "$1/" in "$2"/*) return 0 ;; esac; return 1; }
 
 # An explicitly named file is always scanned
+NONEMPTY=( -size +0c )
 if [ -f "$TARGET_PATH" ]; then
-  MAX_MB=0; SKIP_SEALED=0; SKIP_NONBINARY=0; SKIP_CLOUD=0
+  MAX_MB=0; SKIP_SEALED=0; SKIP_NONBINARY=0; SKIP_CLOUD=0; NONEMPTY=()
 fi
 
 if [ "$SKIP_SEALED" -eq 1 ]; then
@@ -370,9 +393,27 @@ if [ "$SKIP_SEALED" -eq 1 ]; then
            -o \( -path '/usr/*' ! -path /usr/local ! -path '/usr/local/*' \) )
   log "Skipping sealed system paths (use -S to include)"
 fi
+# -x: find prints resolved paths, so an existing folder is resolved like
+# TARGET_PATH (/tmp -> /private/tmp). A skip that is or contains TARGET_PATH
+# would prune the whole walk, so like the other skips it is turned off.
+# ${a[@]+"${a[@]}"}: bash 3.2 (macOS) calls an empty array unbound under set -u
+for d in ${EXCLUDE_DIRS[@]+"${EXCLUDE_DIRS[@]}"}; do
+  if [ -d "$d" ]; then d="$(cd "$d" && pwd -P)"; fi
+  # $d unquoted on purpose: it may be a pattern such as */node_modules
+  # shellcheck disable=SC2254
+  case "$TARGET_PATH/" in ${d%/}/*) log "Not skipping $d (-x): it contains $TARGET_PATH"; continue ;; esac
+  PRUNE+=( -o -path "$d" )
+  log "Skipping $d (-x)"
+done
+DATALESS=()
 if [ "$SKIP_CLOUD" -eq 1 ]; then
   PRUNE+=( -o -path '*/Library/CloudStorage' -o -path '*/Library/Mobile Documents' )
-  log "Skipping cloud-drive folders (use -C to include)"
+  # iCloud "Desktop & Documents" leaves online-only files outside those folders.
+  # An unknown flag name is a fatal find error, so probe it first (older macOS).
+  if find / -maxdepth 0 -flags +dataless >/dev/null 2>&1; then
+    DATALESS=( ! -flags +dataless )
+  fi
+  log "Skipping cloud-drive folders and online-only files (use -C to include)"
 fi
 # Files at/over the cap are printed with a SKIPPED_SIZE tag, split out below
 SIZE_TEST=( -print )
@@ -384,8 +425,9 @@ fi
 SCAN_LIST="${WORK_DIR}/scan_list.txt"
 FIND_LIST="${WORK_DIR}/find_list.txt"
 log "Listing files under $TARGET_PATH (skipping other mounts)"
-find "$TARGET_PATH" -xdev \( "${PRUNE[@]}" \) -prune \
-  -o -type f "${SIZE_TEST[@]}" >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
+nice -n 10 find "$TARGET_PATH" -xdev \( "${PRUNE[@]}" \) -prune \
+  -o -type f ${NONEMPTY[@]+"${NONEMPTY[@]}"} ${DATALESS[@]+"${DATALESS[@]}"} \
+  "${SIZE_TEST[@]}" >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
 
 TAB=$'\t'
 SIZE_SKIPPED="$(grep -c "^SKIPPED_SIZE${TAB}" "$FIND_LIST" || true)"
@@ -400,6 +442,7 @@ if [ "$SKIP_NONBINARY" -eq 1 ]; then
     BEGIN { n = split(exts, a, " "); for (i = 1; i <= n; i++) skip[a[i]] = 1 }
     /^SKIPPED_SIZE\t/ { next }
     { f = $0; sub(/.*\//, "", f)
+      if (f == "php_version.h") { print; next }
       if (match(f, /\.[^.]*$/) && (tolower(substr(f, RSTART + 1)) in skip)) next
       print }' "$FIND_LIST" >"$SCAN_LIST"
   NONBINARY_SKIPPED=$(( $(wc -l <"$FIND_LIST") - SIZE_SKIPPED - $(wc -l <"$SCAN_LIST") ))
@@ -410,10 +453,10 @@ fi
 log "Found $(wc -l <"$SCAN_LIST" | tr -d ' ') file(s) to scan"
 
 # ---- scan -----------------------------------------------------------------
-log "Scanning..."
+log "Scanning with $THREADS thread(s) at low priority..."
 log "Results: $RESULT_FILE"
 SCAN_RC=0
-"$YR" scan --scan-list --print-meta --print-strings \
+nice -n 10 "$YR" scan --scan-list --print-meta --print-strings --threads "$THREADS" \
   --output-format "$OUTPUT_FORMAT" \
   "$RULE_FILE" "$SCAN_LIST" >"$RESULT_FILE" 2>>"$LOG_FILE" || SCAN_RC=$?
 

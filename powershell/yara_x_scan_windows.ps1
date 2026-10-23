@@ -20,8 +20,10 @@
     mounted VHDs report themselves as fixed and are scanned too.
 
     Junctions and directory symlinks are not followed (avoids loops and scanning
-    the same files twice). File-level reparse points are scanned: they can be
-    real local files (deduplicated volumes, hydrated OneDrive files).
+    the same files twice). File symlinks list with no size and are skipped like
+    empty files (their target is scanned where it lives); other file-level
+    reparse points are scanned: they can be real local files (deduplicated
+    volumes, hydrated OneDrive files).
 
     Run as Administrator for a full scan; otherwise protected folders are logged
     as unreadable and skipped.
@@ -35,10 +37,12 @@
       - Files of MaxMB (512) MB or more: PHP builds are ~20-40 MB, the largest
         known (FrankenPHP, static PHP in Go) ~180 MB; this cuts pagefile.sys,
         VM disks, WSL/Docker .vhdx, media. Use -MaxMB 0 to include.
-      - Images, media, archives, documents, fonts, web/source/text files: the
-        rules only match executables (by header) and php-config/php_version.h.
-        Files with no extension, .exe, .dll, .h, .so, .o are kept. Use
-        -IncludeNonBinary to include.
+      - Images, media, archives, installers, documents, fonts, web/source/text
+        files, C headers other than php_version.h, debug symbols (.pdb), event
+        logs and databases: the rules only match executables (by header) and
+        php-config/php_version.h. Files with no extension, .exe, .dll, .so, .o
+        are kept. Use -IncludeNonBinary to include.
+      - Empty files.
       - Cloud placeholders (OneDrive Files On-Demand, Dropbox, iCloud, etc.):
         files and folders with the Offline, RecallOnOpen or RecallOnDataAccess
         attribute are only online, and reading them would download them. Use
@@ -60,6 +64,11 @@
     Nothing where PHP is plausible is skipped: C:\xampp, C:\wamp*, C:\laragon,
     C:\php*, C:\tools (Chocolatey), Program Files, Program Files (x86) (IIS PHP
     Manager / Web PI), ProgramData, user profiles.
+
+    The scan runs at BelowNormal priority (this PowerShell process and yr.exe)
+    and yr uses 2 threads (-Threads), so a full scan doesn't take over the
+    machine. It's meant to run unattended; in an interactive session the
+    priority stays lowered until that PowerShell window is closed.
 
     Exit codes: 0 = scan ran, no matches; 1 = scan ran, matches found;
                 2 = usage error; 3 = download/verify/unpack error; 4 = scan error
@@ -89,6 +98,13 @@
 
 .PARAMETER MaxMB
     Skip files of MaxMB MB or larger; 0 = no limit. Default: 512
+
+.PARAMETER Threads
+    Number of yr scan threads. Default: 2
+
+.PARAMETER ExcludePath
+    Folders to skip, comma-separated (-ExcludePath D:\backup,E:\media). A
+    folder that contains the target is not skipped.
 
 .PARAMETER IncludeSystemPaths
     Also scan the system folders listed above (WinSxS, Recycle Bin, ...).
@@ -141,6 +157,10 @@ param(
 
     [string]$MaxMB = '512',
 
+    [string]$Threads = '2',
+
+    [string[]]$ExcludePath,
+
     [switch]$IncludeSystemPaths,
 
     [switch]$IncludeNonBinary,
@@ -163,8 +183,10 @@ $YaraXUrl     = "https://github.com/VirusTotal/yara-x/releases/download/v$YaraXV
 # GitHub-computed asset digest for v1.22.0 (releases API, assets[].digest)
 $YaraXSha256  = 'eac36a58699b94d3732a7fe1d8453fe89e0077bb18ac2c99b4c2ee102a431f2e'
 
-# Same list as NONBINARY_EXT_RE in bash/yara_x_scan_macos.sh: extensions of files
-# that can't start with an executable header and aren't php-config / php_version.h.
+# Same base list as NONBINARY_EXTS in bash/yara_x_scan_macos.sh: extensions of files
+# that can't start with an executable header and aren't php-config / php_version.h
+# (php_version.h is kept despite 'h'). The last line is Windows-only: debug
+# symbols, installers/cabinets, import libraries, event logs, ESE databases.
 $NonBinaryExtensions = @(
     'jpg', 'jpeg', 'png', 'gif', 'heic', 'tif', 'tiff', 'bmp', 'webp', 'ico', 'icns', 'svg', 'svgz',
     'mov', 'mp4', 'm4v', 'avi', 'mkv', 'mp3', 'm4a', 'aac', 'wav', 'aiff', 'caf', 'flac',  # codespell:ignore caf
@@ -172,8 +194,9 @@ $NonBinaryExtensions = @(
     'docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt', 'pages', 'numbers', 'key',
     'txt', 'md', 'rst', 'json', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'map', 'css', 'scss', 'html', 'htm',
     'xml', 'plist', 'strings', 'nib', 'car', 'py', 'pyc', 'rb', 'php', 'java', 'class', 'go', 'rs',
-    'c', 'cc', 'cpp', 'hpp', 'm', 'swift', 'yml', 'yaml', 'toml', 'ini', 'csv', 'tsv', 'log',
-    'sqlite', 'db', 'sqlite-wal', 'sqlite-shm', 'ttf', 'otf', 'woff', 'woff2', 'mo', 'po', 'lock', 'sum'
+    'c', 'cc', 'cpp', 'h', 'hpp', 'm', 'swift', 'yml', 'yaml', 'toml', 'ini', 'csv', 'tsv', 'log',
+    'sqlite', 'db', 'sqlite-wal', 'sqlite-shm', 'ttf', 'otf', 'woff', 'woff2', 'mo', 'po', 'lock', 'sum',
+    'pdb', 'cab', 'msi', 'msp', 'nupkg', 'lib', 'cat', 'etl', 'evtx', 'edb', 'chm'
 )
 
 # System folders / files skipped on every scanned drive (see help for why)
@@ -443,6 +466,8 @@ function Invoke-NativeToFile
     $psi.StandardErrorEncoding = $Utf8NoBom
 
     $process = [System.Diagnostics.Process]::Start($psi)
+    # Background scan: keep the machine responsive. Best effort; yr runs either way.
+    try { $process.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal } catch { $null = $_ }
     # Read stderr asynchronously so neither pipe can fill up and block yr
     $stderrTask = $process.StandardError.ReadToEndAsync()
     $out = [System.IO.File]::Create($StdoutPath)
@@ -495,7 +520,7 @@ function Get-ScanFile
         [bool]$SkipCloud = $true
     )
 
-    $stats = [pscustomobject]@{ Listed = 0L; SizeSkipped = 0L; ExtSkipped = 0L; CloudSkipped = 0L; LinksSkipped = 0L; Errors = 0L }
+    $stats = [pscustomobject]@{ Listed = 0L; SizeSkipped = 0L; ExtSkipped = 0L; EmptySkipped = 0L; CloudSkipped = 0L; LinksSkipped = 0L; Errors = 0L }
     $dirAttr = [int][System.IO.FileAttributes]::Directory
     $reparseAttr = [int][System.IO.FileAttributes]::ReparsePoint
 
@@ -557,11 +582,16 @@ function Get-ScanFile
                     if ($null -ne $SkipExtensions)
                     {
                         $ext = $entry.Extension
-                        if ($ext.Length -gt 1 -and $SkipExtensions.Contains($ext.Substring(1)))
+                        if ($ext.Length -gt 1 -and $SkipExtensions.Contains($ext.Substring(1)) -and $entry.Name -ne 'php_version.h')
                         {
                             $stats.ExtSkipped++
                             continue
                         }
+                    }
+                    if ($entry.Length -eq 0)
+                    {
+                        $stats.EmptySkipped++
+                        continue
                     }
                     if ($MaxBytes -gt 0 -and $entry.Length -ge $MaxBytes)
                     {
@@ -668,6 +698,8 @@ function Invoke-Main
         [switch]$KeepBinary,
         [string]$YaraXArchive,
         [string]$MaxMB,
+        [string]$Threads = '2',
+        [string[]]$ExcludePath,
         [switch]$IncludeSystemPaths,
         [switch]$IncludeNonBinary,
         [switch]$IncludeCloudFiles,
@@ -707,6 +739,11 @@ function Invoke-Main
         return 2
     }
     $maxBytes = [long]$MaxMB * 1MB
+    if ($Threads -notmatch '^[0-9]{1,3}$' -or [int]$Threads -lt 1)
+    {
+        Write-UsageError "Invalid -Threads '$Threads' (number of threads, 1 or more)."
+        return 2
+    }
 
     if (-not (Test-IsWindowsHost))
     {
@@ -784,6 +821,9 @@ function Invoke-Main
         [System.IO.File]::WriteAllText($ruleFile, $EmbeddedRule, $Utf8NoBom)
 
         # ---- build list of files to scan ------------------------------------------
+        # Unattended background scan: the file walk (this process) runs at
+        # BelowNormal like yr.exe (see Invoke-NativeToFile). Best effort.
+        try { [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]::BelowNormal } catch { $null = $_ }
         if (-not (Test-IsAdministrator))
         {
             Write-Warning 'Not running as Administrator - protected folders will be skipped (see log)'
@@ -807,11 +847,22 @@ function Invoke-Main
         {
             Write-ScanLog "Skipping system folders: $($SystemSkipDirs -join ', ') (use -IncludeSystemPaths to include)"
         }
+        # powershell.exe -File passes "A,B" as one string, so split on commas here
+        $excludeDirs = @()
+        foreach ($x in @($ExcludePath | Where-Object { $_ } | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ }))
+        {
+            if (-not (Test-Path -LiteralPath $x -PathType Container))
+            {
+                Write-ScanLog "WARNING: -ExcludePath folder not found, ignored: $x"
+                continue
+            }
+            $excludeDirs += (Resolve-Path -LiteralPath $x).ProviderPath.TrimEnd('\', '/')
+        }
 
         $scanList = Join-Path -Path $workDir -ChildPath 'scan_list.txt'
         $listWriter = New-Object -TypeName System.IO.StreamWriter -ArgumentList $scanList, $false, $Utf8NoBom
         $listWriter.NewLine = "`n"
-        $totals = @{ Listed = 0L; SizeSkipped = 0L; ExtSkipped = 0L; CloudSkipped = 0L; LinksSkipped = 0L; Errors = 0L }
+        $totals = @{ Listed = 0L; SizeSkipped = 0L; ExtSkipped = 0L; EmptySkipped = 0L; CloudSkipped = 0L; LinksSkipped = 0L; Errors = 0L }
         try
         {
             foreach ($target in $targets)
@@ -829,6 +880,11 @@ function Invoke-Main
                 foreach ($d in @($OutputDir, $workDir.TrimEnd('\', '/')))
                 {
                     if (-not (Test-PathWithin -Child $target -Parent $d)) { [void]$skipDirs.Add($d) }
+                }
+                foreach ($d in $excludeDirs)
+                {
+                    if (Test-PathWithin -Child $target -Parent $d) { Write-ScanLog "Not skipping $d (-ExcludePath): it contains $target" }
+                    else { [void]$skipDirs.Add($d); Write-ScanLog "Skipping $d (-ExcludePath)" }
                 }
                 $skipRootFiles = $null
                 if (-not $IncludeSystemPaths)
@@ -860,15 +916,16 @@ function Invoke-Main
         if ($totals.CloudSkipped -gt 0) { Write-ScanLog "Skipped $($totals.CloudSkipped) online-only cloud file(s)/folder(s)" }
         if ($totals.SizeSkipped -gt 0) { Write-ScanLog "Skipped $($totals.SizeSkipped) file(s) of $MaxMB MB or more (listed in $logFile)" }
         if ($null -ne $skipExt) { Write-ScanLog "Skipped $($totals.ExtSkipped) non-executable file type(s)" }
+        if ($totals.EmptySkipped -gt 0) { Write-ScanLog "Skipped $($totals.EmptySkipped) empty file(s)" }
         Write-ScanLog "Found $($totals.Listed) file(s) to scan"
 
         # ---- scan -----------------------------------------------------------------
-        Write-ScanLog 'Scanning...'
+        Write-ScanLog "Scanning with $Threads thread(s) at low priority..."
         Write-ScanLog "Results: $resultFile"
         try
         {
             $scan = Invoke-NativeToFile -FilePath $yr -StdoutPath $resultFile -Arguments @(
-                'scan', '--scan-list', '--print-meta', '--print-strings',
+                'scan', '--scan-list', '--print-meta', '--print-strings', '--threads', $Threads,
                 '--output-format', $Format, $ruleFile, $scanList)
         }
         catch
@@ -947,6 +1004,8 @@ if ($MyInvocation.InvocationName -ne '.')
         KeepBinary         = $KeepBinary
         YaraXArchive       = $YaraXArchive
         MaxMB              = $MaxMB
+        Threads            = $Threads
+        ExcludePath        = $ExcludePath
         IncludeSystemPaths = $IncludeSystemPaths
         IncludeNonBinary   = $IncludeNonBinary
         IncludeCloudFiles  = $IncludeCloudFiles
