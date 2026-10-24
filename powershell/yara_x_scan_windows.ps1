@@ -38,11 +38,10 @@
         known (FrankenPHP, static PHP in Go) ~180 MB; this cuts pagefile.sys,
         VM disks, WSL/Docker .vhdx, media. Use -MaxMB 0 to include.
       - Images, media, archives, installers, documents, fonts, web/source/text
-        files, C headers other than php_version.h, debug symbols (.pdb), event
-        logs, databases, component manifests, BigFix Fixlet files (.fxf) and
-        virtual disks: the rules only match executables (by header) and
-        php-config/php_version.h. Files with no extension, .exe, .dll, .so, .o
-        are kept. Use -IncludeNonBinary to include.
+        files, C headers, debug symbols (.pdb), event logs, databases,
+        component manifests, BigFix Fixlet files (.fxf) and virtual disks: the
+        rules only match executables (by header). Files with no extension, .exe,
+        .dll, .so, .o are kept. Use -IncludeNonBinary to include.
       - Empty files.
       - Cloud placeholders (OneDrive Files On-Demand, Dropbox, iCloud, etc.):
         files and folders with the Offline, RecallOnOpen or RecallOnDataAccess
@@ -57,8 +56,6 @@
                                         100k+ files on a server
           \Windows\assembly, \Windows\Microsoft.NET  .NET framework and
                                         native-image caches
-          \Program Files\WindowsApps, \Program Files (x86)\WindowsApps
-                                        Microsoft Store app packages
           \ProgramData\Microsoft\Windows Defender  antivirus definitions
           \Users\*\AppData\Local\BigFix\Enterprise Console  BigFix Console
                                         cache (can be many GB)
@@ -194,8 +191,7 @@ $YaraXUrl     = "https://github.com/VirusTotal/yara-x/releases/download/v$YaraXV
 $YaraXSha256  = 'eac36a58699b94d3732a7fe1d8453fe89e0077bb18ac2c99b4c2ee102a431f2e'
 
 # Same base list as NONBINARY_EXTS in bash/yara_x_scan_macos.sh: extensions of files
-# that can't start with an executable header and aren't php-config / php_version.h
-# (php_version.h is kept despite 'h'). The last two lines are Windows-only: debug
+# that can't start with an executable header. The last two lines are Windows-only: debug
 # symbols, installers/cabinets, import libraries, event logs, ESE databases;
 # then (measured on a server: none of these held an executable) component and
 # policy manifests, BigFix Fixlet files, VS extensions, app resources, crash
@@ -214,9 +210,10 @@ $NonBinaryExtensions = @(
 )
 
 # System folders / files skipped on every scanned drive (see help for why)
+# Program Files\WindowsApps stays in scope: MSIX/Store packages are installed software.
 $SystemSkipDirs  = @('Windows\WinSxS', 'Windows\SoftwareDistribution', 'Windows\servicing', 'Windows\assembly',
-                     'Windows\Microsoft.NET', 'Program Files\WindowsApps', 'Program Files (x86)\WindowsApps',
-                     'ProgramData\Microsoft\Windows Defender', '$Recycle.Bin', 'System Volume Information')
+                     'Windows\Microsoft.NET', 'ProgramData\Microsoft\Windows Defender', '$Recycle.Bin',
+                     'System Volume Information')
 # Skipped in every user profile on a scanned drive (see help)
 $ProfileSkipDirs = @('AppData\Local\BigFix\Enterprise Console')
 $SystemSkipFiles = @('pagefile.sys', 'hiberfil.sys', 'swapfile.sys')
@@ -227,7 +224,7 @@ $CloudAttributeMask = 0x1000 -bor 0x40000 -bor 0x400000
 
 # ---- embedded YARA rule -----------------------------------------------------
 # PHP install detection + version. Copy of YARA/php/php_detect.yar - keep in
-# sync. The version is in the printed strings ($ver, $pv, $cfg_ver, $hdr_ver).
+# sync. The version is in the printed strings ($ver, $pv).
 $EmbeddedRule = @'
 /*
   PHP install detection + version, all OSes (Linux ELF, Windows PE, macOS Mach-O).
@@ -243,7 +240,6 @@ $EmbeddedRule = @'
                               (php.exe, php-cgi.exe, php8ts.dll, ext\php_*.dll);
                               $pv holds ProductVersion
     PHP_Binary_Broad        - catch-all: any executable with any PHP marker
-    PHP_Build_Artifact      - php-config / php_version.h left by source installs
 
   No modules are imported so the rules also work in embedded YARA engines
   (osquery, EDRs) that are built without the pe/elf/macho modules.
@@ -259,6 +255,7 @@ private rule PHP_Detect_IsExecutable
     or uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF   // Mach-O 32/64
     or uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE   // Mach-O 32/64, byte-swapped
     or uint32(0) == 0xBEBAFECA                              // Mach-O universal (CAFEBABE)
+    or uint32(0) == 0xBFBAFECA                              // Mach-O 64-bit universal (CAFEBABF), rare
 }
 
 rule PHP_Runtime_Version
@@ -308,27 +305,6 @@ rule PHP_Binary_Broad
     (
       $xpb or $zend or $api or $pname
       or ($grp and ($ini or $fmt))
-    )
-}
-
-rule PHP_Build_Artifact
-{
-  meta:
-    description = "php-config script or php_version.h header from a PHP build/install; $v* = version"
-    confidence = "medium"
-  strings:
-    // php-config (installed next to the php binary by `make install` and -dev packages)
-    $cfg_ver   = /version="[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $cfg_a     = "php_cli_binary="
-    $cfg_b     = "--php-binary"
-    // main/php_version.h
-    $hdr_ver   = /#define PHP_VERSION "[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $hdr_a     = "#define PHP_MAJOR_VERSION"
-  condition:
-    filesize < 64KB and
-    (
-      ($cfg_ver and $cfg_a and $cfg_b)
-      or ($hdr_ver and $hdr_a)
     )
 }
 '@
@@ -600,7 +576,7 @@ function Get-ScanFile
                     if ($null -ne $SkipExtensions)
                     {
                         $ext = $entry.Extension
-                        if ($ext.Length -gt 1 -and $SkipExtensions.Contains($ext.Substring(1)) -and $entry.Name -ne 'php_version.h')
+                        if ($ext.Length -gt 1 -and $SkipExtensions.Contains($ext.Substring(1)))
                         {
                             $stats.ExtSkipped++
                             continue
@@ -657,7 +633,7 @@ function ConvertTo-PhpVersionSummary
     # The meta pattern skips quoted values, so a ']' inside a description is fine.
     $ruleLine = [regex]'^PHP_\S* (?:\[(?:"(?:[^"\\]|\\.)*"|[^\]"])*\] )?(?<path>.*)$'
     # string line: "0xOFFSET:LENGTH:$id: <matched text>"
-    $stringLine = [regex]':\$(?:ver|pv|cfg_ver|hdr_ver): '
+    $stringLine = [regex]':\$(?:ver|pv): '
     $version = [regex]'[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*'
 
     $results = New-Object -TypeName 'System.Collections.Generic.HashSet[string]' -ArgumentList ([System.StringComparer]::Ordinal)

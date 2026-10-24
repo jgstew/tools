@@ -49,9 +49,8 @@
 #     (FrankenPHP, static PHP in Go) ~180 MB; this cuts VM disks, model
 #     weights, media
 #   - images, media, archives, packages, documents, fonts, web/source/text
-#     files, C headers other than php_version.h, logs and databases: the
-#     rules only match executables (by header) and php-config/php_version.h;
-#     files with no extension, .so, .dll, .exe, .o are kept
+#     files, C headers, logs and databases: the rules only match executables
+#     (by header); files with no extension, .so, .dll, .exe, .o are kept
 #   - empty files
 #   - container storage: /var/lib/docker, /var/lib/containers,
 #     /var/lib/containerd, /var/lib/rancher, /var/lib/lxc, /var/lib/lxd,
@@ -96,9 +95,8 @@ SKIP_NONBINARY=1
 SKIP_CONTAINERS=1
 SKIP_SNAPSHOTS=1
 
-# Extensions of files that can't start with an executable header and aren't
-# php-config / php_version.h. Matched case-insensitively against the path end;
-# php_version.h is added back after this filter. The last line is Linux-only:
+# Extensions of files that can't start with an executable header, matched
+# case-insensitively against the path end. The last line is Linux-only:
 # packages, static libraries (ar archives here), git packs, journald, disk images,
 # BigFix Fixlet files (.fxf, under the client's __BESData).
 NONBINARY_EXT_RE='\.(jpg|jpeg|png|gif|heic|tif|tiff|bmp|webp|ico|icns|svg|svgz|mov|mp4|m4v|avi|mkv|mp3|m4a|aac|wav|aiff|caf|flac|pdf|zip|gz|tgz|xz|bz2|zst|7z|rar|dmg|pkg|xip|iso|jar|whl|docx|xlsx|pptx|doc|xls|ppt|pages|numbers|key|txt|md|rst|json|js|mjs|cjs|ts|tsx|jsx|map|css|scss|html|htm|xml|plist|strings|nib|car|py|pyc|rb|php|java|class|go|rs|c|cc|cpp|h|hpp|m|swift|yml|yaml|toml|ini|csv|tsv|log|sqlite|db|sqlite-wal|sqlite-shm|ttf|otf|woff|woff2|mo|po|lock|sum|'  # codespell:ignore caf
@@ -261,7 +259,7 @@ log "Unpacked $YR_VERSION"
 
 # ---- embedded YARA rule ---------------------------------------------------
 # PHP install detection + version. Copy of YARA/php/php_detect.yar - keep in
-# sync. The version is in the printed strings ($ver, $pv, $cfg_ver, $hdr_ver).
+# sync. The version is in the printed strings ($ver, $pv).
 RULE_FILE="${WORK_DIR}/embedded_rule.yar"
 cat > "$RULE_FILE" <<'YARA_RULE'
 /*
@@ -278,7 +276,6 @@ cat > "$RULE_FILE" <<'YARA_RULE'
                               (php.exe, php-cgi.exe, php8ts.dll, ext\php_*.dll);
                               $pv holds ProductVersion
     PHP_Binary_Broad        - catch-all: any executable with any PHP marker
-    PHP_Build_Artifact      - php-config / php_version.h left by source installs
 
   No modules are imported so the rules also work in embedded YARA engines
   (osquery, EDRs) that are built without the pe/elf/macho modules.
@@ -294,6 +291,7 @@ private rule PHP_Detect_IsExecutable
     or uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF   // Mach-O 32/64
     or uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE   // Mach-O 32/64, byte-swapped
     or uint32(0) == 0xBEBAFECA                              // Mach-O universal (CAFEBABE)
+    or uint32(0) == 0xBFBAFECA                              // Mach-O 64-bit universal (CAFEBABF), rare
 }
 
 rule PHP_Runtime_Version
@@ -345,27 +343,6 @@ rule PHP_Binary_Broad
       or ($grp and ($ini or $fmt))
     )
 }
-
-rule PHP_Build_Artifact
-{
-  meta:
-    description = "php-config script or php_version.h header from a PHP build/install; $v* = version"
-    confidence = "medium"
-  strings:
-    // php-config (installed next to the php binary by `make install` and -dev packages)
-    $cfg_ver   = /version="[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $cfg_a     = "php_cli_binary="
-    $cfg_b     = "--php-binary"
-    // main/php_version.h
-    $hdr_ver   = /#define PHP_VERSION "[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $hdr_a     = "#define PHP_MAJOR_VERSION"
-  condition:
-    filesize < 64KB and
-    (
-      ($cfg_ver and $cfg_a and $cfg_b)
-      or ($hdr_ver and $hdr_a)
-    )
-}
 YARA_RULE
 
 # ---- embedded version extractor (text format) -----------------------------
@@ -376,7 +353,7 @@ cat > "$VERSIONS_AWK" <<'AWK_SCRIPT'
 /^PHP_/ { file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file] = 1; next }
 
 # string line: "0xOFFSET:$id: <matched text>"
-/:\$(ver|pv|cfg_ver|hdr_ver): / {
+/:\$(ver|pv): / {
   v = $0; gsub(/\\x00/, "", v); sub(/^[^ ]+ /, "", v)
   if (match(v, /[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*/)) { print file "\t" substr(v, RSTART, RLENGTH); versioned[file] = 1 }
 }
@@ -526,8 +503,6 @@ if [ "$SIZE_SKIPPED" -gt 0 ]; then
 fi
 if [ "$SKIP_NONBINARY" -eq 1 ]; then
   grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" | grep -Eiv "$NONBINARY_EXT_RE" >"$SCAN_LIST" || true
-  # the .h skip above also drops php_version.h, which the rules do match
-  grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" | grep '/php_version\.h$' >>"$SCAN_LIST" || true
   NONBINARY_SKIPPED=$(( $(wc -l <"$FIND_LIST") - SIZE_SKIPPED - $(wc -l <"$SCAN_LIST") ))
   log "Skipped $NONBINARY_SKIPPED non-executable file type(s) (use -E to include)"
 else

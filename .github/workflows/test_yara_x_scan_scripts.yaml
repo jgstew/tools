@@ -1,0 +1,189 @@
+---
+name: test_yara_x_scan_scripts
+
+# Smoke tests for the three YARA-X PHP scan scripts. Each job plants a real PHP
+# runtime and decoys in a folder, scans that folder at the default (1 thread)
+# and with 2 threads, and checks what is reported - and what isn't:
+#   found:     the PHP binary/DLLs, and a renamed copy (detection is by content)
+#   not found: a copy in an excluded folder (-x / -ExcludePath), a copy with a
+#              skipped extension (.zip), an empty file, and a php_version.h text file
+# Runs only when this workflow or one of the three scripts changes.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - bash/yara_x_scan_linux.sh
+      - bash/yara_x_scan_macos.sh
+      - powershell/yara_x_scan_windows.ps1
+      - .github/workflows/test_yara_x_scan_scripts.yaml
+  pull_request:
+    paths:
+      - bash/yara_x_scan_linux.sh
+      - bash/yara_x_scan_macos.sh
+      - powershell/yara_x_scan_windows.ps1
+      - .github/workflows/test_yara_x_scan_scripts.yaml
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install distro PHP (a real, unpacked ELF runtime)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends php8.3-cli
+          echo "PHP_EXPECT=$(php -r 'echo PHP_VERSION;')" >> "$GITHUB_ENV"
+
+      - name: Plant fixtures
+        run: |
+          F="$RUNNER_TEMP/fixtures"
+          mkdir -p "$F/bin" "$F/renamed" "$F/excluded" "$F/decoys"
+          cp "$(readlink -f "$(command -v php)")" "$F/bin/php"
+          cp "$F/bin/php" "$F/renamed/webd"
+          cp "$F/bin/php" "$F/excluded/php"
+          cp "$F/bin/php" "$F/decoys/php.zip"
+          : > "$F/decoys/empty"
+          printf '#define PHP_MAJOR_VERSION 8\n#define PHP_VERSION "8.3.1"\n' > "$F/decoys/php_version.h"
+
+      - name: Scan and check (1 thread default, then -T 2)
+        run: |
+          F="$RUNNER_TEMP/fixtures"
+          # The script reports paths resolved with pwd -P
+          RF=$(cd "$F" && pwd -P)
+          for threads in default 2; do
+            out="$RUNNER_TEMP/out-$threads"
+            rm -rf "$out" "$out.console"
+            args=(-t "$F" -o "$out" -x "$F/excluded")
+            [ "$threads" = default ] || args+=(-T "$threads")
+            set +e
+            bash bash/yara_x_scan_linux.sh "${args[@]}" 2>&1 | tee "$out.console"
+            rc=${PIPESTATUS[0]}
+            set -e
+            [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 (matches found), got $rc"; exit 1; }
+            want_threads=1; [ "$threads" = default ] || want_threads=$threads
+            grep -q "Scanning with $want_threads thread(s)" "$out.console" || { echo "::error::expected $want_threads thread(s)"; exit 1; }
+            results=$(ls "$out"/yara_results_*.text | grep -v '\.raw\.text$')
+            cat "$results"
+            for p in bin/php renamed/webd; do
+              grep -qx "$RF/$p	$PHP_EXPECT" "$results" || { echo "::error::$p with version $PHP_EXPECT not reported"; exit 1; }
+            done
+            if grep -E "/(excluded|decoys)/" "$results"; then echo "::error::excluded or decoy file reported"; exit 1; fi
+          done
+
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      # static-php.dev macOS builds are unpacked (its Linux builds are UPX-packed)
+      PHP_URL: https://dl.static-php.dev/static-php-cli/common/php-8.3.32-cli-macos-aarch64.tar.gz
+      PHP_SHA256: 1cc8148750bd1722031daba1618825a8b7d0a3830bb92c50d8dd844a1dcfb306
+      PHP_EXPECT: 8.3.32
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Plant fixtures
+        run: |
+          F="$RUNNER_TEMP/fixtures"
+          mkdir -p "$F/bin" "$F/renamed" "$F/excluded" "$F/decoys" "$RUNNER_TEMP/dl"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/php.tgz" "$PHP_URL"
+          echo "$PHP_SHA256  $RUNNER_TEMP/dl/php.tgz" | shasum -a 256 -c
+          tar -xzf "$RUNNER_TEMP/dl/php.tgz" -C "$F/bin" php
+          cp "$F/bin/php" "$F/renamed/webd"
+          cp "$F/bin/php" "$F/excluded/php"
+          cp "$F/bin/php" "$F/decoys/php.zip"
+          : > "$F/decoys/empty"
+          printf '#define PHP_MAJOR_VERSION 8\n#define PHP_VERSION "8.3.1"\n' > "$F/decoys/php_version.h"
+
+      - name: Scan and check (1 thread default, then -T 2)
+        run: |
+          F="$RUNNER_TEMP/fixtures"
+          # The scripts resolve paths with pwd -P (/var -> /private/var on macOS)
+          RF=$(cd "$F" && pwd -P)
+          for threads in default 2; do
+            out="$RUNNER_TEMP/out-$threads"
+            rm -rf "$out" "$out.console"
+            args=(-t "$F" -o "$out" -x "$F/excluded")
+            [ "$threads" = default ] || args+=(-T "$threads")
+            set +e
+            /bin/bash bash/yara_x_scan_macos.sh "${args[@]}" 2>&1 | tee "$out.console"
+            rc=${PIPESTATUS[0]}
+            set -e
+            [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 (matches found), got $rc"; exit 1; }
+            want_threads=1; [ "$threads" = default ] || want_threads=$threads
+            grep -q "Scanning with $want_threads thread(s)" "$out.console" || { echo "::error::expected $want_threads thread(s)"; exit 1; }
+            results=$(ls "$out"/yara_results_*.text | grep -v '\.raw\.text$')
+            cat "$results"
+            for p in bin/php renamed/webd; do
+              grep -qx "$RF/$p	$PHP_EXPECT" "$results" || { echo "::error::$p with version $PHP_EXPECT not reported"; exit 1; }
+            done
+            if grep -E "/(excluded|decoys)/" "$results"; then echo "::error::excluded or decoy file reported"; exit 1; fi
+          done
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      # archives/ keeps a stable URL after newer releases ship
+      PHP_URL: https://windows.php.net/downloads/releases/archives/php-8.3.35-nts-Win32-vs16-x64.zip
+      PHP_SHA256: 25a8e2ac9ff30f1d768d1447c09a600617fa6e6082729f6e95f008b59c91fe45
+      PHP_EXPECT: 8.3.35
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Plant fixtures
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $F = Join-Path $env:RUNNER_TEMP 'fixtures'
+          New-Item -ItemType Directory -Force -Path "$F\renamed", "$F\excluded", "$F\decoys" | Out-Null
+          $zip = Join-Path $env:RUNNER_TEMP 'php.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri $env:PHP_URL -OutFile $zip
+          $hash = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLowerInvariant()
+          if ($hash -ne $env:PHP_SHA256) { throw "PHP zip SHA256 mismatch: $hash" }
+          Expand-Archive -LiteralPath $zip -DestinationPath "$F\php"
+          Copy-Item "$F\php\php8.dll" "$F\renamed\webd.dll"
+          Copy-Item "$F\php\php8.dll" "$F\excluded\php8.dll"
+          Copy-Item "$F\php\php8.dll" "$F\decoys\php8.zip"
+          New-Item -ItemType File -Path "$F\decoys\empty" | Out-Null
+          Set-Content -Path "$F\decoys\php_version.h" -Value "#define PHP_MAJOR_VERSION 8`n#define PHP_VERSION `"8.3.1`""
+
+      - name: Scan and check (1 thread default, then -Threads 2)
+        run: |
+          # Continue: a native command's stderr must not abort before the checks below
+          $ErrorActionPreference = 'Continue'
+          $F = Join-Path $env:RUNNER_TEMP 'fixtures'
+          foreach ($threads in @('default', '2')) {
+            $out = Join-Path $env:RUNNER_TEMP "out-$threads"
+            Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
+            $scanArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'powershell\yara_x_scan_windows.ps1',
+                          '-Path', $F, '-OutputDir', $out, '-ExcludePath', "$F\excluded")
+            if ($threads -ne 'default') { $scanArgs += @('-Threads', $threads) }
+            $console = & powershell.exe @scanArgs 6>&1 2>&1 | Out-String
+            $rc = $LASTEXITCODE
+            Write-Host $console
+            if ($rc -ne 1) { throw "expected exit 1 (matches found), got $rc" }
+            $wantThreads = if ($threads -eq 'default') { '1' } else { $threads }
+            if ($console -notmatch "Scanning with $wantThreads thread\(s\)") { throw "expected $wantThreads thread(s)" }
+            $results = Get-ChildItem "$out\yara_results_*.text" | Where-Object { $_.Name -notlike '*.raw.text' }
+            $lines = @(Get-Content $results.FullName)
+            $lines | Write-Host
+            foreach ($p in 'php\php.exe', 'php\php8.dll', 'renamed\webd.dll') {
+              if ($lines -notcontains "$F\$p`t$env:PHP_EXPECT") { throw "$p with version $env:PHP_EXPECT not reported" }
+            }
+            $bad = @($lines | Where-Object { $_ -like "$F\excluded\*" -or $_ -like "$F\decoys\*" })
+            if ($bad.Count) { throw "excluded or decoy file reported: $($bad -join '; ')" }
+          }

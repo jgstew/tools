@@ -31,10 +31,18 @@ them together or separately.
 | `PHP_Runtime_Version` | high | PHP core: `php`, `php-cgi`, `php-fpm`, `phpdbg`, `libphp*.so`, `php*ts.dll`, `php8.dll`, statically embedded PHP | `$ver` = `X-Powered-By: PHP/<version>` - a compile-time literal, present even with `expose_php=Off`. Includes distro suffix, e.g. `8.1.2-1ubuntu2.27`. |
 | `PHP_Windows_VersionInfo` | high | Any Windows PE whose version resource says `ProductName = PHP`: `php.exe`, `php-cgi.exe`, `php-win.exe`, SAPI DLLs, `ext\php_*.dll` | `$pv` = `ProductVersion` |
 | `PHP_Binary_Broad` | medium | Catch-all: any ELF/PE/Mach-O with any PHP marker (version string, `Zend Engine v`, `API2xxxxxxx,NTS/TS` build ID, PHP version resource, `The PHP Group` + `php.ini`). Includes Linux extensions (`.so`). | - (use the branch rules or the API table below) |
-| `PHP_Build_Artifact` | medium | `php-config` and `main/php_version.h` left by source builds / `-dev` packages | `$cfg_ver` / `$hdr_ver` |
+
+Every rule requires an executable header (ELF, PE, Mach-O 32/64, or a Mach-O
+universal binary, including the rare 64-bit `CAFEBABF` form), so YARA only scans
+the content of executables; other files are rejected after reading their first bytes.
 
 On Windows the `X-Powered-By` string lives in `php7ts.dll` / `php8.dll` / `php8ts.dll`,
 not in `php.exe` (except 8.5+) - `php.exe` is caught by its version resource instead.
+
+`php-config` and `main/php_version.h` (source builds, `-dev` packages) are no
+longer matched: the runtime rules already find the PHP binary itself, the text
+rule matched any small file that happened to contain those strings, and it
+forced every file under 64 KB to be read in full.
 
 ## Usage
 
@@ -114,6 +122,34 @@ Whole-filesystem scans work but are slow. Typical PHP locations:
 
 Add `-p <threads>` and an `--timeout` for big trees; skip `/proc`, `/sys`, network mounts.
 
+### Scan scripts
+
+The three scripts scan whole machines (all local disk filesystems / fixed drives)
+and report only `path<TAB>version`. Defaults aim at an unattended background scan:
+
+- **1 `yr` thread at low priority** (`nice 10`, `ionice` on Linux where usable,
+  BelowNormal on Windows). `-T 2` (bash) / `-Threads 2` (PowerShell) finishes
+  about 1.5-2x sooner at about twice the peak CPU.
+- **Skipped without opening:** files that can't start with an executable header
+  (images, media, archives, documents, source/text, C headers, logs, databases,
+  Xcode/SDK data, packages, debug symbols, ...), empty files, files of 512 MB or
+  more (`-m` / `-MaxMB`), and folders that can't hold an install: containers and
+  snapshots (Linux), the sealed system volume on macOS 12+, online-only iCloud /
+  cloud files, and on Windows `WinSxS`, `servicing`, the .NET assembly caches,
+  Defender definitions and the BigFix Console cache. `Program Files\WindowsApps`
+  is scanned (MSIX / Store packages are installed software).
+- **Extra exclusions:** `-x DIR` (bash, repeatable, also a find `-path` pattern)
+  or `-ExcludePath A,B` (PowerShell). An exclusion that contains the scan target
+  is ignored.
+
+Measured cost (single runs, cold cache, 1 thread): ~90 s for a test Mac mini
+(74k files sent to `yr`), ~8 min for a developer laptop (1.36M files), a few
+seconds for a Linux server image. On Windows almost all of the time is Microsoft
+Defender scanning each file the scan opens: ~15 min on a Server 2022 VM (111k
+files), with Defender using about one core while `yr` stays mostly idle. Opening
+fewer files is what speeds Windows up; 2 threads lets Defender check two files at
+once (~8 min, both cores busy).
+
 ### BigFix
 
 `make_bigfix_content.py` turns the three scan scripts into BigFix content in a
@@ -169,7 +205,9 @@ correct version:
 | Rocky Linux 9 `php-cli`, `php-fpm` | Linux ELF | 8.0.30 |
 | windows.php.net zips (TS + NTS, vc15/vs16/vs17) | Windows PE | 7.4.33, 8.2.34, 8.5.11 - all `.exe`, SAPI DLLs, every `ext\php_*.dll` |
 | conda-forge `php` | macOS Mach-O arm64 | 8.5.9 |
-| `php-config`, `php_version.h` | text | 8.4.26, 8.5.9, 8.5.11 |
+| static-php.dev CLI builds | macOS Mach-O x86_64 | 8.3.32, 8.4.23, 8.5.8 |
+| Debian 12 `php8.2-cli`; Ubuntu 24.04 `php8.3-cli`, `php8.3-fpm`, `libapache2-mod-php8.3` | Linux ELF (aarch64) | 8.2.35, 8.3.6 |
+| windows.php.net zip (NTS vs16 x64) | Windows PE | 8.3.36 - `.exe`, SAPI DLLs, every `ext\php_*.dll` |
 
 Not matched (correct): third-party DLLs shipped in the Windows zip (OpenSSL,
 ICU, libpq, …), `deplister.exe`, a log file containing an `X-Powered-By: PHP/`
@@ -189,7 +227,9 @@ DLL as `PHP_7_0`; branch rules now require `ProductName = PHP` for that check.
 - **Linux extensions** (`*.so`) carry no full version - only the branch (via the
   API build ID / branch rules).
 - **Packed/compressed binaries** (UPX, self-extracting installers, `.zip`/`.msi`
-  not yet extracted) won't match until unpacked.
+  not yet extracted) won't match until unpacked. For example, static-php.dev's
+  Linux CLI builds are UPX-packed and are not detected; its macOS builds are not
+  packed and are.
 - **Containers.** A host scan doesn't look inside image layers; scan an exported
   filesystem (`docker export`) or the container's merged rootfs.
 - **Broad = some noise.** `PHP_Binary_Broad` can flag non-PHP tools that embed PHP

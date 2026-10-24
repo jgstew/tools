@@ -62,6 +62,7 @@ private rule PHP_Branch_IsExecutable
     or uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF   // Mach-O 32/64
     or uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE   // Mach-O 32/64, byte-swapped
     or uint32(0) == 0xBEBAFECA                              // Mach-O universal (CAFEBABE)
+    or uint32(0) == 0xBFBAFECA                              // Mach-O 64-bit universal (CAFEBABF), rare
 }}
 """
 

@@ -337,16 +337,17 @@ def task_xml(os_name, cfg, script_text, mtime):
 
 def analysis_xml(mtime):
     files = f'files whose(name of it as lowercase starts with "{RESULTS_FILE}") of folders "Logs" of folders "__Global" of data folders of client'
-    # Summary properties only: every line of the file (former ID 1) could be too
-    # much data. IDs stay fixed so existing results keep their history.
+    # Summary properties only: every line of the file could be too much data.
+    # IDs must match the deployed Analysis (bigfix-content and Site_Rapid_Response
+    # both use 1-3); changing one orphans the results already collected for it.
     properties = [
         (
-            2,
+            1,
             "PHP Versions Found",
             f'unique values of following texts of lasts "%09" of lines of {files}',
         ),
-        (3, "PHP Files Found", f"(number of lines of it) of {files}"),
-        (4, "PHP Scan Time", f"modification times of {files}"),
+        (2, "PHP Files Found", f"(number of lines of it) of {files}"),
+        (3, "PHP Scan Time", f"modification times of {files}"),
     ]
     props = "\n".join(
         f'\t\t<Property Name="{name}" ID="{i}" EvaluationPeriod="P1D"><![CDATA[{rel}]]></Property>'

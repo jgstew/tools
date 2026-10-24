@@ -43,10 +43,9 @@
 #   - on macOS 12+ (no bundled PHP): /System, /bin, /sbin, /usr except
 #     /usr/local, /Library/Apple - the read-only sealed system volume
 #   - images, media, archives, documents, fonts, web/source/text files, C
-#     headers other than php_version.h, Xcode/SDK data (.swiftmodule, .tbd,
-#     ...), logs and databases: the rules only match executables (by header)
-#     and php-config/php_version.h; files with no extension, .dylib, .so,
-#     .dll, .exe, .a, .o are kept
+#     headers, Xcode/SDK data (.swiftmodule, .tbd, ...), logs and databases:
+#     the rules only match executables (by header); files with no extension,
+#     .dylib, .so, .dll, .exe, .a, .o are kept
 #   - empty files
 #   - ~/Library/CloudStorage, ~/Library/Mobile Documents (iCloud), and
 #     online-only (dataless) files anywhere, e.g. iCloud "Desktop & Documents":
@@ -83,9 +82,8 @@ SKIP_SEALED=1
 SKIP_NONBINARY=1
 SKIP_CLOUD=1
 
-# Extensions of files that can't start with an executable header and aren't
-# php-config / php_version.h. Compared case-insensitively with the text after
-# the last "." of the file name; php_version.h is kept despite "h". The second
+# Extensions of files that can't start with an executable header. Compared
+# case-insensitively with the text after the last "." of the file name. The second
 # line was measured on a Mac (no executables among them): Xcode/SDK, unified
 # logs, Chromium/app resources and SQLite/LMDB side files, ~half of the files
 # left after the first line. Not .a: macOS static libraries can be universal binaries.
@@ -214,7 +212,7 @@ log "Unpacked $("$YR" --version)"
 
 # ---- embedded YARA rule ---------------------------------------------------
 # PHP install detection + version. Copy of YARA/php/php_detect.yar - keep in
-# sync. The version is in the printed strings ($ver, $pv, $cfg_ver, $hdr_ver).
+# sync. The version is in the printed strings ($ver, $pv).
 RULE_FILE="${WORK_DIR}/embedded_rule.yar"
 cat > "$RULE_FILE" <<'YARA_RULE'
 /*
@@ -231,7 +229,6 @@ cat > "$RULE_FILE" <<'YARA_RULE'
                               (php.exe, php-cgi.exe, php8ts.dll, ext\php_*.dll);
                               $pv holds ProductVersion
     PHP_Binary_Broad        - catch-all: any executable with any PHP marker
-    PHP_Build_Artifact      - php-config / php_version.h left by source installs
 
   No modules are imported so the rules also work in embedded YARA engines
   (osquery, EDRs) that are built without the pe/elf/macho modules.
@@ -247,6 +244,7 @@ private rule PHP_Detect_IsExecutable
     or uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF   // Mach-O 32/64
     or uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE   // Mach-O 32/64, byte-swapped
     or uint32(0) == 0xBEBAFECA                              // Mach-O universal (CAFEBABE)
+    or uint32(0) == 0xBFBAFECA                              // Mach-O 64-bit universal (CAFEBABF), rare
 }
 
 rule PHP_Runtime_Version
@@ -298,27 +296,6 @@ rule PHP_Binary_Broad
       or ($grp and ($ini or $fmt))
     )
 }
-
-rule PHP_Build_Artifact
-{
-  meta:
-    description = "php-config script or php_version.h header from a PHP build/install; $v* = version"
-    confidence = "medium"
-  strings:
-    // php-config (installed next to the php binary by `make install` and -dev packages)
-    $cfg_ver   = /version="[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $cfg_a     = "php_cli_binary="
-    $cfg_b     = "--php-binary"
-    // main/php_version.h
-    $hdr_ver   = /#define PHP_VERSION "[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $hdr_a     = "#define PHP_MAJOR_VERSION"
-  condition:
-    filesize < 64KB and
-    (
-      ($cfg_ver and $cfg_a and $cfg_b)
-      or ($hdr_ver and $hdr_a)
-    )
-}
 YARA_RULE
 
 # ---- embedded version extractor (text format) -----------------------------
@@ -329,7 +306,7 @@ cat > "$VERSIONS_AWK" <<'AWK_SCRIPT'
 /^PHP_/ { file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file] = 1; next }
 
 # string line: "0xOFFSET:$id: <matched text>"
-/:\$(ver|pv|cfg_ver|hdr_ver): / {
+/:\$(ver|pv): / {
   v = $0; gsub(/\\x00/, "", v); sub(/^[^ ]+ /, "", v)
   if (match(v, /[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*/)) { print file "\t" substr(v, RSTART, RLENGTH); versioned[file] = 1 }
 }
@@ -442,7 +419,6 @@ if [ "$SKIP_NONBINARY" -eq 1 ]; then
     BEGIN { n = split(exts, a, " "); for (i = 1; i <= n; i++) skip[a[i]] = 1 }
     /^SKIPPED_SIZE\t/ { next }
     { f = $0; sub(/.*\//, "", f)
-      if (f == "php_version.h") { print; next }
       if (match(f, /\.[^.]*$/) && (tolower(substr(f, RSTART + 1)) in skip)) next
       print }' "$FIND_LIST" >"$SCAN_LIST"
   NONBINARY_SKIPPED=$(( $(wc -l <"$FIND_LIST") - SIZE_SKIPPED - $(wc -l <"$SCAN_LIST") ))

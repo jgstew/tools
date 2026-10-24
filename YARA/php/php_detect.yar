@@ -12,7 +12,6 @@
                               (php.exe, php-cgi.exe, php8ts.dll, ext\php_*.dll);
                               $pv holds ProductVersion
     PHP_Binary_Broad        - catch-all: any executable with any PHP marker
-    PHP_Build_Artifact      - php-config / php_version.h left by source installs
 
   No modules are imported so the rules also work in embedded YARA engines
   (osquery, EDRs) that are built without the pe/elf/macho modules.
@@ -28,6 +27,7 @@ private rule PHP_Detect_IsExecutable
     or uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF   // Mach-O 32/64
     or uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE   // Mach-O 32/64, byte-swapped
     or uint32(0) == 0xBEBAFECA                              // Mach-O universal (CAFEBABE)
+    or uint32(0) == 0xBFBAFECA                              // Mach-O 64-bit universal (CAFEBABF), rare
 }
 
 rule PHP_Runtime_Version
@@ -77,26 +77,5 @@ rule PHP_Binary_Broad
     (
       $xpb or $zend or $api or $pname
       or ($grp and ($ini or $fmt))
-    )
-}
-
-rule PHP_Build_Artifact
-{
-  meta:
-    description = "php-config script or php_version.h header from a PHP build/install; $v* = version"
-    confidence = "medium"
-  strings:
-    // php-config (installed next to the php binary by `make install` and -dev packages)
-    $cfg_ver   = /version="[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $cfg_a     = "php_cli_binary="
-    $cfg_b     = "--php-binary"
-    // main/php_version.h
-    $hdr_ver   = /#define PHP_VERSION "[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.+~_-]{0,40}"/
-    $hdr_a     = "#define PHP_MAJOR_VERSION"
-  condition:
-    filesize < 64KB and
-    (
-      ($cfg_ver and $cfg_a and $cfg_b)
-      or ($hdr_ver and $hdr_a)
     )
 }

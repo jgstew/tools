@@ -8,7 +8,7 @@
 /^PHP_/ { file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file] = 1; next }
 
 # string line: "0xOFFSET:$id: <matched text>"
-/:\$(ver|pv|cfg_ver|hdr_ver): / {
+/:\$(ver|pv): / {
   v = $0; gsub(/\\x00/, "", v); sub(/^[^ ]+ /, "", v)
   if (match(v, /[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*/)) { print file "\t" substr(v, RSTART, RLENGTH); versioned[file] = 1 }
 }
