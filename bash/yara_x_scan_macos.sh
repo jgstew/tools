@@ -27,7 +27,7 @@
 #                   file, or a folder holding it under its release name (e.g. a
 #                   BigFix prefetch folder); its SHA256 is still checked
 #   -m MAX_MB       skip files of MAX_MB MB or larger, 0 = no limit (default: 512)
-#   -T THREADS      yr scan threads                   (default: 2)
+#   -T THREADS      yr scan threads                   (default: 1)
 #   -x DIR          also skip this folder; repeat for more (a find -path
 #                   pattern such as '*/node_modules' works too)
 #   -S              also scan the sealed macOS system paths
@@ -54,7 +54,7 @@
 # A skip whose folder contains TARGET_PATH is turned off automatically, and
 # none apply when TARGET_PATH is a single file.
 #
-# find and yr run at low priority (nice 10) and yr uses 2 threads (-T), so a
+# find and yr run at low priority (nice 10) and yr uses 1 thread (-T 2 for faster scans), so a
 # full scan doesn't take over the machine.
 #
 # Exit codes: 0 = scan ran, no matches; 1 = scan ran, matches found;
@@ -77,7 +77,7 @@ OUTPUT_FORMAT="text"
 KEEP_BINARY=0
 YR_ARCHIVE=""
 MAX_MB=512
-THREADS=2
+THREADS=1
 EXCLUDE_DIRS=()
 SKIP_SEALED=1
 SKIP_NONBINARY=1

@@ -76,7 +76,7 @@
     Manager / Web PI), ProgramData, user profiles.
 
     The scan runs at BelowNormal priority (this PowerShell process and yr.exe)
-    and yr uses 2 threads (-Threads), so a full scan doesn't take over the
+    and yr uses 1 thread (-Threads 2 for faster scans), so a full scan doesn't take over the
     machine. It's meant to run unattended; in an interactive session the
     priority stays lowered until that PowerShell window is closed.
 
@@ -110,7 +110,7 @@
     Skip files of MaxMB MB or larger; 0 = no limit. Default: 512
 
 .PARAMETER Threads
-    Number of yr scan threads. Default: 2
+    Number of yr scan threads. Default: 1 (2 finishes sooner, at about twice the peak CPU)
 
 .PARAMETER ExcludePath
     Folders to skip, comma-separated (-ExcludePath D:\backup,E:\media). A
@@ -167,7 +167,7 @@ param(
 
     [string]$MaxMB = '512',
 
-    [string]$Threads = '2',
+    [string]$Threads = '1',
 
     [string[]]$ExcludePath,
 
@@ -716,7 +716,7 @@ function Invoke-Main
         [switch]$KeepBinary,
         [string]$YaraXArchive,
         [string]$MaxMB,
-        [string]$Threads = '2',
+        [string]$Threads = '1',
         [string[]]$ExcludePath,
         [switch]$IncludeSystemPaths,
         [switch]$IncludeNonBinary,
