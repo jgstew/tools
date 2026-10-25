@@ -13,7 +13,9 @@
 #        yara_results_<host>_<time>.text      "path<TAB>version", one per line
 #
 #        Files matched with no version string, e.g. Linux PHP extensions,
-#        are listed with version "unknown".
+#        are listed with version "unknown". Files whose paths contain control
+#        characters (newline, tab, ...) are scanned as copies and shown as
+#        bash $'...' quoted paths (e.g. $'/opt/new\nline/php').
 #
 # Run with sudo (and give the terminal / agent Full Disk Access) for a full
 # scan; otherwise protected files are logged as unreadable and skipped.
@@ -68,6 +70,11 @@
 # Related: https://github.com/jgstew/tools/tree/master/YARA/php
 
 set -euo pipefail
+
+# Treat file names as bytes: in a UTF-8 locale find's [[:cntrl:]] also matches
+# U+0080-U+009F, which bash 3.2's printf %q then splits into invalid UTF-8 that
+# makes awk fail. In the C locale those names are ordinary valid UTF-8 for yr.
+export LC_ALL=C
 
 YARAX_VERSION="1.22.0"
 YARAX_BASE_URL="https://github.com/VirusTotal/yara-x/releases/download/v${YARAX_VERSION}"
@@ -434,10 +441,16 @@ fi
 
 SCAN_LIST="${WORK_DIR}/scan_list.txt"
 FIND_LIST="${WORK_DIR}/find_list.txt"
+# A newline (or other control character) in a path would break the one-path-
+# per-line lists, so such paths go NUL-separated to their own list, copied below
+CTRL_LIST="${WORK_DIR}/ctrl_list.bin"
+: >"$CTRL_LIST"
 log "Listing files under $TARGET_PATH (skipping other mounts)"
+# shellcheck disable=SC2016  # $0/$@ are for the inner sh
 nice -n 10 find "$TARGET_PATH" -xdev \( "${PRUNE[@]}" \) -prune \
   -o -type f ${NONEMPTY[@]+"${NONEMPTY[@]}"} ${DATALESS[@]+"${DATALESS[@]}"} \
-  "${SIZE_TEST[@]}" >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
+  \( -path '*[[:cntrl:]]*' -exec sh -c 'printf "%s\0" "$@" >>"$0" || true' "$CTRL_LIST" {} + \
+     -o "${SIZE_TEST[@]}" \) >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
 
 TAB=$'\t'
 SIZE_SKIPPED="$(grep -c "^SKIPPED_SIZE${TAB}" "$FIND_LIST" || true)"
@@ -459,6 +472,47 @@ if [ "$SKIP_NONBINARY" -eq 1 ]; then
 else
   grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" >"$SCAN_LIST" || true
 fi
+
+# Control-character paths are scanned as ASCII-named copies in the work folder
+# (a symlink loses the path in json output, a hard link would change the file's
+# ctime), and their results show the bash $'...' quoted real path. They skipped
+# the size cap and extension filter in find (a folder name with a tab sends
+# every file below it here), so both are applied now.
+COPY_MAP="${WORK_DIR}/copy_map.txt"
+: >"$COPY_MAP"
+COPIES=0
+CTRL_SKIPPED=0
+NONBINARY_RE="\\.(${NONBINARY_EXTS// /|})\$"  # same test as the awk filter above
+shopt -s nocasematch
+while IFS= read -r -d '' p; do
+  if [ "$SKIP_NONBINARY" -eq 1 ] && [[ ${p##*/} =~ $NONBINARY_RE ]]; then
+    CTRL_SKIPPED=$((CTRL_SKIPPED + 1))
+    continue
+  fi
+  if [ "$MAX_MB" -gt 0 ] && [ "$(stat -f %z "$p" 2>/dev/null || echo 0)" -ge "$((MAX_MB * 1048576))" ]; then
+    echo "skipped (>= ${MAX_MB} MB): $(printf '%q' "$p")" >>"$LOG_FILE"
+    CTRL_SKIPPED=$((CTRL_SKIPPED + 1))
+    continue
+  fi
+  COPIES=$((COPIES + 1))
+  copy="${WORK_DIR_REAL}/copies/${COPIES}_"  # trailing _ so .../1_ never matches inside .../10_
+  mkdir -p "${WORK_DIR_REAL}/copies"
+  # An APFS clone (cp -c) takes no extra space; across volumes it fails, so
+  # fall back to a plain copy
+  if ! { cp -c "$p" "$copy" 2>/dev/null || cp "$p" "$copy" 2>>"$LOG_FILE"; }; then
+    echo "unreadable (unusual name): $(printf '%q' "$p")" >>"$LOG_FILE"
+    continue
+  fi
+  echo "$copy" >>"$SCAN_LIST"
+  printf '%s\t%q\n' "$copy" "$p" >>"$COPY_MAP"
+done <"$CTRL_LIST"
+shopt -u nocasematch
+if [ "$CTRL_SKIPPED" -gt 0 ]; then
+  log "Skipped $CTRL_SKIPPED more file(s) with control characters in their paths (non-executable type or over the size cap)"
+fi
+if [ "$COPIES" -gt 0 ]; then
+  log "$COPIES file(s) with control characters in their paths are scanned as copies; results show them as \$'...' paths"
+fi
 log "Found $(wc -l <"$SCAN_LIST" | tr -d ' ') file(s) to scan"
 
 # ---- scan -----------------------------------------------------------------
@@ -474,6 +528,20 @@ nice -n 10 "$YR" scan --scan-list --print-meta --print-strings --threads "$THREA
 if [ "$SCAN_RC" -ne 0 ]; then
   log "ERROR: yr exited with code $SCAN_RC (see $LOG_FILE)"
   exit 4
+fi
+
+# Put the real (quoted) paths back in place of the copies
+if [ -s "$COPY_MAP" ]; then
+  awk -v map="$COPY_MAP" -v fmt="$OUTPUT_FORMAT" '
+    BEGIN { FS = "\t"
+            while ((getline line < map) > 0) {
+              i = index(line, "\t"); k = substr(line, 1, i - 1); v = substr(line, i + 1)
+              if (fmt != "text") { gsub(/\\/, "\\\\", v); gsub(/"/, "\\\"", v) }  # JSON string escaping
+              n++; from[n] = k; to[n] = v } }
+    { for (j = 1; j <= n; j++)
+        while ((p = index($0, from[j])) > 0) $0 = substr($0, 1, p - 1) to[j] substr($0, p + length(from[j]))
+      print }' "$RESULT_FILE" >"${RESULT_FILE}.tmp"
+  mv "${RESULT_FILE}.tmp" "$RESULT_FILE"
 fi
 
 if [ -n "$SUMMARY_FILE" ]; then

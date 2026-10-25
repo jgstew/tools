@@ -16,7 +16,9 @@
 #
 #        Files matched with no version string, e.g. Linux PHP extensions,
 #        are listed with version "unknown". Files whose names aren't valid
-#        UTF-8 are shown as bash $'...' quoted paths (e.g. $'/opt/app\351/php').
+#        UTF-8, or whose paths contain control characters (newline, tab, ...),
+#        are scanned as copies and shown as bash $'...' quoted paths (e.g.
+#        $'/opt/app\351/php', $'/opt/new\nline/php').
 #
 # Run with sudo for a full scan; otherwise unreadable files are logged and skipped.
 # Needs bash, coreutils, find, grep, sed, awk, tar + gzip, and curl or wget.
@@ -518,9 +520,16 @@ fi
 
 SCAN_LIST="${WORK_DIR}/scan_list.txt"
 FIND_LIST="${WORK_DIR}/find_list.txt"
+# A newline (or other control character) in a path would break the one-path-
+# per-line lists, so such paths go NUL-separated to their own list, copied below
+CTRL_LIST="${WORK_DIR}/ctrl_list.bin"
+: >"$CTRL_LIST"
 log "Listing files under $TARGET_PATH"
+# shellcheck disable=SC2016  # $0/$1 are for the inner sh
 "${LOW_PRIORITY[@]}" find "${ROOTS[@]}" -xdev \( "${PRUNE[@]}" \) -prune \
-  -o -type f ${NONEMPTY[@]+"${NONEMPTY[@]}"} "${SIZE_TEST[@]}" >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
+  -o -type f ${NONEMPTY[@]+"${NONEMPTY[@]}"} \
+  \( -path '*[[:cntrl:]]*' -exec sh -c 'printf "%s\0" "$1" >>"$0" || true' "$CTRL_LIST" {} \; \
+     -o "${SIZE_TEST[@]}" \) >"$FIND_LIST" 2>>"$LOG_FILE" || true  # non-zero on permission errors
 
 TAB=$'\t'
 SIZE_SKIPPED="$(grep -c "^SKIPPED_SIZE${TAB}" "$FIND_LIST" || true)"
@@ -538,9 +547,10 @@ fi
 
 # yr --scan-list aborts at the first path that isn't valid UTF-8 ("stream did not
 # contain valid UTF-8") and still exits 0, so one odd file name would silently
-# empty the whole scan. Such files are scanned as ASCII-named copies in the work
-# folder (a symlink loses the path in json output, a hard link would change the
-# file's ctime), and their results show the bash $'...' quoted real path.
+# empty the whole scan. Such files, and those with control characters in their
+# paths, are scanned as ASCII-named copies in the work folder (a symlink loses
+# the path in json output, a hard link would change the file's ctime), and their
+# results show the bash $'...' quoted real path.
 UTF8_SPLIT_AWK="${WORK_DIR}/utf8_split.awk"
 cat > "$UTF8_SPLIT_AWK" <<'AWK_SCRIPT'
 # needs LC_ALL=C so awk sees bytes; valid lines to stdout, others to file "bad"
@@ -551,27 +561,50 @@ BEGIN {
 { if ($0 ~ u8) print; else print > bad }
 AWK_SCRIPT
 NONUTF8_LIST="${WORK_DIR}/nonutf8_list.txt"
-NONUTF8_MAP="${WORK_DIR}/nonutf8_map.txt"
-: >"$NONUTF8_LIST"; : >"$NONUTF8_MAP"
+COPY_MAP="${WORK_DIR}/copy_map.txt"
+: >"$NONUTF8_LIST"; : >"$COPY_MAP"
 # Pure-ASCII paths (nearly all) are valid as-is; only the rest go through awk
 HIGH_BYTE=$'[\x80-\xff]'
 grep -v "$HIGH_BYTE" "$SCAN_LIST" >"${SCAN_LIST}.utf8" || true
 grep "$HIGH_BYTE" "$SCAN_LIST" | awk -v bad="$NONUTF8_LIST" -f "$UTF8_SPLIT_AWK" >>"${SCAN_LIST}.utf8" || true
 mv "${SCAN_LIST}.utf8" "$SCAN_LIST"
-if [ -s "$NONUTF8_LIST" ]; then
-  mkdir -p "${WORK_DIR_REAL}/nonutf8"
-  n=0
-  while IFS= read -r p; do
-    n=$((n + 1))
-    copy="${WORK_DIR_REAL}/nonutf8/${n}_"  # trailing _ so .../1_ never matches inside .../10_
-    if ! cp "$p" "$copy" 2>>"$LOG_FILE"; then
-      echo "unreadable (non-UTF-8 name): $(printf '%q' "$p")" >>"$LOG_FILE"
-      continue
-    fi
-    echo "$copy" >>"$SCAN_LIST"
-    printf '%s\t%q\n' "$copy" "$p" >>"$NONUTF8_MAP"
-  done <"$NONUTF8_LIST"
-  log "$n file(s) with non-UTF-8 names are scanned as copies; results show them as \$'...' paths"
+COPIES=0
+scan_as_copy() {
+  COPIES=$((COPIES + 1))
+  local copy="${WORK_DIR_REAL}/copies/${COPIES}_"  # trailing _ so .../1_ never matches inside .../10_
+  mkdir -p "${WORK_DIR_REAL}/copies"
+  # A reflink clone (btrfs, XFS) takes no extra space; BusyBox cp has no
+  # --reflink, so fall back to a plain copy
+  if ! { cp --reflink=auto "$1" "$copy" 2>/dev/null || cp "$1" "$copy" 2>>"$LOG_FILE"; }; then
+    echo "unreadable (unusual name): $(printf '%q' "$1")" >>"$LOG_FILE"
+    return 0
+  fi
+  echo "$copy" >>"$SCAN_LIST"
+  printf '%s\t%q\n' "$copy" "$1" >>"$COPY_MAP"
+}
+while IFS= read -r p; do scan_as_copy "$p"; done <"$NONUTF8_LIST"
+# Control-character paths skipped the size cap and extension filter in find
+# (a folder name with a tab sends every file below it here), so apply both now
+CTRL_SKIPPED=0
+shopt -s nocasematch
+while IFS= read -r -d '' p; do
+  if [ "$SKIP_NONBINARY" -eq 1 ] && [[ ${p##*/} =~ $NONBINARY_EXT_RE ]]; then
+    CTRL_SKIPPED=$((CTRL_SKIPPED + 1))
+    continue
+  fi
+  if [ "$MAX_MB" -gt 0 ] && [ "$(stat -c %s "$p" 2>/dev/null || echo 0)" -ge "$((MAX_MB * 1048576))" ]; then
+    echo "skipped (>= ${MAX_MB} MB): $(printf '%q' "$p")" >>"$LOG_FILE"
+    CTRL_SKIPPED=$((CTRL_SKIPPED + 1))
+    continue
+  fi
+  scan_as_copy "$p"
+done <"$CTRL_LIST"
+shopt -u nocasematch
+if [ "$CTRL_SKIPPED" -gt 0 ]; then
+  log "Skipped $CTRL_SKIPPED more file(s) with control characters in their paths (non-executable type or over the size cap)"
+fi
+if [ "$COPIES" -gt 0 ]; then
+  log "$COPIES file(s) with unusual names (control characters, not UTF-8) are scanned as copies; results show them as \$'...' paths"
 fi
 log "Found $(wc -l <"$SCAN_LIST" | tr -d ' ') file(s) to scan"
 
@@ -595,9 +628,9 @@ if grep -q 'did not contain valid UTF-8' "$LOG_FILE" 2>/dev/null; then
   exit 4
 fi
 
-# Put the real (quoted) paths back in place of the temporary links
-if [ -s "$NONUTF8_MAP" ]; then
-  awk -v map="$NONUTF8_MAP" -v fmt="$OUTPUT_FORMAT" '
+# Put the real (quoted) paths back in place of the copies
+if [ -s "$COPY_MAP" ]; then
+  awk -v map="$COPY_MAP" -v fmt="$OUTPUT_FORMAT" '
     BEGIN { FS = "\t"
             while ((getline line < map) > 0) {
               i = index(line, "\t"); k = substr(line, 1, i - 1); v = substr(line, i + 1)

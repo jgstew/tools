@@ -5,8 +5,11 @@ name: test_yara_x_scan_scripts
 # runtime and decoys in a folder, scans that folder at the default (1 thread)
 # and with 2 threads, and checks what is reported - and what isn't:
 #   found:     the PHP binary/DLLs, and a renamed copy (detection is by content)
+#   found:     (Linux, macOS) copies with a newline / tab in the file or folder
+#              name, reported as bash $'...' quoted paths
 #   not found: a copy in an excluded folder (-x / -ExcludePath), a copy with a
-#              skipped extension (.zip), an empty file, and a php_version.h text file
+#              skipped extension (.zip, and .png with a newline in the name), an
+#              empty file, and a php_version.h text file
 # Runs only when this workflow or one of the three scripts changes.
 on:
   push:
@@ -52,19 +55,26 @@ jobs:
           cp "$F/bin/php" "$F/decoys/php.zip"
           : > "$F/decoys/empty"
           printf '#define PHP_MAJOR_VERSION 8\n#define PHP_VERSION "8.3.1"\n' > "$F/decoys/php_version.h"
+          # control characters in a file or folder name: scanned as copies
+          mkdir -p "$F/odd/dir"$'\n'"nl"
+          cp "$F/bin/php" "$F/odd/new"$'\n'"line"
+          cp "$F/bin/php" "$F/odd/tab"$'\t'"php"
+          cp "$F/bin/php" "$F/odd/dir"$'\n'"nl/php"
+          cp "$F/bin/php" "$F/decoys/new"$'\n'"line.png"
 
       - name: Scan and check (1 thread default, then -T 2)
         run: |
           F="$RUNNER_TEMP/fixtures"
           # The script reports paths resolved with pwd -P
           RF=$(cd "$F" && pwd -P)
+          SH=$(command -v bash)
           for threads in default 2; do
             out="$RUNNER_TEMP/out-$threads"
             rm -rf "$out" "$out.console"
             args=(-t "$F" -o "$out" -x "$F/excluded")
             [ "$threads" = default ] || args+=(-T "$threads")
             set +e
-            bash bash/yara_x_scan_linux.sh "${args[@]}" 2>&1 | tee "$out.console"
+            "$SH" bash/yara_x_scan_linux.sh "${args[@]}" 2>&1 | tee "$out.console"
             rc=${PIPESTATUS[0]}
             set -e
             [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 (matches found), got $rc"; exit 1; }
@@ -75,7 +85,13 @@ jobs:
             for p in bin/php renamed/webd; do
               grep -qx "$RF/$p	$PHP_EXPECT" "$results" || { echo "::error::$p with version $PHP_EXPECT not reported"; exit 1; }
             done
+            # reported as the bash $'...' quoted path ($SH: the bash that ran the script)
+            for p in "odd/new"$'\n'"line" "odd/tab"$'\t'"php" "odd/dir"$'\n'"nl/php"; do
+              q=$("$SH" -c 'printf %q "$1"' _ "$RF/$p")
+              grep -qxF "$q	$PHP_EXPECT" "$results" || { echo "::error::$q with version $PHP_EXPECT not reported"; exit 1; }
+            done
             if grep -E "/(excluded|decoys)/" "$results"; then echo "::error::excluded or decoy file reported"; exit 1; fi
+            if grep /copies/ "$results"; then echo "::error::work-folder copy path reported"; exit 1; fi
           done
 
   macos:
@@ -103,19 +119,26 @@ jobs:
           cp "$F/bin/php" "$F/decoys/php.zip"
           : > "$F/decoys/empty"
           printf '#define PHP_MAJOR_VERSION 8\n#define PHP_VERSION "8.3.1"\n' > "$F/decoys/php_version.h"
+          # control characters in a file or folder name: scanned as copies
+          mkdir -p "$F/odd/dir"$'\n'"nl"
+          cp "$F/bin/php" "$F/odd/new"$'\n'"line"
+          cp "$F/bin/php" "$F/odd/tab"$'\t'"php"
+          cp "$F/bin/php" "$F/odd/dir"$'\n'"nl/php"
+          cp "$F/bin/php" "$F/decoys/new"$'\n'"line.png"
 
       - name: Scan and check (1 thread default, then -T 2)
         run: |
           F="$RUNNER_TEMP/fixtures"
           # The scripts resolve paths with pwd -P (/var -> /private/var on macOS)
           RF=$(cd "$F" && pwd -P)
+          SH=/bin/bash
           for threads in default 2; do
             out="$RUNNER_TEMP/out-$threads"
             rm -rf "$out" "$out.console"
             args=(-t "$F" -o "$out" -x "$F/excluded")
             [ "$threads" = default ] || args+=(-T "$threads")
             set +e
-            /bin/bash bash/yara_x_scan_macos.sh "${args[@]}" 2>&1 | tee "$out.console"
+            "$SH" bash/yara_x_scan_macos.sh "${args[@]}" 2>&1 | tee "$out.console"
             rc=${PIPESTATUS[0]}
             set -e
             [ "$rc" -eq 1 ] || { echo "::error::expected exit 1 (matches found), got $rc"; exit 1; }
@@ -126,7 +149,13 @@ jobs:
             for p in bin/php renamed/webd; do
               grep -qx "$RF/$p	$PHP_EXPECT" "$results" || { echo "::error::$p with version $PHP_EXPECT not reported"; exit 1; }
             done
+            # reported as the bash $'...' quoted path ($SH: the bash that ran the script)
+            for p in "odd/new"$'\n'"line" "odd/tab"$'\t'"php" "odd/dir"$'\n'"nl/php"; do
+              q=$("$SH" -c 'printf %q "$1"' _ "$RF/$p")
+              grep -qxF "$q	$PHP_EXPECT" "$results" || { echo "::error::$q with version $PHP_EXPECT not reported"; exit 1; }
+            done
             if grep -E "/(excluded|decoys)/" "$results"; then echo "::error::excluded or decoy file reported"; exit 1; fi
+            if grep /copies/ "$results"; then echo "::error::work-folder copy path reported"; exit 1; fi
           done
 
   windows:

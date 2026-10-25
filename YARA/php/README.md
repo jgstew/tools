@@ -151,6 +151,11 @@ and report only `path<TAB>version`. Defaults aim at an unattended background sca
 - **Reusing the download:** `-k` / `-KeepArchive` keeps the `yr` release archive
   in the output folder; pass that folder back with `-a` / `-YaraXArchive` and its
   SHA256 is checked again.
+- **Unusual file names (Linux, macOS):** `yr` reads its file list one UTF-8 path
+  per line, so files whose paths contain control characters (newline, tab, ...)
+  or, on Linux, aren't valid UTF-8 are scanned as copies in the work folder and
+  reported as bash `$'...'` quoted paths (e.g. `$'/opt/new\nline/php'`). Windows
+  file names can't contain either.
 
 Measured cost (single runs, cold cache, 1 thread): ~90 s for a test Mac mini
 (74k files sent to `yr`), ~8 min for a developer laptop (1.36M files), a few
