@@ -187,3 +187,6 @@ jobs:
             $bad = @($lines | Where-Object { $_ -like "$F\excluded\*" -or $_ -like "$F\decoys\*" })
             if ($bad.Count) { throw "excluded or decoy file reported: $($bad -join '; ')" }
           }
+          # The runner exits with the last native $LASTEXITCODE, which is the
+          # scan's expected 1 (matches found); every check above passed
+          exit 0
