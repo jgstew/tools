@@ -33,7 +33,10 @@
 
     Skipped by default (each skip is reported while running; files over the size
     cap are listed in the log). A skipped folder that contains the target is not
-    skipped, and none of the skips apply when the target is a single file.
+    skipped, and none of the skips apply when the target is a single file. To
+    scan just one skipped folder, target it (e.g. -Path C:\Windows\WinSxS);
+    -NoSkips turns off all of these skips except empty files, cloud
+    placeholders and this script's own folders.
       - Files of MaxMB (512) MB or more: PHP builds are ~20-40 MB, the largest
         known (FrankenPHP, static PHP in Go) ~180 MB; this cuts pagefile.sys,
         VM disks, WSL/Docker .vhdx, media. Use -MaxMB 0 to include.
@@ -41,12 +44,11 @@
         files, C headers, debug symbols (.pdb), event logs, databases,
         component manifests, BigFix Fixlet files (.fxf) and virtual disks: the
         rules only match executables (by header). Files with no extension, .exe,
-        .dll, .so, .o are kept. Use -IncludeNonBinary to include.
+        .dll, .so, .o are kept.
       - Empty files.
       - Cloud placeholders (OneDrive Files On-Demand, Dropbox, iCloud, etc.):
         files and folders with the Offline, RecallOnOpen or RecallOnDataAccess
-        attribute are only online, and reading them would download them. Use
-        -IncludeCloudFiles to include.
+        attribute are only online, and reading them would download them.
       - System folders that can't hold a PHP install, on every scanned drive:
           \Windows\WinSxS               component store: Microsoft side-by-side
                                         components only, mostly hard links to
@@ -64,8 +66,7 @@
                                         readable even as Administrator
           \pagefile.sys, \hiberfil.sys, \swapfile.sys  locked by the OS
         The rest of C:\Windows is scanned on purpose: old PHP setup guides told
-        people to copy php5ts.dll / php.ini into C:\Windows\System32. Use
-        -IncludeSystemPaths to include these too.
+        people to copy php5ts.dll / php.ini into C:\Windows\System32.
       - This script's own output and temp folders (old results contain matched
         strings).
     Nothing where PHP is plausible is skipped: C:\xampp, C:\wamp*, C:\laragon,
@@ -95,8 +96,9 @@
 .PARAMETER Format
     yr output format: text, json or ndjson. Default: text
 
-.PARAMETER KeepBinary
-    Keep the downloaded yr.exe in OutputDir\bin for reuse.
+.PARAMETER KeepArchive
+    Keep the downloaded yr release zip in OutputDir, to reuse later with
+    -YaraXArchive <OutputDir> (its SHA256 is checked again).
 
 .PARAMETER YaraXArchive
     Use a local yr release zip instead of downloading: the file, or a folder
@@ -104,7 +106,7 @@
     SHA256 is still checked.
 
 .PARAMETER MaxMB
-    Skip files of MaxMB MB or larger; 0 = no limit. Default: 512
+    Skip files of MaxMB MB or larger; 0 = no limit. Default: 512, or 0 with -NoSkips
 
 .PARAMETER Threads
     Number of yr scan threads. Default: 1 (2 finishes sooner, at about twice the peak CPU)
@@ -113,14 +115,11 @@
     Folders to skip, comma-separated (-ExcludePath D:\backup,E:\media). A
     folder that contains the target is not skipped.
 
-.PARAMETER IncludeSystemPaths
-    Also scan the system folders listed above (WinSxS, Recycle Bin, ...).
-
-.PARAMETER IncludeNonBinary
-    Also scan file types that can't be executables.
-
-.PARAMETER IncludeCloudFiles
-    Also read online-only cloud files. This downloads them.
+.PARAMETER NoSkips
+    Turn off the default skips listed above: system folders, non-executable
+    file types and the size cap (unless -MaxMB is given). Empty files and
+    online-only cloud files are still skipped. -ExcludePath still applies.
+    To scan just one skipped folder, target it with -Path instead.
 
 .PARAMETER Help
     Show this help.
@@ -135,7 +134,7 @@
     Scan all local fixed drives, writing results to .\yara_results.
 
 .EXAMPLE
-    .\yara_x_scan_windows.ps1 -Path C:\xampp, D:\web -OutputDir C:\Temp\yara -KeepBinary
+    .\yara_x_scan_windows.ps1 -Path C:\xampp, D:\web -OutputDir C:\Temp\yara -KeepArchive
 
 .EXAMPLE
     .\yara_x_scan_windows.ps1 -Format ndjson -MaxMB 0
@@ -158,21 +157,18 @@ param(
     # Validated in the script body (not ValidateSet/[int]) so bad values exit with code 2
     [string]$Format = 'text',
 
-    [switch]$KeepBinary,
+    [switch]$KeepArchive,
 
     [string]$YaraXArchive,
 
-    [string]$MaxMB = '512',
+    # Omitted = 512, or 0 with -NoSkips (see Invoke-Main)
+    [string]$MaxMB,
 
     [string]$Threads = '1',
 
     [string[]]$ExcludePath,
 
-    [switch]$IncludeSystemPaths,
-
-    [switch]$IncludeNonBinary,
-
-    [switch]$IncludeCloudFiles,
+    [switch]$NoSkips,
 
     [switch]$Help,
 
@@ -360,11 +356,12 @@ function Test-PathWithin
 function Get-YaraX
 {
     # Downloads (or copies -ArchivePath), verifies and unpacks yr.exe into
-    # $WorkDir; returns its path. Throws on any failure (the caller maps that
-    # to exit code 3).
+    # $WorkDir; returns its path. With -KeepDir, the verified archive is also
+    # copied there. Throws on any failure (the caller maps that to exit code 3).
     param(
         [Parameter(Mandatory = $true)][string]$WorkDir,
-        [string]$ArchivePath
+        [string]$ArchivePath,
+        [string]$KeepDir
     )
 
     $zipPath = Join-Path -Path $WorkDir -ChildPath $YaraXAsset
@@ -420,6 +417,20 @@ function Get-YaraX
         throw "SHA256 mismatch for $YaraXAsset`n  expected: $YaraXSha256`n  actual:   $actual"
     }
     Write-ScanLog "SHA256 verified: $actual"
+
+    if ($KeepDir)
+    {
+        # A failed copy only costs a download next time, so it doesn't stop the scan
+        try
+        {
+            Copy-Item -LiteralPath $zipPath -Destination $KeepDir -Force
+            Write-ScanLog "Kept $(Join-Path -Path $KeepDir -ChildPath $YaraXAsset) (reuse with -YaraXArchive $KeepDir)"
+        }
+        catch
+        {
+            Write-ScanLog "WARNING: could not keep the archive in ${KeepDir}: $($_.Exception.Message)"
+        }
+    }
 
     $binDir = Join-Path -Path $WorkDir -ChildPath 'bin'
     try
@@ -689,14 +700,12 @@ function Invoke-Main
         [string[]]$Path,
         [string]$OutputDir,
         [string]$Format,
-        [switch]$KeepBinary,
+        [switch]$KeepArchive,
         [string]$YaraXArchive,
         [string]$MaxMB,
         [string]$Threads = '1',
         [string[]]$ExcludePath,
-        [switch]$IncludeSystemPaths,
-        [switch]$IncludeNonBinary,
-        [switch]$IncludeCloudFiles,
+        [switch]$NoSkips,
         [switch]$Help,
         [string[]]$ExtraArgs
     )
@@ -727,6 +736,8 @@ function Invoke-Main
         Write-UsageError "Invalid -Format '$Format' (use text, json or ndjson)."
         return 2
     }
+    # -NoSkips lifts the size cap too, unless -MaxMB is given
+    if (-not $PSBoundParameters.ContainsKey('MaxMB')) { $MaxMB = if ($NoSkips) { '0' } else { '512' } }
     if ($MaxMB -notmatch '^[0-9]{1,7}$')
     {
         Write-UsageError "Invalid -MaxMB '$MaxMB' (whole number of MB, 0 = no limit)."
@@ -800,7 +811,16 @@ function Invoke-Main
         # ---- download, verify, unpack -------------------------------------------
         try
         {
-            $yr = Get-YaraX -WorkDir $workDir -ArchivePath $YaraXArchive
+            $keepDir = $null
+            if ($KeepArchive -and $YaraXArchive)
+            {
+                Write-ScanLog "Not keeping the archive (-KeepArchive): it is already local at $YaraXArchive"
+            }
+            elseif ($KeepArchive)
+            {
+                $keepDir = $OutputDir
+            }
+            $yr = Get-YaraX -WorkDir $workDir -ArchivePath $YaraXArchive -KeepDir $keepDir
             $yrVersion = (& $yr --version 2>&1 | Out-String).Trim()
             if ($LASTEXITCODE -ne 0) { throw "yr --version failed: $yrVersion" }
             Write-ScanLog "Unpacked $yrVersion"
@@ -824,22 +844,20 @@ function Invoke-Main
         }
 
         $skipExt = $null
-        if (-not $IncludeNonBinary)
+        if (-not $NoSkips)
         {
             $skipExt = New-Object -TypeName 'System.Collections.Generic.HashSet[string]' -ArgumentList ([string[]]$NonBinaryExtensions), ([System.StringComparer]::OrdinalIgnoreCase)
-            Write-ScanLog 'Skipping non-executable file types (use -IncludeNonBinary to include)'
+            Write-ScanLog 'Skipping non-executable file types (use -NoSkips to include)'
         }
-        if (-not $IncludeCloudFiles)
-        {
-            Write-ScanLog 'Skipping online-only cloud files (use -IncludeCloudFiles to include)'
-        }
+        # Always, even with -NoSkips: reading online-only files would download them
+        Write-ScanLog 'Skipping online-only cloud files'
         if ($maxBytes -gt 0)
         {
             Write-ScanLog "Skipping files of $MaxMB MB or more (use -MaxMB 0 to include)"
         }
-        if (-not $IncludeSystemPaths)
+        if (-not $NoSkips)
         {
-            Write-ScanLog "Skipping system folders: $($SystemSkipDirs -join ', '), Users\*\$($ProfileSkipDirs -join ', Users\*\') (use -IncludeSystemPaths to include)"
+            Write-ScanLog "Skipping system folders: $($SystemSkipDirs -join ', '), Users\*\$($ProfileSkipDirs -join ', Users\*\') (target one with -Path, or -NoSkips, to include)"
         }
         # powershell.exe -File passes "A,B" as one string, so split on commas here
         $excludeDirs = @()
@@ -881,7 +899,7 @@ function Invoke-Main
                     else { [void]$skipDirs.Add($d); Write-ScanLog "Skipping $d (-ExcludePath)" }
                 }
                 $skipRootFiles = $null
-                if (-not $IncludeSystemPaths)
+                if (-not $NoSkips)
                 {
                     $root = [System.IO.Path]::GetPathRoot($target)
                     $systemDirs = @($SystemSkipDirs | ForEach-Object { Join-Path -Path $root -ChildPath $_ })
@@ -900,7 +918,7 @@ function Invoke-Main
                 Write-ScanLog "Listing files under $target"
                 $stats = Get-ScanFile -Root $target -ListWriter $listWriter -LogWriter $logWriter `
                     -SkipDirs $skipDirs -SkipRootFiles $skipRootFiles -SkipExtensions $skipExt `
-                    -MaxBytes $maxBytes -SkipCloud (-not $IncludeCloudFiles)
+                    -MaxBytes $maxBytes -SkipCloud $true
                 foreach ($k in @($totals.Keys)) { $totals[$k] += $stats.$k }
             }
         }
@@ -947,14 +965,6 @@ function Invoke-Main
             Write-ScanLog "Versions: $summaryFile ($($lines.Count) path(s))"
         }
 
-        if ($KeepBinary)
-        {
-            $keepDir = Join-Path -Path $OutputDir -ChildPath 'bin'
-            $null = New-Item -Path $keepDir -ItemType Directory -Force
-            Copy-Item -LiteralPath $yr -Destination (Join-Path -Path $keepDir -ChildPath 'yr.exe') -Force
-            Write-ScanLog "Kept yr binary at $(Join-Path -Path $keepDir -ChildPath 'yr.exe')"
-        }
-
         # Any output in text/ndjson mode means at least one match; json always prints an object
         if ($Format -eq 'json')
         {
@@ -999,16 +1009,16 @@ if ($MyInvocation.InvocationName -ne '.')
         Path               = $Path
         OutputDir          = $OutputDir
         Format             = $Format
-        KeepBinary         = $KeepBinary
+        KeepArchive        = $KeepArchive
         YaraXArchive       = $YaraXArchive
         MaxMB              = $MaxMB
         Threads            = $Threads
         ExcludePath        = $ExcludePath
-        IncludeSystemPaths = $IncludeSystemPaths
-        IncludeNonBinary   = $IncludeNonBinary
-        IncludeCloudFiles  = $IncludeCloudFiles
+        NoSkips            = $NoSkips
         Help               = $Help
         ExtraArgs          = $ExtraArgs
     }
+    # Pass -MaxMB on only when given, so Invoke-Main can tell "omitted" from "-MaxMB ''"
+    if (-not $PSBoundParameters.ContainsKey('MaxMB')) { $mainArgs.Remove('MaxMB') }
     exit (Invoke-Main @mainArgs)
 }

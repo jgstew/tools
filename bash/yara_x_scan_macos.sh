@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#### Usage: ./yara_x_scan_macos.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-a YR_ARCHIVE] [-m MAX_MB] [-T THREADS] [-x DIR]... [-S] [-E] [-C]
+#### Usage: ./yara_x_scan_macos.sh [-t TARGET_PATH] [-o OUTPUT_DIR] [-f text|json|ndjson] [-k] [-a YR_ARCHIVE] [-m MAX_MB] [-T THREADS] [-x DIR]... [-A]
 #
 # Self-contained YARA-X scan for macOS:
 #   1. downloads the YARA-X CLI (yr) release for this CPU architecture
@@ -22,21 +22,25 @@
 #   -t TARGET_PATH  file or folder to scan            (default: / = whole local boot drive)
 #   -o OUTPUT_DIR   folder to write results into      (default: ./yara_results)
 #   -f FORMAT       yr output format: text|json|ndjson (default: text)
-#   -k              keep the downloaded yr binary in OUTPUT_DIR/bin for reuse
+#   -k              keep the downloaded yr archive in OUTPUT_DIR, to reuse
+#                   later with -a OUTPUT_DIR (its SHA256 is checked again)
 #   -a YR_ARCHIVE   use a local yr release archive instead of downloading: the
 #                   file, or a folder holding it under its release name (e.g. a
 #                   BigFix prefetch folder); its SHA256 is still checked
-#   -m MAX_MB       skip files of MAX_MB MB or larger, 0 = no limit (default: 512)
+#   -m MAX_MB       skip files of MAX_MB MB or larger, 0 = no limit
+#                   (default: 512, or 0 with -A)
 #   -T THREADS      yr scan threads                   (default: 1)
 #   -x DIR          also skip this folder; repeat for more (a find -path
 #                   pattern such as '*/node_modules' works too)
-#   -S              also scan the sealed macOS system paths
-#   -E              also scan file types that can't be executables
-#   -C              also scan cloud-drive folders
+#   -A              no default skips: scan everything listed below as skipped
+#                   by default, except empty files and cloud files; -x still
+#                   applies
 #   -h              show this help
 #
 # Skipped by default (none of these can hold a likely PHP install; each skip
-# is reported while running, files over the size cap are listed in the log):
+# is reported while running, files over the size cap are listed in the log).
+# To scan just one of these folders, target it (e.g. -t /usr/bin) instead of
+# using -A:
 #   - files of 512 MB or more: PHP builds are ~20 MB, the largest known
 #     (FrankenPHP, static PHP in Go) ~180 MB; this cuts VM disks, Docker.raw,
 #     model weights, media
@@ -73,14 +77,13 @@ SHA256_X86_64="d059da4b91c7d7b43f6f50174a7739e3362b51f349f2ba8b33d46e3334bb3300"
 TARGET_PATH="/"
 OUTPUT_DIR="$PWD/yara_results"
 OUTPUT_FORMAT="text"
-KEEP_BINARY=0
+KEEP_ARCHIVE=0
 YR_ARCHIVE=""
-MAX_MB=512
+MAX_MB=""
+MAX_MB_SET=0
 THREADS=1
 EXCLUDE_DIRS=()
-SKIP_SEALED=1
-SKIP_NONBINARY=1
-SKIP_CLOUD=1
+NO_SKIPS=0
 
 # Extensions of files that can't start with an executable header. Compared
 # case-insensitively with the text after the last "." of the file name. The second
@@ -98,19 +101,17 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
 }
 
-while getopts ":t:o:f:ka:m:T:x:SECh" opt; do
+while getopts ":t:o:f:ka:m:T:x:Ah" opt; do
   case "$opt" in
     t) TARGET_PATH="$OPTARG" ;;
     o) OUTPUT_DIR="$OPTARG" ;;
     f) OUTPUT_FORMAT="$OPTARG" ;;
-    k) KEEP_BINARY=1 ;;
+    k) KEEP_ARCHIVE=1 ;;
     a) YR_ARCHIVE="$OPTARG" ;;
-    m) MAX_MB="$OPTARG" ;;
+    m) MAX_MB="$OPTARG"; MAX_MB_SET=1 ;;
     T) THREADS="$OPTARG" ;;
     x) [ "$OPTARG" = / ] && EXCLUDE_DIRS+=( / ) || EXCLUDE_DIRS+=( "${OPTARG%/}" ) ;;
-    S) SKIP_SEALED=0 ;;
-    E) SKIP_NONBINARY=0 ;;
-    C) SKIP_CLOUD=0 ;;
+    A) NO_SKIPS=1 ;;
     h) usage; exit 0 ;;
     :) echo "Option -$OPTARG requires an argument." >&2; usage; exit 2 ;;
     \?) echo "Unknown option: -$OPTARG" >&2; usage; exit 2 ;;
@@ -121,6 +122,15 @@ case "$OUTPUT_FORMAT" in
   text|json|ndjson) ;;
   *) echo "Invalid format '$OUTPUT_FORMAT' (use text, json or ndjson)." >&2; exit 2 ;;
 esac
+
+# -A lifts the size cap too, unless -m is given
+if [ "$MAX_MB_SET" -eq 0 ]; then
+  [ "$NO_SKIPS" -eq 1 ] && MAX_MB=0 || MAX_MB=512
+fi
+SKIP_SEALED=$((1 - NO_SKIPS))
+SKIP_NONBINARY=$((1 - NO_SKIPS))
+# Not turned off by -A: reading online-only files would download them
+SKIP_CLOUD=1
 
 case "$MAX_MB" in
   ''|*[!0-9]*) echo "Invalid -m '$MAX_MB' (whole number of MB, 0 = no limit)." >&2; exit 2 ;;
@@ -150,11 +160,17 @@ esac
 ASSET_NAME="yara-x-v${YARAX_VERSION}-${ARCH}-apple-darwin.tar.gz"
 ASSET_URL="${YARAX_BASE_URL}/${ASSET_NAME}"
 
-WORK_DIR="$(mktemp -d -t yara_x_scan)"
+if ! WORK_DIR="$(mktemp -d -t yara_x_scan)"; then
+  echo "Cannot create a temporary folder" >&2
+  exit 3
+fi
 cleanup() { rm -rf "$WORK_DIR"; }
 trap cleanup EXIT
 
-mkdir -p "$OUTPUT_DIR"
+if ! mkdir -p "$OUTPUT_DIR"; then
+  echo "Cannot create output folder: $OUTPUT_DIR" >&2
+  exit 2
+fi
 TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
 RESULT_BASE="${OUTPUT_DIR}/yara_results_$(hostname -s)_${TIMESTAMP}"
 SUMMARY_FILE=""
@@ -174,7 +190,10 @@ if [ -n "$YR_ARCHIVE" ]; then
     exit 3
   fi
   log "Using local archive $YR_ARCHIVE"
-  cp "$YR_ARCHIVE" "${WORK_DIR}/${ASSET_NAME}"
+  if ! cp "$YR_ARCHIVE" "${WORK_DIR}/${ASSET_NAME}"; then
+    log "ERROR: cannot read $YR_ARCHIVE"
+    exit 3
+  fi
 else
   log "Downloading $ASSET_URL"
   if ! curl --fail --silent --show-error --location \
@@ -194,6 +213,17 @@ if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
   exit 3
 fi
 log "SHA256 verified: $ACTUAL_SHA256"
+
+if [ "$KEEP_ARCHIVE" -eq 1 ]; then
+  if [ -n "$YR_ARCHIVE" ]; then
+    log "Not keeping the archive (-k): it is already local at $YR_ARCHIVE"
+  # A failed copy only costs a download next time, so it doesn't stop the scan
+  elif cp "${WORK_DIR}/${ASSET_NAME}" "${OUTPUT_DIR}/${ASSET_NAME}"; then
+    log "Kept ${OUTPUT_DIR}/${ASSET_NAME} (reuse with -a $OUTPUT_DIR)"
+  else
+    log "WARNING: could not keep the archive in $OUTPUT_DIR"
+  fi
+fi
 
 # ---- unpack ---------------------------------------------------------------
 mkdir -p "${WORK_DIR}/bin"
@@ -328,13 +358,16 @@ AWK_SCRIPT
 if [ "$(id -u)" -ne 0 ]; then
   log "WARNING: not running as root - protected files will be skipped (see log)"
 fi
-OUTPUT_DIR_REAL="$(cd "$OUTPUT_DIR" && pwd -P)"
+# A failed cd would make set -e exit 1, which means "matches found"
+OUTPUT_DIR_REAL="$(cd "$OUTPUT_DIR" && pwd -P)" || { log "ERROR: cannot enter $OUTPUT_DIR"; exit 2; }
 WORK_DIR_REAL="$(cd "$WORK_DIR" && pwd -P)"
 if [ -d "$TARGET_PATH" ]; then
-  TARGET_PATH="$(cd "$TARGET_PATH" && pwd -P)"
+  TARGET_REAL="$(cd "$TARGET_PATH" && pwd -P)" || { log "ERROR: cannot enter $TARGET_PATH"; exit 2; }
 else
-  TARGET_PATH="$(cd "$(dirname "$TARGET_PATH")" && pwd -P)/$(basename "$TARGET_PATH")"
+  TARGET_REAL="$(cd "$(dirname "$TARGET_PATH")" && pwd -P)/$(basename "$TARGET_PATH")" ||
+    { log "ERROR: cannot enter the folder of $TARGET_PATH"; exit 2; }
 fi
+TARGET_PATH="$TARGET_REAL"
 
 # path_within PATH DIR: PATH is DIR or somewhere below it
 path_within() { case "$1/" in "$2"/*) return 0 ;; esac; return 1; }
@@ -368,7 +401,7 @@ if [ "$SKIP_SEALED" -eq 1 ]; then
   # find's -path * also matches "/", hence both /usr/local exclusions
   PRUNE+=( -o -path /System -o -path /bin -o -path /sbin -o -path /Library/Apple
            -o \( -path '/usr/*' ! -path /usr/local ! -path '/usr/local/*' \) )
-  log "Skipping sealed system paths (use -S to include)"
+  log "Skipping sealed system paths (target one with -t, or -A, to include)"
 fi
 # -x: find prints resolved paths, so an existing folder is resolved like
 # TARGET_PATH (/tmp -> /private/tmp). A skip that is or contains TARGET_PATH
@@ -390,7 +423,7 @@ if [ "$SKIP_CLOUD" -eq 1 ]; then
   if find / -maxdepth 0 -flags +dataless >/dev/null 2>&1; then
     DATALESS=( ! -flags +dataless )
   fi
-  log "Skipping cloud-drive folders and online-only files (use -C to include)"
+  log "Skipping cloud-drive folders and online-only files (target one with -t to include)"
 fi
 # Files at/over the cap are printed with a SKIPPED_SIZE tag, split out below
 SIZE_TEST=( -print )
@@ -422,7 +455,7 @@ if [ "$SKIP_NONBINARY" -eq 1 ]; then
       if (match(f, /\.[^.]*$/) && (tolower(substr(f, RSTART + 1)) in skip)) next
       print }' "$FIND_LIST" >"$SCAN_LIST"
   NONBINARY_SKIPPED=$(( $(wc -l <"$FIND_LIST") - SIZE_SKIPPED - $(wc -l <"$SCAN_LIST") ))
-  log "Skipped $NONBINARY_SKIPPED non-executable file type(s) (use -E to include)"
+  log "Skipped $NONBINARY_SKIPPED non-executable file type(s) (use -A to include)"
 else
   grep -v "^SKIPPED_SIZE${TAB}" "$FIND_LIST" >"$SCAN_LIST" || true
 fi
@@ -446,12 +479,6 @@ fi
 if [ -n "$SUMMARY_FILE" ]; then
   awk -f "$VERSIONS_AWK" "$RESULT_FILE" | sort -u >"$SUMMARY_FILE"
   log "Versions: $SUMMARY_FILE ($(wc -l <"$SUMMARY_FILE" | tr -d ' ') path(s))"
-fi
-
-if [ "$KEEP_BINARY" -eq 1 ]; then
-  mkdir -p "${OUTPUT_DIR}/bin"
-  cp "$YR" "${OUTPUT_DIR}/bin/yr"
-  log "Kept yr binary at ${OUTPUT_DIR}/bin/yr"
 fi
 
 if [ -s "$LOG_FILE" ]; then

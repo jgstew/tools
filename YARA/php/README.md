@@ -138,9 +138,19 @@ and report only `path<TAB>version`. Defaults aim at an unattended background sca
   cloud files, and on Windows `WinSxS`, `servicing`, the .NET assembly caches,
   Defender definitions and the BigFix Console cache. `Program Files\WindowsApps`
   is scanned (MSIX / Store packages are installed software).
+- **Scanning a skipped folder:** target it (`-t /var/lib/docker`,
+  `-Path C:\Windows\WinSxS`); a skip that contains the target is turned off.
+  `-A` (bash) / `-NoSkips` (PowerShell) turns off all the default skips at once,
+  including the size cap unless `-m` / `-MaxMB` is given. Empty files and
+  online-only cloud files are still skipped with `-A` / `-NoSkips` (reading
+  cloud files would download them); on macOS, targeting a cloud folder with
+  `-t` reads it.
 - **Extra exclusions:** `-x DIR` (bash, repeatable, also a find `-path` pattern)
   or `-ExcludePath A,B` (PowerShell). An exclusion that contains the scan target
   is ignored.
+- **Reusing the download:** `-k` / `-KeepArchive` keeps the `yr` release archive
+  in the output folder; pass that folder back with `-a` / `-YaraXArchive` and its
+  SHA256 is checked again.
 
 Measured cost (single runs, cold cache, 1 thread): ~90 s for a test Mac mini
 (74k files sent to `yr`), ~8 min for a developer laptop (1.36M files), a few
