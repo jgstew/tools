@@ -12,10 +12,13 @@
 #      filesystems (/proc, /sys, /dev, /run) are skipped
 #   5. writes results + a log to OUTPUT_DIR; for text format:
 #        yara_results_<host>_<time>.raw.text  full yr output (rules, meta, strings)
-#        yara_results_<host>_<time>.text      "path<TAB>version", one per line
+#        yara_results_<host>_<time>.text      "path<TAB>product<TAB>version",
+#                                             one line per product in a file
 #
-#        Files matched with no version string, e.g. Linux PHP extensions,
-#        are listed with version "unknown". Files whose names aren't valid
+#        product is php, node or electron; an Electron framework gets a node
+#        and an electron line. Files matched with no version string, e.g.
+#        Linux PHP extensions or Node addons, are listed with version
+#        "unknown". Files whose names aren't valid
 #        UTF-8, or whose paths contain control characters (newline, tab, ...),
 #        are scanned as copies and shown as bash $'...' quoted paths (e.g.
 #        $'/opt/app\351/php', $'/opt/new\nline/php').
@@ -45,23 +48,23 @@
 #                   by default (except empty files); -x still applies
 #   -h              show this help
 #
-# Skipped by default (none of these can hold a likely host PHP install; each
-# skip is reported while running, files over the size cap and skipped mounts
-# are listed in the log). To scan just one of these folders, target it
-# (e.g. -t /var/lib/docker) instead of using -A:
+# Skipped by default (none of these can hold a likely host PHP or Node.js
+# install; each skip is reported while running, files over the size cap and
+# skipped mounts are listed in the log). To scan just one of these folders,
+# target it (e.g. -t /var/lib/docker) instead of using -A:
 #   - files of 512 MB or more: PHP builds are ~20 MB, the largest known
-#     (FrankenPHP, static PHP in Go) ~180 MB; this cuts VM disks, model
-#     weights, media
+#     (FrankenPHP, static PHP in Go) ~180 MB, node 8.x-25.x 33-127 MB,
+#     Electron frameworks 125-350 MB; this cuts VM disks, model weights, media
 #   - images, media, archives, packages, documents, fonts, web/source/text
 #     files, C headers, logs and databases: the rules only match executables
 #     (by header); files with no extension, .so, .dll, .exe, .o are kept
 #   - empty files
 #   - container storage: /var/lib/docker, /var/lib/containers,
 #     /var/lib/containerd, /var/lib/rancher, /var/lib/lxc, /var/lib/lxd,
-#     /var/snap/lxd, ~/.local/share/containers - PHP inside images isn't a host
-#     install and repeats once per image layer
+#     /var/snap/lxd, ~/.local/share/containers - PHP or Node inside images
+#     isn't a host install and repeats once per image layer
 #   - snapshots: /.snapshots (snapper), /timeshift - full copies of the system
-#     that would repeat every distro PHP
+#     that would repeat every distro PHP and Node
 # A skip whose folder contains TARGET_PATH is turned off automatically, and
 # none apply when TARGET_PATH is a single file.
 #
@@ -73,7 +76,7 @@
 #
 # Release: https://github.com/VirusTotal/yara-x/releases/tag/v1.22.0
 # SHA256 values below are the GitHub-computed asset digests for v1.22.0.
-# Related: https://github.com/jgstew/tools/tree/master/YARA/php
+# Related: https://github.com/jgstew/tools/tree/master/YARA
 
 set -euo pipefail
 
@@ -284,9 +287,10 @@ fi
 log "Unpacked $YR_VERSION"
 
 # ---- embedded YARA rule ---------------------------------------------------
-# PHP install detection + version. Copied from YARA/php/php_detect.yar by
-# YARA/php/sync_rules.py - edit there, not here. The version is in the printed
-# strings ($ver, $pv).
+# PHP and Node.js install detection + version, in one rule file so both are
+# found in one scan. Copied from YARA/php/php_detect.yar and
+# YARA/node/node_detect.yar by YARA/sync_rules.py - edit there, not here. The
+# version is in the printed strings ($ver, $pv, $rel, $electron).
 RULE_FILE="${WORK_DIR}/embedded_rule.yar"
 cat > "$RULE_FILE" <<'YARA_RULE'
 /*
@@ -401,28 +405,176 @@ rule PHP_Binary_Broad
       or ($grp and ($ini or $fmt))
     )
 }
+
+/*
+  Node.js install detection + version, all OSes (Linux ELF, Windows PE, macOS Mach-O).
+
+  Finds standalone node / node.exe, distro libnode, and Node embedded in other
+  software (Electron, single-executable applications, vercel/pkg, apps that
+  bundle libnode). Deliberately broad: Node_Binary_Broad flags anything that
+  looks Node-related so nothing is missed; the other rules carry the exact
+  version string. Run with `yara -s` (or `yr scan -s`) to print the matched
+  version text.
+
+  Rules:
+    Node_Runtime_Version  - Node runtime or a runtime embedding Node; $ver holds
+                            the exact version (node.js/v22.23.4), or for pkg
+                            builds with no inspector $rel (the release URL)
+    Node_Electron_Version - Electron framework; $electron holds Electron's
+                            version, $ver the embedded Node version
+    Node_Binary_Broad     - catch-all: any executable with any Node marker,
+                            incl. native addons (.node) and the distro node
+                            launchers that load libnode
+
+  Bun is not detected and not excluded: Bun-compiled executables match only
+  Node_Binary_Broad (an accepted false positive, reported with no version).
+
+  No modules are imported so the rules also work in embedded YARA engines
+  (osquery, EDRs) that are built without the pe/elf/macho modules.
+
+  See README.md for tested samples and the ABI number -> Node major table.
+*/
+
+// Condition copied from is_executable.yar by sync_rules.py - edit it there
+private rule Node_Detect_IsExecutable
+{
+  condition:
+    // ELF executable (2) or shared object (3, also PIE executables); e_type is
+    // in the byte order given by EI_DATA (1 = little, 2 = big endian)
+    (uint32(0) == 0x464C457F and
+      ((uint8(5) == 1 and (uint16(16) == 2 or uint16(16) == 3)) or
+       (uint8(5) == 2 and (uint16be(16) == 2 or uint16be(16) == 3))))
+    // PE: MZ header whose e_lfanew (0x3C) points at "PE\0\0"
+    or (uint16(0) == 0x5A4D and uint32(uint32(0x3C)) == 0x00004550)
+    // Mach-O 32/64 execute (2), dylib (6) or bundle (8, e.g. PHP extensions)
+    or ((uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF) and
+        (uint32(12) == 2 or uint32(12) == 6 or uint32(12) == 8))
+    // same, byte-swapped (big-endian) Mach-O
+    or ((uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE) and
+        (uint32be(12) == 2 or uint32be(12) == 6 or uint32be(12) == 8))
+    // Mach-O universal (CAFEBABE) with 1-19 architectures whose first slice
+    // passes the thin Mach-O check above, so universal static libraries (.a),
+    // object files and dSYMs are rejected. Java .class files also start with
+    // CAFEBABE, but bytes 4-7 hold their class version (major >= 45), not an
+    // architecture count. The header is big-endian; the first slice's offset
+    // is at 16 (fat_arch.offset).
+    or (uint32(0) == 0xBEBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(16)) == 0xFEEDFACE or uint32(uint32be(16)) == 0xFEEDFACF) and
+          (uint32(uint32be(16) + 12) == 2 or uint32(uint32be(16) + 12) == 6 or
+           uint32(uint32be(16) + 12) == 8)) or
+         ((uint32(uint32be(16)) == 0xCEFAEDFE or uint32(uint32be(16)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(16) + 12) == 2 or uint32be(uint32be(16) + 12) == 6 or
+           uint32be(uint32be(16) + 12) == 8))))
+    // same for the rare 64-bit universal header (CAFEBABF): fat_arch_64.offset
+    // is 8 bytes at 16; slices sit well below 4 GB, so its low half (20) is used
+    or (uint32(0) == 0xBFBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(20)) == 0xFEEDFACE or uint32(uint32be(20)) == 0xFEEDFACF) and
+          (uint32(uint32be(20) + 12) == 2 or uint32(uint32be(20) + 12) == 6 or
+           uint32(uint32be(20) + 12) == 8)) or
+         ((uint32(uint32be(20)) == 0xCEFAEDFE or uint32(uint32be(20)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(20) + 12) == 2 or uint32be(uint32be(20) + 12) == 6 or
+           uint32be(uint32be(20) + 12) == 8))))
+}
+
+rule Node_Runtime_Version
+{
+  meta:
+    description = "Node.js runtime (node, node.exe, libnode, or a runtime embedding Node: Electron, SEA, pkg); $ver = exact Node version"
+    confidence = "high"
+  strings:
+    // Inspector /json/version "Browser" value: "node.js/" NODE_VERSION. In
+    // every official build 8.17.0-25.9.0, distro libnode, Electron and SEA.
+    // A suffix only after "-" (-rc.1, -nightly...): the compiler can merge the
+    // literal with the next string (linux-x64 24.22.1: "v24.22.1Protocol-...")
+    $ver = /node\.js\/v[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?/
+    // process.release.sourceUrl / headersUrl. Also in Bun (Node compatibility),
+    // so it only counts together with the NODE_MODULE ABI symbol, which Bun
+    // lacks; needed for vercel/pkg builds, which have no inspector string.
+    // No "not Bun" exclusion: it could hide a real Node binary whose embedded
+    // JavaScript mentions Bun.
+    $rel = /https:\/\/nodejs\.org\/download\/release\/v[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}/
+    // NODE_MODULE registration symbol, ABI = NODE_MODULE_VERSION (10.x and later)
+    $abi = /node_register_module_v[0-9]{2,3}/
+  condition:
+    Node_Detect_IsExecutable and ($ver or ($rel and $abi))
+}
+
+rule Node_Electron_Version
+{
+  meta:
+    description = "Electron framework (embeds Node.js); $electron = Electron version, $ver = embedded Node version"
+    confidence = "high"
+  strings:
+    // Electron user agent. Both keep a "-" suffix (31.0.0-nightly.20240101), the
+    // same as Node_Runtime_Version's $ver, so one file gives one node version
+    $electron = /Electron\/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?/
+    $ver = /node\.js\/v[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?/
+  condition:
+    Node_Detect_IsExecutable and $electron and $ver
+}
+
+rule Node_Binary_Broad
+{
+  meta:
+    description = "Broad catch-all: Node runtime, libnode launcher, or native addon (.node)"
+    confidence = "medium"
+  strings:
+    $ver    = "node.js/v"
+    $rel    = "https://nodejs.org/download/release/v"
+    $abi    = /node_register_module_v[0-9]{2,3}/   // NODE_MODULE ABI, also in addons
+    $napi   = "napi_register_module_v1"              // N-API addon export
+    $napiim = "napi_module_register"                 // N-API addon import
+    $start  = "_ZN4node5StartEiPPc"                  // distro launcher importing node::Start from libnode
+  condition:
+    // Also matches Bun-compiled executables (release URL, N-API): an accepted
+    // false positive, reported as "node unknown"
+    Node_Detect_IsExecutable and any of them
+}
 YARA_RULE
 
 # ---- embedded version extractor (text format) -----------------------------
-# Copied from YARA/php/php_versions.awk by YARA/php/sync_rules.py - edit there.
-VERSIONS_AWK="${WORK_DIR}/php_versions.awk"
+# Copied from YARA/versions.awk by YARA/sync_rules.py - edit there.
+VERSIONS_AWK="${WORK_DIR}/versions.awk"
 cat > "$VERSIONS_AWK" <<'AWK_SCRIPT'
-# Turn `yara -s` / `yr scan -s` output of php_detect.yar into "path<TAB>version".
-#   yara -s -r php_detect.yar /opt 2>/dev/null | awk -f php_versions.awk | sort -u
+# Turn `yara -s` / `yr scan -s` output of php/php_detect.yar and
+# node/node_detect.yar into "path<TAB>product<TAB>version", one line per
+# product found in a file (product: php, node or electron):
+#   yr scan -s -r php/php_detect.yar node/node_detect.yar /opt 2>/dev/null | awk -f versions.awk | sort -u
 # Handles paths with spaces and the UTF-16 ProductVersion match ($pv), which
 # yara prints with escaped NULs (8\x00.\x002\x00...). Matched files with no
-# version string (e.g. Linux extensions) get "unknown".
+# version string (e.g. Linux PHP extensions, Node addons) get "unknown".
+# Versions: php from $ver / $pv; node from $ver (node.js/v...), or from $rel
+# (the release URL) when no $ver matched; electron from $electron, so an
+# Electron framework gets a node and an electron line.
 
 # rule line: "<RULE> <path>", or with yr --print-meta "<RULE> [meta...] <path>"
-/^PHP_/ { file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file] = 1; next }
-
-# string line: "0xOFFSET:$id: <matched text>"
-/:\$(ver|pv): / {
-  v = $0; gsub(/\\x00/, "", v); sub(/^[^ ]+ /, "", v)
-  if (match(v, /[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*/)) { print file "\t" substr(v, RSTART, RLENGTH); versioned[file] = 1 }
+/^(PHP|Node)_/ {
+  prod = /^PHP_/ ? "php" : "node"
+  file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file SUBSEP prod] = 1; next
 }
 
-END { for (f in seen) if (!(f in versioned)) print f "\tunknown" }
+# string line: "0xOFFSET:$id: <matched text>"
+/:\$(ver|pv|rel|electron): / {
+  v = $0; gsub(/\\x00/, "", v)
+  id = v; sub(/: .*/, "", id); sub(/.*\$/, "", id)
+  sub(/^[^ ]+ /, "", v)
+  if (!match(v, /[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*/)) next
+  v = substr(v, RSTART, RLENGTH)
+  if (id == "electron") print file "\telectron\t" v
+  else if (id == "rel") rel[file SUBSEP prod SUBSEP v] = 1
+  else { print file "\t" prod "\t" v; versioned[file SUBSEP prod] = 1 }
+}
+
+END {
+  for (k in rel) {
+    split(k, a, SUBSEP)
+    if (!((a[1] SUBSEP a[2]) in versioned)) { print a[1] "\t" a[2] "\t" a[3]; fromrel[a[1] SUBSEP a[2]] = 1 }
+  }
+  for (k in seen) {
+    split(k, a, SUBSEP)
+    if (!(k in versioned) && !(k in fromrel)) print a[1] "\t" a[2] "\tunknown"
+  }
+}
 AWK_SCRIPT
 
 # ---- build list of files to scan ------------------------------------------
@@ -682,7 +834,7 @@ fi
 
 if [ -n "$SUMMARY_FILE" ]; then
   awk -f "$VERSIONS_AWK" "$RESULT_FILE" | sort -u >"$SUMMARY_FILE"
-  log "Versions: $SUMMARY_FILE ($(wc -l <"$SUMMARY_FILE" | tr -d ' ') path(s))"
+  log "Versions: $SUMMARY_FILE ($(wc -l <"$SUMMARY_FILE" | tr -d ' ') line(s))"
 fi
 
 if [ -s "$LOG_FILE" ]; then

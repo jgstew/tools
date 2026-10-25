@@ -2,8 +2,9 @@
   Executable header check - the source of truth for every IsExecutable rule.
 
   sync_rules.py copies the condition below into PHP_Detect_IsExecutable
-  (php_detect.yar, and from there the scan scripts) and PHP_Branch_IsExecutable
-  (php_version_branches.yar). Edit it here, then run:
+  (php/php_detect.yar), Node_Detect_IsExecutable (node/node_detect.yar), from
+  there into the scan scripts, and into PHP_Branch_IsExecutable
+  (php/php_version_branches.yar). Edit it here, then run:
 
       python3 sync_rules.py
 
@@ -14,8 +15,9 @@
   Only fixed-offset reads, no patterns and no modules: YARA-X skips the pattern
   search of a file when this is false, so a large non-executable costs about
   the same as reading its header. Real executables, shared libraries and
-  loadable modules pass; object files, core dumps, debug symbols (dSYM) and
-  files that only start with an executable magic do not.
+  loadable modules (PHP extensions, Node addons) pass; object files, core
+  dumps, debug symbols (dSYM) and files that only start with an executable
+  magic do not.
 */
 
 rule Is_Executable

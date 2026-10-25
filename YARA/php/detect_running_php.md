@@ -1,7 +1,7 @@
 # Detecting running / listening PHP (Linux, macOS, Windows)
 
 The YARA scans in this folder answer "which PHP builds are on disk, and which
-version is each one" (`path<TAB>version`, see [README](README.md)). This page
+version is each one" (`path<TAB>product<TAB>version`, see [README](../README.md#summary-format)). This page
 answers the next question: **which of them is actually running, and which is
 serving on a network port**, from the command line and from BigFix client
 relevance. Every command and relevance statement below was run; what wasn't is
@@ -20,7 +20,7 @@ shortened to `<testdir>` (macOS) and `C:\phprun` (Windows).
   is *running* (it also covers containers and binaries replaced by an upgrade).
 - **BigFix relevance can do a lot of this** on all three platforms
   (`sockets of network` → `process of <socket>` → `image file`), and can join to
-  `yara_results_php.text` directly. It **cannot** see loaded modules on Windows or
+  `yara_results_runtimes.text` directly. It **cannot** see loaded modules on Windows or
   macOS (mod_php, `php8apache2_4.dll` in `httpd.exe`), command lines on Windows or
   macOS, or unix sockets on macOS. Linux relevance covers mod_php and
   containers by reading `/proc/<pid>/maps` and `/proc/<pid>/net/tcp` as files.
@@ -201,8 +201,8 @@ YARA-scan the running image through `/proc`, so the path doesn't have to exist i
 your mount namespace and a replaced binary still scans as the old one:
 
 ```bash
-yara -s php_detect.yar /proc/<pid>/exe | awk -f php_versions.awk
-yara -s php_detect.yar /proc/<pid>/root/usr/lib/apache2/modules/libphp.so | awk -f php_versions.awk   # path from maps
+yara -s php_detect.yar /proc/<pid>/exe | awk -f ../versions.awk
+yara -s php_detect.yar /proc/<pid>/root/usr/lib/apache2/modules/libphp.so | awk -f ../versions.awk   # path from maps
 ```
 
 Tested from the host namespaces against every listener above: `php`, `webd`,
@@ -492,12 +492,14 @@ Misses the renamed `webd` and the DLL host, as expected. Cheap; good for a quick
 
 ### 3. Listening port → PHP version, joined to the YARA results (all platforms)
 
-Joins each listener's exe path to `path<TAB>version` lines in
-`__BESData/__Global/Logs/yara_results_php.text` (written by the existing YARA
-tasks). `%09` is a tab.
+Joins each listener's exe path to the `path<TAB>php<TAB>version` lines in
+`__BESData/__Global/Logs/yara_results_runtimes.text` (written by the existing YARA
+tasks). `%09` is a tab. The statements here match `%09php%09` since the results
+gained a product column (Node.js lines are ignored); the sample output below
+was produced with the earlier 2-column `path<TAB>version` file.
 
 ```relevance
-unique values of (item 0 of it & " " & item 1 of it & " version=" & following text of first "%09" of item 2 of it) of ((local port of it as string, pathnames of image files of processes of it, lines of files whose (name of it as lowercase starts with "yara_results_php.text") of folders "Logs" of folders "__Global" of data folders of client) of sockets whose (tcp of it and listening of tcp state of it and exists image files of processes of it) of network) whose (item 2 of it as lowercase starts with (item 1 of it as lowercase & "%09"))
+unique values of (item 0 of it & " " & item 1 of it & " version=" & following text of first "%09php%09" of item 2 of it) of ((local port of it as string, pathnames of image files of processes of it, lines of files whose (name of it as lowercase starts with "yara_results_runtimes.text") of folders "Logs" of folders "__Global" of data folders of client) of sockets whose (tcp of it and listening of tcp state of it and exists image files of processes of it) of network) whose (item 2 of it as lowercase starts with (item 1 of it as lowercase & "%09php%09"))
 ```
 
 Tested with the results file path replaced by the file each OS's scan script
@@ -524,7 +526,7 @@ PHP), and on every other target (no results file). Misses mod_php / DLL hosts
 Running but not listening (cron jobs, queue workers, php-fpm without TCP):
 
 ```relevance
-unique values of (item 0 of it as string & " " & item 1 of it & " version=" & following text of first "%09" of item 2 of it) of ((pid of it, pathnames of image files of it, lines of files whose (name of it as lowercase starts with "yara_results_php.text") of folders "Logs" of folders "__Global" of data folders of client) of processes) whose (item 2 of it as lowercase starts with (item 1 of it as lowercase & "%09"))
+unique values of (item 0 of it as string & " " & item 1 of it & " version=" & following text of first "%09php%09" of item 2 of it) of ((pid of it, pathnames of image files of it, lines of files whose (name of it as lowercase starts with "yara_results_runtimes.text") of folders "Logs" of folders "__Global" of data folders of client) of processes) whose (item 2 of it as lowercase starts with (item 1 of it as lowercase & "%09php%09"))
 ```
 
 Evaluated on all targets without error (no answers: no PHP running where a
@@ -553,10 +555,12 @@ property (or behind `if windows of operating system`). Misses the DLL host
 
 Client relevance reads `/proc` files as ordinary files. Joining every mapped file
 of each listener to the YARA results catches mod_php, FrankenPHP and renamed
-binaries:
+binaries. `files` and `processes` are plural, so on Windows and macOS (no
+`/proc`) and for sockets with no owning process it returns no answers instead
+of an error:
 
 ```relevance
-unique values of (item 0 of it & " pid=" & item 1 of it & " " & item 2 of it & " version=" & following text of first "%09" of item 3 of it) of ((local port of it as string, pid of process of it as string, unique values of ("/" & following text of first "/" of it) of lines whose (it contains "/") of file ("/proc/" & pid of process of it as string & "/maps"), lines of files whose (name of it as lowercase starts with "yara_results_php.text") of folders "Logs" of folders "__Global" of data folders of client) of sockets whose (tcp of it and listening of tcp state of it) of network) whose (item 3 of it starts with (item 2 of it & "%09"))
+unique values of (item 0 of it & " pid=" & item 1 of it & " " & item 2 of it & " version=" & following text of first "%09php%09" of item 3 of it) of ((local port of item 0 of it as string, pid of item 1 of it as string, unique values of ("/" & following text of first "/" of it) of lines whose (it contains "/") of files ("/proc/" & pid of item 1 of it as string & "/maps"), lines of files whose (name of it as lowercase starts with "yara_results_runtimes.text") of folders "Logs" of folders "__Global" of data folders of client) of (it, processes of it) of sockets whose (tcp of it and listening of tcp state of it) of network) whose (item 3 of it starts with (item 2 of it & "%09php%09"))
 ```
 
 ```text
@@ -633,7 +637,7 @@ to its PID (that needs the `/proc/<pid>/fd` link targets); pair it with
 One statement that runs unchanged on Windows, macOS and Linux. It lists every
 listening socket (`address:port`) and every process (`running`) that looks like
 PHP, with an `evidence=` list saying why, so likely positives show even
-without a YARA scan. When `yara_results_php.text` is present it adds `yara`
+without a YARA scan. When `yara_results_runtimes.text` is present it adds `yara`
 evidence (finds renamed binaries) and fills in `version=`. Output per line:
 
 ```text
@@ -647,7 +651,7 @@ evidence (finds renamed binaries) and fills in `version=`. Output per line:
 | `pe` | exe's version resource has `ProductName` = `PHP` (also gives `version=`) | Windows | confirmed |
 | `libphp` | `libphp*.so` mapped (mod_php, FrankenPHP); paths in `libphp=` | Linux | confirmed |
 | `php-ext` | a `/php/extensions/` module mapped (renamed `php`) | Linux | strong |
-| `yara` | exe path is in `yara_results_php.text` (also gives `version=`) | all | confirmed |
+| `yara` | exe path is in `yara_results_runtimes.text` (also gives `version=`) | all | confirmed |
 | `httpd-conf` | `httpd`/`apache*` with `LoadModule php` in `../conf/*.conf` or `../conf/extra/*.conf` (Windows/XAMPP-style layout) | all | likely |
 | `webserver-modules-unknown` | `httpd`/`apache*` whose loaded modules can't be read (Windows, macOS, or an unreadable Linux process) | all | possible |
 
@@ -657,15 +661,15 @@ are skipped.
 
 Generated by [`gen_running_php_relevance.py`](gen_running_php_relevance.py); edit
 the pieces there, not this one-liner. Pass a results-file path to test against a
-file other than `__BESData/__Global/Logs/yara_results_php.text`:
+file other than `__BESData/__Global/Logs/yara_results_runtimes.text`:
 
 ```bash
 python3 gen_running_php_relevance.py > running_php.rel
-python3 gen_running_php_relevance.py /tmp/yara_results_php.text > running_php_test.rel
+python3 gen_running_php_relevance.py /tmp/yara_results_runtimes.text > running_php_test.rel
 ```
 
 ```relevance
-unique values of (item 1 of it & " pid=" & (pid of item 2 of it as string) & " name=" & (name of item 2 of it | "") & " path=" & (pathname of image file of item 2 of it | "?") & " evidence=" & item 3 of it & " version=" & concatenation "," of unique values of (((if (windows of operating system) then concatenation "," of (value "ProductVersion" of version block 1 of it as string) of image files whose (value "ProductName" of version block 1 of it as string = "PHP") of item 2 of it else "") ; (following text of first "%09" of item 1 of it) of ((it as lowercase) of pathnames of image files of item 2 of it, substrings separated by "%0a" of item 0 of it) whose (item 1 of it starts with (item 0 of it & "%09")) ; (following text of first "%09" of item 1 of it) of (unique values of (("/" & following text of first "/" of it) as lowercase) of lines whose (it contains "/") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root")), substrings separated by "%0a" of item 0 of it) whose (item 1 of it starts with (item 0 of it & "%09"))) whose (it != "" and it != "unknown")) & " libphp=" & concatenation ";" of unique values of ("/" & following text of first "/" of it) of lines whose (it as lowercase contains "/libphp") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) of ((item 0 of it, item 1 of it, item 2 of it, concatenation "," of ((if ((name of item 2 of it | "") as lowercase contains "php") then "name" else "") ; (if (exists pathnames whose (it as lowercase contains "php") of image files of item 2 of it) then "path" else "") ; (if (windows of operating system) then (if (exists image files whose (value "ProductName" of version block 1 of it as string = "PHP") of item 2 of it) then "pe" else "") else "") ; (if (exists lines whose (it as lowercase contains "/libphp") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) then "libphp" else "") ; (if (exists lines whose (it as lowercase contains "/php/extensions/") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) then "php-ext" else "") ; (if (exists (item 0 of it, (it as lowercase) of pathnames of image files of item 2 of it) whose (item 0 of it contains ("%0a" & item 1 of it & "%09"))) then "yara" else "") ; (if ((name of item 2 of it | "") as lowercase starts with "httpd" or (name of item 2 of it | "") as lowercase starts with "apache") then (if (exists lines whose (it as lowercase contains "loadmodule php") of files whose (name of it as lowercase ends with ".conf") of (folders "conf" of it; folders "extra" of folders "conf" of it) of parent folders of parent folders of image files of item 2 of it) then "httpd-conf" else "") else "") ; (if (((name of item 2 of it | "") as lowercase starts with "httpd" or (name of item 2 of it | "") as lowercase starts with "apache") and not exists files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) then "webserver-modules-unknown" else "")) whose (it != "")) of ((item 0 of it, item 0 of item 1 of it, item 1 of item 1 of it) of (("%0a" & concatenation "%0a" of (it as string as lowercase) of lines of files whose (name of it as lowercase starts with "yara_results_php.text") of folders "Logs" of folders "__Global" of data folders of client & "%0a"), ((local address of it as string & ":" & local port of it as string, processes of it) of sockets whose (tcp of it and listening of tcp state of it) of network ; ("running", it) of processes)))) whose (item 3 of it != "")
+unique values of (item 1 of it & " pid=" & (pid of item 2 of it as string) & " name=" & (name of item 2 of it | "") & " path=" & (pathname of image file of item 2 of it | "?") & " evidence=" & item 3 of it & " version=" & concatenation "," of unique values of (((if (windows of operating system) then concatenation "," of (value "ProductVersion" of version block 1 of it as string) of image files whose (value "ProductName" of version block 1 of it as string = "PHP") of item 2 of it else "") ; (following text of first "%09php%09" of item 1 of it) of ((it as lowercase) of pathnames of image files of item 2 of it, substrings separated by "%0a" of item 0 of it) whose (item 1 of it starts with (item 0 of it & "%09php%09")) ; (following text of first "%09php%09" of item 1 of it) of (unique values of (("/" & following text of first "/" of it) as lowercase) of lines whose (it contains "/") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root")), substrings separated by "%0a" of item 0 of it) whose (item 1 of it starts with (item 0 of it & "%09php%09"))) whose (it != "" and it != "unknown")) & " libphp=" & concatenation ";" of unique values of ("/" & following text of first "/" of it) of lines whose (it as lowercase contains "/libphp") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) of ((item 0 of it, item 1 of it, item 2 of it, concatenation "," of ((if ((name of item 2 of it | "") as lowercase contains "php") then "name" else "") ; (if (exists pathnames whose (it as lowercase contains "php") of image files of item 2 of it) then "path" else "") ; (if (windows of operating system) then (if (exists image files whose (value "ProductName" of version block 1 of it as string = "PHP") of item 2 of it) then "pe" else "") else "") ; (if (exists lines whose (it as lowercase contains "/libphp") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) then "libphp" else "") ; (if (exists lines whose (it as lowercase contains "/php/extensions/") of files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) then "php-ext" else "") ; (if (exists (item 0 of it, (it as lowercase) of pathnames of image files of item 2 of it) whose (item 0 of it contains ("%0a" & item 1 of it & "%09php%09"))) then "yara" else "") ; (if ((name of item 2 of it | "") as lowercase starts with "httpd" or (name of item 2 of it | "") as lowercase starts with "apache") then (if (exists lines whose (it as lowercase contains "loadmodule php") of files whose (name of it as lowercase ends with ".conf") of (folders "conf" of it; folders "extra" of folders "conf" of it) of parent folders of parent folders of image files of item 2 of it) then "httpd-conf" else "") else "") ; (if (((name of item 2 of it | "") as lowercase starts with "httpd" or (name of item 2 of it | "") as lowercase starts with "apache") and not exists files ("/proc/" & (pid of item 2 of it as string) & "/maps") whose (exists folder (pathname of parent folder of it & "/root"))) then "webserver-modules-unknown" else "")) whose (it != "")) of ((item 0 of it, item 0 of item 1 of it, item 1 of item 1 of it) of (("%0a" & concatenation "%0a" of (it as string as lowercase) of lines of files whose (name of it as lowercase starts with "yara_results_runtimes.text") of folders "Logs" of folders "__Global" of data folders of client & "%0a"), ((local address of it as string & ":" & local port of it as string, processes of it) of sockets whose (tcp of it and listening of tcp state of it) of network ; ("running", it) of processes)))) whose (item 3 of it != "")
 ```
 
 How it holds up across platforms:
@@ -744,8 +748,8 @@ under `__BESData/__Global/Logs/`, and an analysis reads it.
 
 ## Matching listeners to the YARA install list
 
-Goal: `port → PHP version`. The YARA list is `path<TAB>version`, one line per
-PHP file. For each listener, collect the **exe path** and every **loaded PHP
+Goal: `port → PHP version`. The YARA list is `path<TAB>product<TAB>version`,
+one line per product found in a file. For each listener, collect the **exe path** and every **loaded PHP
 library path** (`libphp*.so`, `php*ts.dll`, `php8.dll`, `php*apache2_4.dll`), and
 look each up in the list.
 

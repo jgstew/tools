@@ -13,7 +13,8 @@ import datetime
 import pathlib
 import re
 
-IS_EXECUTABLE_YAR = pathlib.Path(__file__).resolve().parent / "is_executable.yar"
+# Shared with the Node rules, one folder up
+IS_EXECUTABLE_YAR = pathlib.Path(__file__).resolve().parents[1] / "is_executable.yar"
 
 # branch -> ZEND_MODULE_API_NO (the "API2xxxxxxx" build ID / extension dir name).
 # Verified against real builds: 5.6, 7.0-7.4, 8.0-8.5 (official Docker images,

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Copy the shared YARA pieces to every file that embeds them.
 
-    is_executable.yar -> PHP_Detect_IsExecutable in php_detect.yar
-                      -> PHP_Branch_IsExecutable in php_version_branches.yar
-                         (regenerated with gen_php_branches.py)
-    php_detect.yar    -> the embedded rule in the three scan scripts
-    php_versions.awk  -> the embedded version extractor in the bash scan scripts
+    is_executable.yar   -> PHP_Detect_IsExecutable in php/php_detect.yar
+                        -> Node_Detect_IsExecutable in node/node_detect.yar
+                        -> PHP_Branch_IsExecutable in php/php_version_branches.yar
+                           (regenerated with php/gen_php_branches.py)
+    php/php_detect.yar  -> the embedded rules in the three scan scripts, followed
+    node/node_detect.yar   by the Node rules (one rule file, one scan pass)
+    versions.awk        -> the embedded version extractor in the bash scan scripts
 
 Edit only the sources on the left, then run this. The scan scripts stay
 self-contained (a single file to copy or embed in BigFix content).
@@ -20,13 +22,16 @@ import pathlib
 import re
 import sys
 
-import gen_php_branches
-
 HERE = pathlib.Path(__file__).resolve().parent
-TOOLS_DIR = HERE.parents[1]
-PHP_DETECT = HERE / "php_detect.yar"
-BRANCHES = HERE / "php_version_branches.yar"
-VERSIONS_AWK = HERE / "php_versions.awk"
+sys.path.insert(0, str(HERE / "php"))
+
+import gen_php_branches  # noqa: E402 (lives in php/)
+
+TOOLS_DIR = HERE.parent
+PHP_DETECT = HERE / "php" / "php_detect.yar"
+NODE_DETECT = HERE / "node" / "node_detect.yar"
+BRANCHES = HERE / "php" / "php_version_branches.yar"
+VERSIONS_AWK = HERE / "versions.awk"
 
 LINUX_SH = TOOLS_DIR / "bash/yara_x_scan_linux.sh"
 MACOS_SH = TOOLS_DIR / "bash/yara_x_scan_macos.sh"
@@ -36,17 +41,29 @@ WINDOWS_PS1 = TOOLS_DIR / "powershell/yara_x_scan_windows.ps1"
 BASH_RULE = r"(cat > \"\$RULE_FILE\" <<'YARA_RULE'\n)(.*?)(\nYARA_RULE\n)"
 BASH_AWK = r"(cat > \"\$VERSIONS_AWK\" <<'AWK_SCRIPT'\n)(.*?)(\nAWK_SCRIPT\n)"
 PS1_RULE = r"(\$EmbeddedRule = @'\n)(.*?)(\n'@\n)"
-DETECT_IS_EXECUTABLE = (
-    r"(private rule PHP_Detect_IsExecutable\n\{\n  condition:\n)(.*?)(\n\})"
-)
+# (rule file, pattern around its copy of the is_executable.yar condition)
+IS_EXECUTABLE_COPIES = [
+    (
+        PHP_DETECT,
+        r"(private rule PHP_Detect_IsExecutable\n\{\n  condition:\n)(.*?)(\n\})",
+    ),
+    (
+        NODE_DETECT,
+        r"(private rule Node_Detect_IsExecutable\n\{\n  condition:\n)(.*?)(\n\})",
+    ),
+]
 
-# (file, pattern around the embedded copy, source of the copy)
+# Every scan script embeds both rule files as one rule file, so PHP and Node
+# are found in a single scan
+RULES = [PHP_DETECT, NODE_DETECT]
+
+# (file, pattern around the embedded copy, sources of the copy)
 EMBEDS = [
-    (LINUX_SH, BASH_RULE, PHP_DETECT),
-    (LINUX_SH, BASH_AWK, VERSIONS_AWK),
-    (MACOS_SH, BASH_RULE, PHP_DETECT),
-    (MACOS_SH, BASH_AWK, VERSIONS_AWK),
-    (WINDOWS_PS1, PS1_RULE, PHP_DETECT),
+    (LINUX_SH, BASH_RULE, RULES),
+    (LINUX_SH, BASH_AWK, [VERSIONS_AWK]),
+    (MACOS_SH, BASH_RULE, RULES),
+    (MACOS_SH, BASH_AWK, [VERSIONS_AWK]),
+    (WINDOWS_PS1, PS1_RULE, RULES),
 ]
 
 # The "GENERATED ... on <date>" line changes every run; ignore it when comparing
@@ -93,16 +110,15 @@ def main():
 
     read(gen_php_branches.IS_EXECUTABLE_YAR)  # fails on CRLF before it is copied
     condition = gen_php_branches.is_executable_condition()
-    updates[PHP_DETECT] = replace_block(
-        current(PHP_DETECT), DETECT_IS_EXECUTABLE, condition, PHP_DETECT.name
-    )
+    for path, pattern in IS_EXECUTABLE_COPIES:
+        updates[path] = replace_block(current(path), pattern, condition, path.name)
 
     branches = gen_php_branches.generate()
     if GENERATED_LINE.sub("", branches) != GENERATED_LINE.sub("", read(BRANCHES)):
         updates[BRANCHES] = branches
 
-    for path, pattern, source in EMBEDS:
-        body = current(source).rstrip("\n")
+    for path, pattern, sources in EMBEDS:
+        body = "\n\n".join(current(source).rstrip("\n") for source in sources)
         updates[path] = replace_block(current(path), pattern, body, path.name)
 
     stale = [p for p, text in updates.items() if text != read(p)]

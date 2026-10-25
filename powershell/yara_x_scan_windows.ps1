@@ -1,18 +1,23 @@
 <#
 .SYNOPSIS
-    Self-contained YARA-X scan for Windows that finds PHP installs and their versions.
+    Self-contained YARA-X scan for Windows that finds PHP and Node.js installs and their versions.
 
 .DESCRIPTION
     Windows counterpart of bash/yara_x_scan_macos.sh:
       1. downloads the YARA-X CLI (yr.exe) release
       2. verifies the SHA256 of the download against a pinned value
       3. unpacks it into a temporary folder (removed on exit)
-      4. scans the target (recursively) with the YARA rule embedded below
-         (a copy of YARA/php/php_detect.yar)
+      4. scans the target (recursively) with the YARA rules embedded below
+         (copies of YARA/php/php_detect.yar and YARA/node/node_detect.yar,
+         one rule file so PHP and Node.js are found in one scan)
       5. writes results + a log to OutputDir; for text format:
            yara_results_<host>_<time>.raw.text  full yr output (rules, meta, strings)
-           yara_results_<host>_<time>.text      "path<TAB>version", one per line
-         Files matched with no version string are listed with version "unknown".
+           yara_results_<host>_<time>.text      "path<TAB>product<TAB>version",
+                                                one line per product in a file
+         product is php, node or electron; an Electron framework gets a node
+         and an electron line. Files matched with no version string (PHP
+         extensions without a version resource, Node addons) are listed with
+         version "unknown".
          json / ndjson write a single yara_results_<host>_<time>.json / .ndjson.
 
     With no -Path, every local fixed drive (DriveType 3) is scanned. Network,
@@ -38,8 +43,10 @@
     -NoSkips turns off all of these skips except empty files, cloud
     placeholders and this script's own folders.
       - Files of MaxMB (512) MB or more: PHP builds are ~20-40 MB, the largest
-        known (FrankenPHP, static PHP in Go) ~180 MB; this cuts pagefile.sys,
-        VM disks, WSL/Docker .vhdx, media. Use -MaxMB 0 to include.
+        known (FrankenPHP, static PHP in Go) ~180 MB, node.exe 8.x-25.x
+        22-91 MB, Electron frameworks 125-350 MB (macOS); this cuts
+        pagefile.sys, VM disks, WSL/Docker .vhdx, media. Use -MaxMB 0 to
+        include.
       - Images, media, archives, installers, documents, fonts, web/source/text
         files, C headers, debug symbols (.pdb), event logs, databases,
         component manifests, BigFix Fixlet files (.fxf) and virtual disks: the
@@ -49,7 +56,8 @@
       - Cloud placeholders (OneDrive Files On-Demand, Dropbox, iCloud, etc.):
         files and folders with the Offline, RecallOnOpen or RecallOnDataAccess
         attribute are only online, and reading them would download them.
-      - System folders that can't hold a PHP install, on every scanned drive:
+      - System folders that can't hold a PHP or Node.js install, on every
+        scanned drive:
           \Windows\WinSxS               component store: Microsoft side-by-side
                                         components only, mostly hard links to
                                         System32 (double scan), 100k+ files
@@ -69,9 +77,10 @@
         people to copy php5ts.dll / php.ini into C:\Windows\System32.
       - This script's own output and temp folders (old results contain matched
         strings).
-    Nothing where PHP is plausible is skipped: C:\xampp, C:\wamp*, C:\laragon,
-    C:\php*, C:\tools (Chocolatey), Program Files, Program Files (x86) (IIS PHP
-    Manager / Web PI), ProgramData, user profiles.
+    Nothing where PHP or Node.js is plausible is skipped: C:\xampp, C:\wamp*,
+    C:\laragon, C:\php*, C:\tools (Chocolatey), Program Files, Program Files
+    (x86) (IIS PHP Manager / Web PI), ProgramData, user profiles (nvm, Electron
+    apps in AppData\Local\Programs).
 
     The scan runs at BelowNormal priority (this PowerShell process and yr.exe)
     and yr uses 1 thread (-Threads 2 for faster scans), so a full scan doesn't take over the
@@ -82,7 +91,7 @@
                 2 = usage error; 3 = download/verify/unpack error; 4 = scan error
 
     Release: https://github.com/VirusTotal/yara-x/releases/tag/v1.22.0
-    Related: https://github.com/jgstew/tools/tree/master/YARA/php
+    Related: https://github.com/jgstew/tools/tree/master/YARA
              https://github.com/jgstew/tools/blob/master/bash/yara_x_scan_macos.sh
 
 .PARAMETER Path
@@ -219,9 +228,10 @@ $SystemSkipFiles = @('pagefile.sys', 'hiberfil.sys', 'swapfile.sys')
 $CloudAttributeMask = 0x1000 -bor 0x40000 -bor 0x400000
 
 # ---- embedded YARA rule -----------------------------------------------------
-# PHP install detection + version. Copied from YARA/php/php_detect.yar by
-# YARA/php/sync_rules.py - edit there, not here. The version is in the printed
-# strings ($ver, $pv).
+# PHP and Node.js install detection + version, in one rule file so both are
+# found in one scan. Copied from YARA/php/php_detect.yar and
+# YARA/node/node_detect.yar by YARA/sync_rules.py - edit there, not here. The
+# version is in the printed strings ($ver, $pv, $rel, $electron).
 $EmbeddedRule = @'
 /*
   PHP install detection + version, all OSes (Linux ELF, Windows PE, macOS Mach-O).
@@ -334,6 +344,131 @@ rule PHP_Binary_Broad
       $xpb or $zend or $api or $pname
       or ($grp and ($ini or $fmt))
     )
+}
+
+/*
+  Node.js install detection + version, all OSes (Linux ELF, Windows PE, macOS Mach-O).
+
+  Finds standalone node / node.exe, distro libnode, and Node embedded in other
+  software (Electron, single-executable applications, vercel/pkg, apps that
+  bundle libnode). Deliberately broad: Node_Binary_Broad flags anything that
+  looks Node-related so nothing is missed; the other rules carry the exact
+  version string. Run with `yara -s` (or `yr scan -s`) to print the matched
+  version text.
+
+  Rules:
+    Node_Runtime_Version  - Node runtime or a runtime embedding Node; $ver holds
+                            the exact version (node.js/v22.23.4), or for pkg
+                            builds with no inspector $rel (the release URL)
+    Node_Electron_Version - Electron framework; $electron holds Electron's
+                            version, $ver the embedded Node version
+    Node_Binary_Broad     - catch-all: any executable with any Node marker,
+                            incl. native addons (.node) and the distro node
+                            launchers that load libnode
+
+  Bun is not detected and not excluded: Bun-compiled executables match only
+  Node_Binary_Broad (an accepted false positive, reported with no version).
+
+  No modules are imported so the rules also work in embedded YARA engines
+  (osquery, EDRs) that are built without the pe/elf/macho modules.
+
+  See README.md for tested samples and the ABI number -> Node major table.
+*/
+
+// Condition copied from is_executable.yar by sync_rules.py - edit it there
+private rule Node_Detect_IsExecutable
+{
+  condition:
+    // ELF executable (2) or shared object (3, also PIE executables); e_type is
+    // in the byte order given by EI_DATA (1 = little, 2 = big endian)
+    (uint32(0) == 0x464C457F and
+      ((uint8(5) == 1 and (uint16(16) == 2 or uint16(16) == 3)) or
+       (uint8(5) == 2 and (uint16be(16) == 2 or uint16be(16) == 3))))
+    // PE: MZ header whose e_lfanew (0x3C) points at "PE\0\0"
+    or (uint16(0) == 0x5A4D and uint32(uint32(0x3C)) == 0x00004550)
+    // Mach-O 32/64 execute (2), dylib (6) or bundle (8, e.g. PHP extensions)
+    or ((uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF) and
+        (uint32(12) == 2 or uint32(12) == 6 or uint32(12) == 8))
+    // same, byte-swapped (big-endian) Mach-O
+    or ((uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE) and
+        (uint32be(12) == 2 or uint32be(12) == 6 or uint32be(12) == 8))
+    // Mach-O universal (CAFEBABE) with 1-19 architectures whose first slice
+    // passes the thin Mach-O check above, so universal static libraries (.a),
+    // object files and dSYMs are rejected. Java .class files also start with
+    // CAFEBABE, but bytes 4-7 hold their class version (major >= 45), not an
+    // architecture count. The header is big-endian; the first slice's offset
+    // is at 16 (fat_arch.offset).
+    or (uint32(0) == 0xBEBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(16)) == 0xFEEDFACE or uint32(uint32be(16)) == 0xFEEDFACF) and
+          (uint32(uint32be(16) + 12) == 2 or uint32(uint32be(16) + 12) == 6 or
+           uint32(uint32be(16) + 12) == 8)) or
+         ((uint32(uint32be(16)) == 0xCEFAEDFE or uint32(uint32be(16)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(16) + 12) == 2 or uint32be(uint32be(16) + 12) == 6 or
+           uint32be(uint32be(16) + 12) == 8))))
+    // same for the rare 64-bit universal header (CAFEBABF): fat_arch_64.offset
+    // is 8 bytes at 16; slices sit well below 4 GB, so its low half (20) is used
+    or (uint32(0) == 0xBFBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(20)) == 0xFEEDFACE or uint32(uint32be(20)) == 0xFEEDFACF) and
+          (uint32(uint32be(20) + 12) == 2 or uint32(uint32be(20) + 12) == 6 or
+           uint32(uint32be(20) + 12) == 8)) or
+         ((uint32(uint32be(20)) == 0xCEFAEDFE or uint32(uint32be(20)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(20) + 12) == 2 or uint32be(uint32be(20) + 12) == 6 or
+           uint32be(uint32be(20) + 12) == 8))))
+}
+
+rule Node_Runtime_Version
+{
+  meta:
+    description = "Node.js runtime (node, node.exe, libnode, or a runtime embedding Node: Electron, SEA, pkg); $ver = exact Node version"
+    confidence = "high"
+  strings:
+    // Inspector /json/version "Browser" value: "node.js/" NODE_VERSION. In
+    // every official build 8.17.0-25.9.0, distro libnode, Electron and SEA.
+    // A suffix only after "-" (-rc.1, -nightly...): the compiler can merge the
+    // literal with the next string (linux-x64 24.22.1: "v24.22.1Protocol-...")
+    $ver = /node\.js\/v[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?/
+    // process.release.sourceUrl / headersUrl. Also in Bun (Node compatibility),
+    // so it only counts together with the NODE_MODULE ABI symbol, which Bun
+    // lacks; needed for vercel/pkg builds, which have no inspector string.
+    // No "not Bun" exclusion: it could hide a real Node binary whose embedded
+    // JavaScript mentions Bun.
+    $rel = /https:\/\/nodejs\.org\/download\/release\/v[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}/
+    // NODE_MODULE registration symbol, ABI = NODE_MODULE_VERSION (10.x and later)
+    $abi = /node_register_module_v[0-9]{2,3}/
+  condition:
+    Node_Detect_IsExecutable and ($ver or ($rel and $abi))
+}
+
+rule Node_Electron_Version
+{
+  meta:
+    description = "Electron framework (embeds Node.js); $electron = Electron version, $ver = embedded Node version"
+    confidence = "high"
+  strings:
+    // Electron user agent. Both keep a "-" suffix (31.0.0-nightly.20240101), the
+    // same as Node_Runtime_Version's $ver, so one file gives one node version
+    $electron = /Electron\/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?/
+    $ver = /node\.js\/v[0-9]{1,2}\.[0-9]{1,3}\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?/
+  condition:
+    Node_Detect_IsExecutable and $electron and $ver
+}
+
+rule Node_Binary_Broad
+{
+  meta:
+    description = "Broad catch-all: Node runtime, libnode launcher, or native addon (.node)"
+    confidence = "medium"
+  strings:
+    $ver    = "node.js/v"
+    $rel    = "https://nodejs.org/download/release/v"
+    $abi    = /node_register_module_v[0-9]{2,3}/   // NODE_MODULE ABI, also in addons
+    $napi   = "napi_register_module_v1"              // N-API addon export
+    $napiim = "napi_module_register"                 // N-API addon import
+    $start  = "_ZN4node5StartEiPPc"                  // distro launcher importing node::Start from libnode
+  condition:
+    // Also matches Bun-compiled executables (release URL, N-API): an accepted
+    // false positive, reported as "node unknown"
+    Node_Detect_IsExecutable and any of them
 }
 '@
 
@@ -662,27 +797,32 @@ function Get-ScanFile
     return $stats
 }
 
-function ConvertTo-PhpVersionSummary
+function ConvertTo-VersionSummary
 {
     <#
-    PowerShell port of YARA/php/php_versions.awk - keep in sync.
+    PowerShell port of YARA/versions.awk - keep in sync.
     Reads `yr scan --print-meta --print-strings` text output and returns sorted,
-    unique "path<TAB>version" lines; matched files with no version string get
-    "unknown".
+    unique "path<TAB>product<TAB>version" lines, one per product found in a
+    file (php, node, electron). Versions: php from $ver / $pv; node from $ver,
+    or from $rel (the release URL) when no $ver matched; electron from
+    $electron. Matched files with no version string get "unknown".
     #>
     param([Parameter(Mandatory = $true)][string]$RawPath)
 
     # rule line: "<RULE> <path>", or with --print-meta "<RULE> [k="v",...] <path>".
     # The meta pattern skips quoted values, so a ']' inside a description is fine.
-    $ruleLine = [regex]'^PHP_\S* (?:\[(?:"(?:[^"\\]|\\.)*"|[^\]"])*\] )?(?<path>.*)$'
+    $ruleLine = [regex]'^(?<rule>PHP|Node)_\S* (?:\[(?:"(?:[^"\\]|\\.)*"|[^\]"])*\] )?(?<path>.*)$'
     # string line: "0xOFFSET:LENGTH:$id: <matched text>"
-    $stringLine = [regex]':\$(?:ver|pv): '
+    $stringLine = [regex]':\$(?<id>ver|pv|rel|electron): '
     $version = [regex]'[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*'
 
     $results = New-Object -TypeName 'System.Collections.Generic.HashSet[string]' -ArgumentList ([System.StringComparer]::Ordinal)
+    # "path<TAB>product" keys: matched, versioned, and $rel versions per key
     $seen = New-Object -TypeName 'System.Collections.Generic.List[string]'
     $versioned = New-Object -TypeName 'System.Collections.Generic.HashSet[string]' -ArgumentList ([System.StringComparer]::Ordinal)
+    $relVersions = New-Object -TypeName 'System.Collections.Generic.List[string]'
     $file = $null
+    $product = $null
 
     $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $RawPath, $Utf8NoBom
     try
@@ -693,20 +833,28 @@ function ConvertTo-PhpVersionSummary
             if ($m.Success)
             {
                 $file = $m.Groups['path'].Value
-                $seen.Add($file)
+                $product = $m.Groups['rule'].Value.ToLowerInvariant()
+                $seen.Add("$file`t$product")
                 continue
             }
-            if ($null -ne $file -and $stringLine.IsMatch($line))
+            $s = $stringLine.Match($line)
+            if ($null -ne $file -and $s.Success)
             {
                 # UTF-16 matches ($pv) are printed with escaped NULs: 8\x00.\x002\x00...
                 $text = $line.Replace('\x00', '')
                 $space = $text.IndexOf(' ')
                 $text = $text.Substring($space + 1)
                 $v = $version.Match($text)
-                if ($v.Success)
+                if (-not $v.Success) { continue }
+                switch ($s.Groups['id'].Value)
                 {
-                    [void]$results.Add("$file`t$($v.Value)")
-                    [void]$versioned.Add($file)
+                    'electron' { [void]$results.Add("$file`telectron`t$($v.Value)") }
+                    'rel' { $relVersions.Add("$file`t$product`t$($v.Value)") }
+                    default
+                    {
+                        [void]$results.Add("$file`t$product`t$($v.Value)")
+                        [void]$versioned.Add("$file`t$product")
+                    }
                 }
             }
         }
@@ -715,9 +863,18 @@ function ConvertTo-PhpVersionSummary
     {
         $reader.Dispose()
     }
-    foreach ($f in $seen)
+    foreach ($r in $relVersions)
     {
-        if (-not $versioned.Contains($f)) { [void]$results.Add("$f`tunknown") }
+        $key = $r.Substring(0, $r.LastIndexOf("`t"))
+        if (-not $versioned.Contains($key)) { [void]$results.Add($r) }
+    }
+    foreach ($key in $seen)
+    {
+        if ($versioned.Contains($key)) { continue }
+        $prefix = "$key`t"
+        $fromRel = $false
+        foreach ($r in $relVersions) { if ($r.StartsWith($prefix, [System.StringComparison]::Ordinal)) { $fromRel = $true; break } }
+        if (-not $fromRel) { [void]$results.Add("$key`tunknown") }
     }
     $sorted = [string[]]@($results)
     [System.Array]::Sort($sorted, [System.StringComparer]::Ordinal)
@@ -992,9 +1149,9 @@ function Invoke-Main
 
         if ($null -ne $summaryFile)
         {
-            $lines = ConvertTo-PhpVersionSummary -RawPath $resultFile
+            $lines = ConvertTo-VersionSummary -RawPath $resultFile
             [System.IO.File]::WriteAllLines($summaryFile, $lines, $Utf8NoBom)
-            Write-ScanLog "Versions: $summaryFile ($($lines.Count) path(s))"
+            Write-ScanLog "Versions: $summaryFile ($($lines.Count) line(s))"
         }
 
         # Any output in text/ndjson mode means at least one match; json always prints an object

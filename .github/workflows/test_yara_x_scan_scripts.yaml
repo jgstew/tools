@@ -1,19 +1,23 @@
 ---
 name: test_yara_x_scan_scripts
 
-# Smoke tests for the three YARA-X PHP scan scripts. Each job plants a real PHP
-# runtime and decoys in a folder, scans that folder at the default (1 thread)
-# and with 2 threads, and checks what is reported - and what isn't:
-#   found:     the PHP binary/DLLs, and a renamed copy (detection is by content)
+# Smoke tests for the three YARA-X PHP and Node.js scan scripts. Each job plants
+# a real PHP runtime, an official Node.js build and decoys in a folder, scans
+# that folder at the default (1 thread) and with 2 threads, and checks the
+# "path<TAB>product<TAB>version" summary - what is reported and what isn't:
+#   found:     the PHP binary/DLLs and node, and a renamed copy of each
+#              (detection is by content), with their exact versions
+#   found:     a native addon decoy (an executable with only the N-API export),
+#              reported as "node unknown" and never with a version
 #   found:     (Linux, macOS) copies with a newline / tab in the file or folder
 #              name, reported as bash $'...' quoted paths
 #   not found: a copy in an excluded folder (-x / -ExcludePath), a copy with a
 #              skipped extension (.zip, and .png with a newline in the name), an
 #              empty file, and a php_version.h text file
-# A separate job fails if a copy made by YARA/php/sync_rules.py (the header
-# check, the rule and the awk embedded in the scripts) differs from its source,
-# or if a rule file in YARA/php doesn't compile with yr.
-# Runs only when this workflow, one of the three scripts or YARA/php changes.
+# A separate job fails if a copy made by YARA/sync_rules.py (the header check,
+# the rules and the awk embedded in the scripts) differs from its source, or if
+# a rule file under YARA doesn't compile with yr.
+# Runs only when this workflow, one of the three scripts or YARA changes.
 on:
   push:
     branches:
@@ -22,14 +26,14 @@ on:
       - bash/yara_x_scan_linux.sh
       - bash/yara_x_scan_macos.sh
       - powershell/yara_x_scan_windows.ps1
-      - YARA/php/**
+      - YARA/**
       - .github/workflows/test_yara_x_scan_scripts.yaml
   pull_request:
     paths:
       - bash/yara_x_scan_linux.sh
       - bash/yara_x_scan_macos.sh
       - powershell/yara_x_scan_windows.ps1
-      - YARA/php/**
+      - YARA/**
       - .github/workflows/test_yara_x_scan_scripts.yaml
 
 permissions:
@@ -45,8 +49,8 @@ jobs:
           persist-credentials: false
 
       - name: Embedded rule copies match their sources
-        # Lists each out-of-date file and exits 1; fix with python3 YARA/php/sync_rules.py
-        run: python3 YARA/php/sync_rules.py --check
+        # Lists each out-of-date file and exits 1; fix with python3 YARA/sync_rules.py
+        run: python3 YARA/sync_rules.py --check
 
       - name: Rule files compile with yr
         run: |
@@ -57,15 +61,20 @@ jobs:
             "https://github.com/VirusTotal/yara-x/releases/download/v${YARAX_VERSION}/$asset"
           echo "$SHA256_X86_64  $RUNNER_TEMP/$asset" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/$asset" -C "$RUNNER_TEMP"
-          for r in YARA/php/*.yar; do
+          for r in YARA/*.yar YARA/php/*.yar YARA/node/*.yar; do
             echo "compile $r"; "$RUNNER_TEMP/yr" compile -o /dev/null "$r"
           done
           # README: the rule files can be loaded together (no rule name collisions)
-          "$RUNNER_TEMP/yr" compile -o /dev/null YARA/php/*.yar
+          "$RUNNER_TEMP/yr" compile -o /dev/null YARA/*.yar YARA/php/*.yar YARA/node/*.yar
 
   linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      # Official build; SHA256 from https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
+      NODE_URL: https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz
+      NODE_SHA256: 1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+      NODE_EXPECT: 22.23.4
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -93,6 +102,14 @@ jobs:
           cp "$F/bin/php" "$F/odd/tab"$'\t'"php"
           cp "$F/bin/php" "$F/odd/dir"$'\n'"nl/php"
           cp "$F/bin/php" "$F/decoys/new"$'\n'"line.png"
+          # Node.js: the official node, a renamed copy, and a native addon decoy
+          # (only the N-API export: must be "node unknown", never a version)
+          mkdir -p "$F/node" "$F/addon" "$RUNNER_TEMP/dl"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/node.tar.xz" "$NODE_URL"
+          echo "$NODE_SHA256  $RUNNER_TEMP/dl/node.tar.xz" | sha256sum -c -
+          tar -xJf "$RUNNER_TEMP/dl/node.tar.xz" -C "$F/node" --strip-components=2 --wildcards '*/bin/node'
+          cp "$F/node/node" "$F/renamed/jsd"
+          printf 'int napi_register_module_v1(void) { return 0; }\n' | gcc -shared -fPIC -x c - -o "$F/addon/addon.node"
 
       - name: Scan and check (1 thread default, then -T 2)
         run: |
@@ -115,12 +132,18 @@ jobs:
             results=$(ls "$out"/yara_results_*.text | grep -v '\.raw\.text$')
             cat "$results"
             for p in bin/php renamed/webd; do
-              grep -qx "$RF/$p	$PHP_EXPECT" "$results" || { echo "::error::$p with version $PHP_EXPECT not reported"; exit 1; }
+              grep -qx "$RF/$p	php	$PHP_EXPECT" "$results" || { echo "::error::$p with php $PHP_EXPECT not reported"; exit 1; }
             done
+            for p in node/node renamed/jsd; do
+              grep -qx "$RF/$p	node	$NODE_EXPECT" "$results" || { echo "::error::$p with node $NODE_EXPECT not reported"; exit 1; }
+            done
+            # the addon decoy: exactly one line, with no version
+            [ "$(grep -c "^$RF/addon/addon.node	" "$results")" -eq 1 ] &&
+              grep -qx "$RF/addon/addon.node	node	unknown" "$results" || { echo "::error::addon.node not reported as just node unknown"; exit 1; }
             # reported as the bash $'...' quoted path ($SH: the bash that ran the script)
             for p in "odd/new"$'\n'"line" "odd/tab"$'\t'"php" "odd/dir"$'\n'"nl/php"; do
               q=$("$SH" -c 'printf %q "$1"' _ "$RF/$p")
-              grep -qxF "$q	$PHP_EXPECT" "$results" || { echo "::error::$q with version $PHP_EXPECT not reported"; exit 1; }
+              grep -qxF "$q	php	$PHP_EXPECT" "$results" || { echo "::error::$q with php $PHP_EXPECT not reported"; exit 1; }
             done
             if grep -E "/(excluded|decoys)/" "$results"; then echo "::error::excluded or decoy file reported"; exit 1; fi
             if grep /copies/ "$results"; then echo "::error::work-folder copy path reported"; exit 1; fi
@@ -134,6 +157,10 @@ jobs:
       PHP_URL: https://dl.static-php.dev/static-php-cli/common/php-8.3.32-cli-macos-aarch64.tar.gz
       PHP_SHA256: 1cc8148750bd1722031daba1618825a8b7d0a3830bb92c50d8dd844a1dcfb306
       PHP_EXPECT: 8.3.32
+      # Official build; SHA256 from https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
+      NODE_URL: https://nodejs.org/dist/v22.23.4/node-v22.23.4-darwin-arm64.tar.gz
+      NODE_SHA256: c9e1dbc748b33ed2d14f42445191ecaf14c56259c7a9a26d0042c49ec2b66428
+      NODE_EXPECT: 22.23.4
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -157,6 +184,14 @@ jobs:
           cp "$F/bin/php" "$F/odd/tab"$'\t'"php"
           cp "$F/bin/php" "$F/odd/dir"$'\n'"nl/php"
           cp "$F/bin/php" "$F/decoys/new"$'\n'"line.png"
+          # Node.js: the official node, a renamed copy, and a native addon decoy
+          # (only the N-API export: must be "node unknown", never a version)
+          mkdir -p "$F/node" "$F/addon"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/node.tgz" "$NODE_URL"
+          echo "$NODE_SHA256  $RUNNER_TEMP/dl/node.tgz" | shasum -a 256 -c
+          tar -xzf "$RUNNER_TEMP/dl/node.tgz" -C "$F/node" --strip-components=2 '*/bin/node'
+          cp "$F/node/node" "$F/renamed/jsd"
+          printf 'int napi_register_module_v1(void) { return 0; }\n' | cc -bundle -x c - -o "$F/addon/addon.node"
 
       - name: Scan and check (1 thread default, then -T 2)
         run: |
@@ -179,12 +214,18 @@ jobs:
             results=$(ls "$out"/yara_results_*.text | grep -v '\.raw\.text$')
             cat "$results"
             for p in bin/php renamed/webd; do
-              grep -qx "$RF/$p	$PHP_EXPECT" "$results" || { echo "::error::$p with version $PHP_EXPECT not reported"; exit 1; }
+              grep -qx "$RF/$p	php	$PHP_EXPECT" "$results" || { echo "::error::$p with php $PHP_EXPECT not reported"; exit 1; }
             done
+            for p in node/node renamed/jsd; do
+              grep -qx "$RF/$p	node	$NODE_EXPECT" "$results" || { echo "::error::$p with node $NODE_EXPECT not reported"; exit 1; }
+            done
+            # the addon decoy: exactly one line, with no version
+            [ "$(grep -c "^$RF/addon/addon.node	" "$results")" -eq 1 ] &&
+              grep -qx "$RF/addon/addon.node	node	unknown" "$results" || { echo "::error::addon.node not reported as just node unknown"; exit 1; }
             # reported as the bash $'...' quoted path ($SH: the bash that ran the script)
             for p in "odd/new"$'\n'"line" "odd/tab"$'\t'"php" "odd/dir"$'\n'"nl/php"; do
               q=$("$SH" -c 'printf %q "$1"' _ "$RF/$p")
-              grep -qxF "$q	$PHP_EXPECT" "$results" || { echo "::error::$q with version $PHP_EXPECT not reported"; exit 1; }
+              grep -qxF "$q	php	$PHP_EXPECT" "$results" || { echo "::error::$q with php $PHP_EXPECT not reported"; exit 1; }
             done
             if grep -E "/(excluded|decoys)/" "$results"; then echo "::error::excluded or decoy file reported"; exit 1; fi
             if grep /copies/ "$results"; then echo "::error::work-folder copy path reported"; exit 1; fi
@@ -198,6 +239,10 @@ jobs:
       PHP_URL: https://windows.php.net/downloads/releases/archives/php-8.3.35-nts-Win32-vs16-x64.zip
       PHP_SHA256: 25a8e2ac9ff30f1d768d1447c09a600617fa6e6082729f6e95f008b59c91fe45
       PHP_EXPECT: 8.3.35
+      # Official build; SHA256 from https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
+      NODE_URL: https://nodejs.org/dist/v22.23.4/node-v22.23.4-win-x64.zip
+      NODE_SHA256: cbc74b5e0982c9dbb41525fd8fb5dcd32fbee237863f7829072f4639a1ce5f20
+      NODE_EXPECT: 22.23.4
     defaults:
       run:
         shell: powershell
@@ -221,6 +266,19 @@ jobs:
           Copy-Item "$F\php\php8.dll" "$F\decoys\php8.zip"
           New-Item -ItemType File -Path "$F\decoys\empty" | Out-Null
           Set-Content -Path "$F\decoys\php_version.h" -Value "#define PHP_MAJOR_VERSION 8`n#define PHP_VERSION `"8.3.1`""
+          # Node.js: the official node.exe, a renamed copy, and a native addon decoy
+          # (a PE DLL whose only Node marker is the N-API export name: must be
+          # "node unknown", never a version)
+          $nodeZip = Join-Path $env:RUNNER_TEMP 'node.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri $env:NODE_URL -OutFile $nodeZip
+          $hash = (Get-FileHash -Algorithm SHA256 $nodeZip).Hash.ToLowerInvariant()
+          if ($hash -ne $env:NODE_SHA256) { throw "Node zip SHA256 mismatch: $hash" }
+          Expand-Archive -LiteralPath $nodeZip -DestinationPath "$env:RUNNER_TEMP\nodezip"
+          New-Item -ItemType Directory -Force -Path "$F\node", "$F\addon" | Out-Null
+          Copy-Item (Get-ChildItem "$env:RUNNER_TEMP\nodezip\*\node.exe").FullName "$F\node\node.exe"
+          Copy-Item "$F\node\node.exe" "$F\renamed\jsd.exe"
+          Add-Type -TypeDefinition 'public static class Addon { public static int napi_register_module_v1() { return 0; } }' `
+            -OutputAssembly "$F\addon\addon.node" -OutputType Library
 
       - name: Scan and check (1 thread default, then -Threads 2)
         run: |
@@ -243,8 +301,14 @@ jobs:
             $lines = @(Get-Content $results.FullName)
             $lines | Write-Host
             foreach ($p in 'php\php.exe', 'php\php8.dll', 'renamed\webd.dll') {
-              if ($lines -notcontains "$F\$p`t$env:PHP_EXPECT") { throw "$p with version $env:PHP_EXPECT not reported" }
+              if ($lines -cnotcontains "$F\$p`tphp`t$env:PHP_EXPECT") { throw "$p with php $env:PHP_EXPECT not reported" }
             }
+            foreach ($p in 'node\node.exe', 'renamed\jsd.exe') {
+              if ($lines -cnotcontains "$F\$p`tnode`t$env:NODE_EXPECT") { throw "$p with node $env:NODE_EXPECT not reported" }
+            }
+            # the addon decoy: exactly one line, with no version
+            $addon = @($lines | Where-Object { $_.StartsWith("$F\addon\addon.node`t") })
+            if ($addon.Count -ne 1 -or $addon[0] -cne "$F\addon\addon.node`tnode`tunknown") { throw "addon.node not reported as just node unknown: $($addon -join '; ')" }
             $bad = @($lines | Where-Object { $_ -like "$F\excluded\*" -or $_ -like "$F\decoys\*" })
             if ($bad.Count) { throw "excluded or decoy file reported: $($bad -join '; ')" }
           }
