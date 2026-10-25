@@ -10,6 +10,10 @@ Usage:
 """
 
 import datetime
+import pathlib
+import re
+
+IS_EXECUTABLE_YAR = pathlib.Path(__file__).resolve().parent / "is_executable.yar"
 
 # branch -> ZEND_MODULE_API_NO (the "API2xxxxxxx" build ID / extension dir name).
 # Verified against real builds: 5.6, 7.0-7.4, 8.0-8.5 (official Docker images,
@@ -54,15 +58,11 @@ HEADER = """/*
   Rule names here don't collide with php_detect.yar; both files can be loaded together.
 */
 
+// Condition copied from is_executable.yar by sync_rules.py - edit it there
 private rule PHP_Branch_IsExecutable
 {{
   condition:
-    uint32(0) == 0x464C457F                                 // ELF
-    or uint16(0) == 0x5A4D                                  // PE (MZ)
-    or uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF   // Mach-O 32/64
-    or uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE   // Mach-O 32/64, byte-swapped
-    or uint32(0) == 0xBEBAFECA                              // Mach-O universal (CAFEBABE)
-    or uint32(0) == 0xBFBAFECA                              // Mach-O 64-bit universal (CAFEBABF), rare
+{is_executable}
 }}
 """
 
@@ -82,6 +82,15 @@ rule PHP_Branch_Unknown
     )
 }}
 """
+
+
+def is_executable_condition():
+    """The condition lines of the rule in is_executable.yar (the source of truth)."""
+    text = IS_EXECUTABLE_YAR.read_text()
+    m = re.search(r"^  condition:\n(.*?)\n\}", text, re.S | re.M)
+    if not m:
+        raise SystemExit(f"no condition found in {IS_EXECUTABLE_YAR}")
+    return m.group(1)
 
 
 def rule_for(branch):
@@ -120,16 +129,26 @@ rule {name}
     return name, rule
 
 
-def main():
+def generate():
+    """The full text of php_version_branches.yar."""
     branches = list(API_NO) + FUTURE
-    out = [HEADER.format(date=datetime.date.today().isoformat())]
+    out = [
+        HEADER.format(
+            date=datetime.date.today().isoformat(),
+            is_executable=is_executable_condition(),
+        )
+    ]
     names = []
     for b in branches:
         name, rule = rule_for(b)
         names.append(name)
         out.append(rule)
     out.append(UNKNOWN.format(names=" or\n      ".join(names)))
-    print("".join(out), end="")
+    return "".join(out)
+
+
+def main():
+    print(generate(), end="")
 
 
 if __name__ == "__main__":

@@ -15,6 +15,8 @@ real results.
 | `php_detect.yar` | Main rules. Detects PHP and carries the **exact version** in the matched string (`yara -s`). |
 | `php_version_branches.yar` | One rule per branch (`PHP_8_2`, `PHP_7_4`, …). The **rule name is the version** - for engines that only report rule names (osquery, EDRs). Generated. |
 | `gen_php_branches.py` | Generates `php_version_branches.yar`. Edit this, not the `.yar`. |
+| `is_executable.yar` | The executable header check every rule is gated on - the one place to edit it. On its own it reports the files that pass. |
+| `sync_rules.py` | Copies `is_executable.yar` into `php_detect.yar` and the branch rules, and embeds `php_detect.yar` / `php_versions.awk` in the three scan scripts. `--check` reports copies that are out of date. |
 | `php_versions.awk` | Turns `yara -s php_detect.yar` output into `path<TAB>version`; matched files with no version string get `unknown`. |
 | `make_bigfix_content.py` | Generates the BigFix tasks and analysis (see [BigFix](#bigfix)) from the three scan scripts. |
 | `detect_running_php.md` | Which PHP is running / listening on a port: commands per OS and BigFix client relevance, with tested results. |
@@ -32,9 +34,22 @@ them together or separately.
 | `PHP_Windows_VersionInfo` | high | Any Windows PE whose version resource says `ProductName = PHP`: `php.exe`, `php-cgi.exe`, `php-win.exe`, SAPI DLLs, `ext\php_*.dll` | `$pv` = `ProductVersion` |
 | `PHP_Binary_Broad` | medium | Catch-all: any ELF/PE/Mach-O with any PHP marker (version string, `Zend Engine v`, `API2xxxxxxx,NTS/TS` build ID, PHP version resource, `The PHP Group` + `php.ini`). Includes Linux extensions (`.so`). | - (use the branch rules or the API table below) |
 
-Every rule requires an executable header (ELF, PE, Mach-O 32/64, or a Mach-O
-universal binary, including the rare 64-bit `CAFEBABF` form), so YARA only scans
-the content of executables; other files are rejected after reading their first bytes.
+Every rule requires a real executable, shared library or loadable module, checked
+from fixed header fields only (`is_executable.yar`, no modules):
+
+| Format | Passes | Rejected |
+|---|---|---|
+| ELF | `e_type` EXEC or DYN (incl. PIE), either byte order | `.o` files, core dumps |
+| PE | `MZ` + `PE\0\0` at `e_lfanew` | files that only start with `MZ` |
+| Mach-O 32/64 | `filetype` EXECUTE, DYLIB or BUNDLE (PHP extensions), either byte order | `.o` files, core dumps, dSYM debug symbols, kexts |
+| Mach-O universal (`CAFEBABE` / `CAFEBABF`) | 1-19 architectures, and the first slice passes the Mach-O check | universal `.o` files, static libraries (`.a`) and dSYMs; Java `.class` files (same magic) |
+
+YARA-X skips the pattern search of a file whose header fails the check, so
+non-executables of any size cost about one header read.
+
+To change the check, edit `is_executable.yar` and run `python3 sync_rules.py`.
+CI fails if a copy is out of date (`sync_rules.py --check`) or a rule file
+doesn't compile. All files involved must use LF line endings.
 
 On Windows the `X-Powered-By` string lives in `php7ts.dll` / `php8.dll` / `php8ts.dll`,
 not in `php.exe` (except 8.5+) - `php.exe` is caught by its version resource instead.
@@ -95,7 +110,8 @@ PHP_8_4 /usr/local/lib/php/extensions/no-debug-non-zts-20240924/opcache.so
 ```
 
 `PHP_Branch_Unknown` = looks like PHP but no branch rule recognised it (a new
-branch, or an odd build). Review, add to `gen_php_branches.py`, regenerate:
+branch, or an odd build). Review, add to `gen_php_branches.py`, regenerate
+(`python3 sync_rules.py` also does this):
 
 ```bash
 python3 gen_php_branches.py > php_version_branches.yar
@@ -182,7 +198,8 @@ and the work folder isn't `__Download` (the client clears it when the action end
 The tasks are relevant again once the results file is a day old, but not while a
 scan is running (`scan.running` marker, ignored after 12 hours). The scripts get
 the prefetched archive with `-a` (bash) / `-YaraXArchive` (PowerShell) and still
-check its SHA256. After changing a script, regenerate:
+check its SHA256. After changing a script or a rule (run `python3 sync_rules.py`
+first for a rule), regenerate:
 
 ```bash
 python3 make_bigfix_content.py

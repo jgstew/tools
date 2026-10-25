@@ -10,7 +10,10 @@ name: test_yara_x_scan_scripts
 #   not found: a copy in an excluded folder (-x / -ExcludePath), a copy with a
 #              skipped extension (.zip, and .png with a newline in the name), an
 #              empty file, and a php_version.h text file
-# Runs only when this workflow or one of the three scripts changes.
+# A separate job fails if a copy made by YARA/php/sync_rules.py (the header
+# check, the rule and the awk embedded in the scripts) differs from its source,
+# or if a rule file in YARA/php doesn't compile with yr.
+# Runs only when this workflow, one of the three scripts or YARA/php changes.
 on:
   push:
     branches:
@@ -19,18 +22,47 @@ on:
       - bash/yara_x_scan_linux.sh
       - bash/yara_x_scan_macos.sh
       - powershell/yara_x_scan_windows.ps1
+      - YARA/php/**
       - .github/workflows/test_yara_x_scan_scripts.yaml
   pull_request:
     paths:
       - bash/yara_x_scan_linux.sh
       - bash/yara_x_scan_macos.sh
       - powershell/yara_x_scan_windows.ps1
+      - YARA/php/**
       - .github/workflows/test_yara_x_scan_scripts.yaml
 
 permissions:
   contents: read
 
 jobs:
+  rules:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Embedded rule copies match their sources
+        # Lists each out-of-date file and exits 1; fix with python3 YARA/php/sync_rules.py
+        run: python3 YARA/php/sync_rules.py --check
+
+      - name: Rule files compile with yr
+        run: |
+          # Same yr release and SHA256 as the Linux scan script pins
+          eval "$(grep -E '^(YARAX_VERSION|SHA256_X86_64)=' bash/yara_x_scan_linux.sh)"
+          asset="yara-x-v${YARAX_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$asset" \
+            "https://github.com/VirusTotal/yara-x/releases/download/v${YARAX_VERSION}/$asset"
+          echo "$SHA256_X86_64  $RUNNER_TEMP/$asset" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$asset" -C "$RUNNER_TEMP"
+          for r in YARA/php/*.yar; do
+            echo "compile $r"; "$RUNNER_TEMP/yr" compile -o /dev/null "$r"
+          done
+          # README: the rule files can be loaded together (no rule name collisions)
+          "$RUNNER_TEMP/yr" compile -o /dev/null YARA/php/*.yar
+
   linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 15

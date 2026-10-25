@@ -284,8 +284,9 @@ fi
 log "Unpacked $YR_VERSION"
 
 # ---- embedded YARA rule ---------------------------------------------------
-# PHP install detection + version. Copy of YARA/php/php_detect.yar - keep in
-# sync. The version is in the printed strings ($ver, $pv).
+# PHP install detection + version. Copied from YARA/php/php_detect.yar by
+# YARA/php/sync_rules.py - edit there, not here. The version is in the printed
+# strings ($ver, $pv).
 RULE_FILE="${WORK_DIR}/embedded_rule.yar"
 cat > "$RULE_FILE" <<'YARA_RULE'
 /*
@@ -309,15 +310,45 @@ cat > "$RULE_FILE" <<'YARA_RULE'
   See README.md for tested samples and the API number -> branch table.
 */
 
+// Condition copied from is_executable.yar by sync_rules.py - edit it there
 private rule PHP_Detect_IsExecutable
 {
   condition:
-    uint32(0) == 0x464C457F                                 // ELF
-    or uint16(0) == 0x5A4D                                  // PE (MZ)
-    or uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF   // Mach-O 32/64
-    or uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE   // Mach-O 32/64, byte-swapped
-    or uint32(0) == 0xBEBAFECA                              // Mach-O universal (CAFEBABE)
-    or uint32(0) == 0xBFBAFECA                              // Mach-O 64-bit universal (CAFEBABF), rare
+    // ELF executable (2) or shared object (3, also PIE executables); e_type is
+    // in the byte order given by EI_DATA (1 = little, 2 = big endian)
+    (uint32(0) == 0x464C457F and
+      ((uint8(5) == 1 and (uint16(16) == 2 or uint16(16) == 3)) or
+       (uint8(5) == 2 and (uint16be(16) == 2 or uint16be(16) == 3))))
+    // PE: MZ header whose e_lfanew (0x3C) points at "PE\0\0"
+    or (uint16(0) == 0x5A4D and uint32(uint32(0x3C)) == 0x00004550)
+    // Mach-O 32/64 execute (2), dylib (6) or bundle (8, e.g. PHP extensions)
+    or ((uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF) and
+        (uint32(12) == 2 or uint32(12) == 6 or uint32(12) == 8))
+    // same, byte-swapped (big-endian) Mach-O
+    or ((uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE) and
+        (uint32be(12) == 2 or uint32be(12) == 6 or uint32be(12) == 8))
+    // Mach-O universal (CAFEBABE) with 1-19 architectures whose first slice
+    // passes the thin Mach-O check above, so universal static libraries (.a),
+    // object files and dSYMs are rejected. Java .class files also start with
+    // CAFEBABE, but bytes 4-7 hold their class version (major >= 45), not an
+    // architecture count. The header is big-endian; the first slice's offset
+    // is at 16 (fat_arch.offset).
+    or (uint32(0) == 0xBEBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(16)) == 0xFEEDFACE or uint32(uint32be(16)) == 0xFEEDFACF) and
+          (uint32(uint32be(16) + 12) == 2 or uint32(uint32be(16) + 12) == 6 or
+           uint32(uint32be(16) + 12) == 8)) or
+         ((uint32(uint32be(16)) == 0xCEFAEDFE or uint32(uint32be(16)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(16) + 12) == 2 or uint32be(uint32be(16) + 12) == 6 or
+           uint32be(uint32be(16) + 12) == 8))))
+    // same for the rare 64-bit universal header (CAFEBABF): fat_arch_64.offset
+    // is 8 bytes at 16; slices sit well below 4 GB, so its low half (20) is used
+    or (uint32(0) == 0xBFBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(20)) == 0xFEEDFACE or uint32(uint32be(20)) == 0xFEEDFACF) and
+          (uint32(uint32be(20) + 12) == 2 or uint32(uint32be(20) + 12) == 6 or
+           uint32(uint32be(20) + 12) == 8)) or
+         ((uint32(uint32be(20)) == 0xCEFAEDFE or uint32(uint32be(20)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(20) + 12) == 2 or uint32be(uint32be(20) + 12) == 6 or
+           uint32be(uint32be(20) + 12) == 8))))
 }
 
 rule PHP_Runtime_Version
@@ -344,8 +375,9 @@ rule PHP_Windows_VersionInfo
     $pname = { 50 00 72 00 6F 00 64 00 75 00 63 00 74 00 4E 00 61 00 6D 00 65 00 [2-4] 50 00 48 00 50 00 00 00 }
     $pv = /ProductVersion\x00[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,3}[0-9A-Za-z.\-]{0,20}/ wide
   condition:
-    // #pv >= 0 is always true: $pv is only there so -s prints the version
-    uint16(0) == 0x5A4D and $pname and #pv >= 0
+    // A real PE (MZ + PE signature). #pv >= 0 is always true: $pv is only
+    // there so -s prints the version
+    uint16(0) == 0x5A4D and PHP_Detect_IsExecutable and $pname and #pv >= 0
 }
 
 rule PHP_Binary_Broad
@@ -372,9 +404,15 @@ rule PHP_Binary_Broad
 YARA_RULE
 
 # ---- embedded version extractor (text format) -----------------------------
-# Copy of YARA/php/php_versions.awk - keep in sync.
+# Copied from YARA/php/php_versions.awk by YARA/php/sync_rules.py - edit there.
 VERSIONS_AWK="${WORK_DIR}/php_versions.awk"
 cat > "$VERSIONS_AWK" <<'AWK_SCRIPT'
+# Turn `yara -s` / `yr scan -s` output of php_detect.yar into "path<TAB>version".
+#   yara -s -r php_detect.yar /opt 2>/dev/null | awk -f php_versions.awk | sort -u
+# Handles paths with spaces and the UTF-16 ProductVersion match ($pv), which
+# yara prints with escaped NULs (8\x00.\x002\x00...). Matched files with no
+# version string (e.g. Linux extensions) get "unknown".
+
 # rule line: "<RULE> <path>", or with yr --print-meta "<RULE> [meta...] <path>"
 /^PHP_/ { file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file] = 1; next }
 
