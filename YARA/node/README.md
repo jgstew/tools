@@ -25,7 +25,7 @@ pass.
 | Rule | Confidence | Matches | Version from |
 |---|---|---|---|
 | `Node_Runtime_Version` | high | `node`, `node.exe`, `libnode.so*` / `libnode*.dylib`, and runtimes embedding Node: Electron, SEA, vercel/pkg | `$ver` = `node.js/v<version>`; vercel/pkg builds have no `$ver`, so `$rel` (the release URL), which only counts together with the ABI symbol `$abi` |
-| `Node_Electron_Version` | high | Electron framework (embeds Node) | `$electron` = `Electron/<version>`, `$ver` = the embedded Node version |
+| `Node_Electron_Version` | high | Electron framework (embeds Node): `Electron/<version>` together with `node.js/v` or, in very old Electron (around 2.x), `node_module_register` | `$electron` = `Electron/<version>`, `$ver` = the embedded Node version (none in very old Electron, which then reports only its Electron version) |
 | `Node_Binary_Broad` | medium | Catch-all: any ELF/PE/Mach-O with any Node marker. Includes native addons (`.node`), the distro `node` launchers that load `libnode`, and Bun-compiled executables. | - (`node unknown` in the summary; the ABI table below gives an addon's Node major) |
 
 Every rule is gated on the shared executable header check, see
@@ -45,6 +45,7 @@ release's `SHASUMS256.txt`, distro packages and installed apps (see
 | `https://nodejs.org/download/release/v<version>/...` | `process.release.sourceUrl` / `headersUrl` | every sample above, **and** vercel/pkg builds (which have no inspector string), **but also Bun** (Node-compatibility shim) |
 | `node_register_module_v<ABI>` | `NODE_MODULE` registration symbol (ABI = `NODE_MODULE_VERSION`) | every Node build from 10.x on, and pkg; **not** in 8.17.0 or Bun. Also in native addons. |
 | `napi_register_module_v1` / `napi_module_register` | N-API addon export / import | Node itself and native `.node` addons. Also in Bun. |
+| `node_module_register` | the C++ function `NODE_MODULE` calls | legacy (non-N-API) native addons, which have no other marker, and old runtimes such as Electron 2.0.7 (VMware Fusion), which has no `node.js/v` |
 | `_ZN4node5StartEiPPc` | import of `node::Start` | the small distro/Homebrew `node` launchers that load `libnode` (the version lives in `libnode`) |
 | `Electron/<version>` | Electron user agent | Electron Framework (together with `node.js/v<embedded node>`) |
 | PE `CompanyName`/`ProductName` = `Node.js`, `ProductVersion` | Windows version resource | official `node.exe`. Not used: `node.js/v` is always there too. |
@@ -162,6 +163,12 @@ whole runtime despite the `.node` name - 18.20.2; Microsoft Teams classic
 Studio 18.15.0 / 25.9.8; VS Code, Docker Desktop and others 24.x / 42-44.
 
 ## Limitations
+
+- **Very old Electron reports only its Electron version.** Electron 2.0.7
+  (VMware Fusion's Applications Menu) has `Electron/2.0.7` and
+  `node_module_register`, but no `node.js/v`, so the summary has
+  `electron 2.0.7` and `node unknown`. No Electron-to-Node version table is
+  applied.
 
 - **Bun / Deno:** not detected, and not excluded. Bun-compiled executables
   appear as `node unknown` through the broad rule (one Bun version, 1.4.0, was

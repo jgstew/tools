@@ -7,8 +7,9 @@ name: test_yara_x_scan_scripts
 # "path<TAB>product<TAB>version" summary - what is reported and what isn't:
 #   found:     the PHP binary/DLLs and node, and a renamed copy of each
 #              (detection is by content), with their exact versions
-#   found:     a native addon decoy (an executable with only the N-API export),
-#              reported as "node unknown" and never with a version
+#   found:     two native addon decoys, one with only the N-API export and a
+#              legacy one that only calls node_module_register (NODE_MODULE),
+#              each reported as "node unknown" and never with a version
 #   found:     (Linux, Windows) an official Electron build, reported as exactly
 #              two lines: its embedded node version and its electron version
 #   found:     (Linux, macOS) copies with a newline / tab in the file or folder
@@ -111,14 +112,17 @@ jobs:
           cp "$F/bin/php" "$F/odd/tab"$'\t'"php"
           cp "$F/bin/php" "$F/odd/dir"$'\n'"nl/php"
           cp "$F/bin/php" "$F/decoys/new"$'\n'"line.png"
-          # Node.js: the official node, a renamed copy, and a native addon decoy
-          # (only the N-API export: must be "node unknown", never a version)
+          # Node.js: the official node, a renamed copy, and two native addon
+          # decoys (only the N-API export, or a legacy NODE_MODULE addon that only
+          # calls node_module_register): each must be "node unknown", never a version
           mkdir -p "$F/node" "$F/addon" "$RUNNER_TEMP/dl"
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/node.tar.xz" "$NODE_URL"
           echo "$NODE_SHA256  $RUNNER_TEMP/dl/node.tar.xz" | sha256sum -c -
           tar -xJf "$RUNNER_TEMP/dl/node.tar.xz" -C "$F/node" --strip-components=2 --wildcards '*/bin/node'
           cp "$F/node/node" "$F/renamed/jsd"
           printf 'int napi_register_module_v1(void) { return 0; }\n' | gcc -shared -fPIC -x c - -o "$F/addon/addon.node"
+          printf 'void node_module_register(void *);\n__attribute__((constructor)) static void reg(void) { node_module_register(0); }\n' |
+            gcc -shared -fPIC -x c - -o "$F/addon/legacy.node"
           # Electron: the official electron binary (embeds Node.js)
           mkdir -p "$F/electron"
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/electron.zip" "$ELECTRON_URL"
@@ -151,9 +155,11 @@ jobs:
             for p in node/node renamed/jsd; do
               grep -qx "$RF/$p	node	$NODE_EXPECT" "$results" || { echo "::error::$p with node $NODE_EXPECT not reported"; exit 1; }
             done
-            # the addon decoy: exactly one line, with no version
-            [ "$(grep -c "^$RF/addon/addon.node	" "$results")" -eq 1 ] &&
-              grep -qx "$RF/addon/addon.node	node	unknown" "$results" || { echo "::error::addon.node not reported as just node unknown"; exit 1; }
+            # the addon decoys: exactly one line each, with no version
+            for a in addon.node legacy.node; do
+              [ "$(grep -c "^$RF/addon/$a	" "$results")" -eq 1 ] &&
+                grep -qx "$RF/addon/$a	node	unknown" "$results" || { echo "::error::$a not reported as just node unknown"; exit 1; }
+            done
             # Electron: exactly two lines, its embedded node and its electron version
             [ "$(grep -c "^$RF/electron/electron	" "$results")" -eq 2 ] &&
               grep -qx "$RF/electron/electron	node	$ELECTRON_NODE_EXPECT" "$results" &&
@@ -202,14 +208,17 @@ jobs:
           cp "$F/bin/php" "$F/odd/tab"$'\t'"php"
           cp "$F/bin/php" "$F/odd/dir"$'\n'"nl/php"
           cp "$F/bin/php" "$F/decoys/new"$'\n'"line.png"
-          # Node.js: the official node, a renamed copy, and a native addon decoy
-          # (only the N-API export: must be "node unknown", never a version)
+          # Node.js: the official node, a renamed copy, and two native addon
+          # decoys (only the N-API export, or a legacy NODE_MODULE addon that only
+          # calls node_module_register): each must be "node unknown", never a version
           mkdir -p "$F/node" "$F/addon"
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/node.tgz" "$NODE_URL"
           echo "$NODE_SHA256  $RUNNER_TEMP/dl/node.tgz" | shasum -a 256 -c
           tar -xzf "$RUNNER_TEMP/dl/node.tgz" -C "$F/node" --strip-components=2 '*/bin/node'
           cp "$F/node/node" "$F/renamed/jsd"
           printf 'int napi_register_module_v1(void) { return 0; }\n' | cc -bundle -x c - -o "$F/addon/addon.node"
+          printf 'void node_module_register(void *);\n__attribute__((constructor)) static void reg(void) { node_module_register(0); }\n' |
+            cc -bundle -undefined dynamic_lookup -x c - -o "$F/addon/legacy.node"
 
       - name: Scan and check (1 thread default, then -T 2)
         run: |
@@ -237,9 +246,11 @@ jobs:
             for p in node/node renamed/jsd; do
               grep -qx "$RF/$p	node	$NODE_EXPECT" "$results" || { echo "::error::$p with node $NODE_EXPECT not reported"; exit 1; }
             done
-            # the addon decoy: exactly one line, with no version
-            [ "$(grep -c "^$RF/addon/addon.node	" "$results")" -eq 1 ] &&
-              grep -qx "$RF/addon/addon.node	node	unknown" "$results" || { echo "::error::addon.node not reported as just node unknown"; exit 1; }
+            # the addon decoys: exactly one line each, with no version
+            for a in addon.node legacy.node; do
+              [ "$(grep -c "^$RF/addon/$a	" "$results")" -eq 1 ] &&
+                grep -qx "$RF/addon/$a	node	unknown" "$results" || { echo "::error::$a not reported as just node unknown"; exit 1; }
+            done
             # reported as the bash $'...' quoted path ($SH: the bash that ran the script)
             for p in "odd/new"$'\n'"line" "odd/tab"$'\t'"php" "odd/dir"$'\n'"nl/php"; do
               q=$("$SH" -c 'printf %q "$1"' _ "$RF/$p")
@@ -291,9 +302,10 @@ jobs:
           Copy-Item "$F\php\php8.dll" "$F\decoys\php8.zip"
           New-Item -ItemType File -Path "$F\decoys\empty" | Out-Null
           Set-Content -Path "$F\decoys\php_version.h" -Value "#define PHP_MAJOR_VERSION 8`n#define PHP_VERSION `"8.3.1`""
-          # Node.js: the official node.exe, a renamed copy, and a native addon decoy
-          # (a PE DLL whose only Node marker is the N-API export name: must be
-          # "node unknown", never a version)
+          # Node.js: the official node.exe, a renamed copy, and two native addon
+          # decoys (PE DLLs whose only Node marker is the N-API export name, or the
+          # legacy NODE_MODULE function node_module_register): each must be
+          # "node unknown", never a version
           $nodeZip = Join-Path $env:RUNNER_TEMP 'node.zip'
           Invoke-WebRequest -UseBasicParsing -Uri $env:NODE_URL -OutFile $nodeZip
           $hash = (Get-FileHash -Algorithm SHA256 $nodeZip).Hash.ToLowerInvariant()
@@ -304,6 +316,8 @@ jobs:
           Copy-Item "$F\node\node.exe" "$F\renamed\jsd.exe"
           Add-Type -TypeDefinition 'public static class Addon { public static int napi_register_module_v1() { return 0; } }' `
             -OutputAssembly "$F\addon\addon.node" -OutputType Library
+          Add-Type -TypeDefinition 'public static class LegacyAddon { public static void node_module_register() { } }' `
+            -OutputAssembly "$F\addon\legacy.node" -OutputType Library
           # Electron: the official electron.exe (embeds Node.js); only that file
           # is kept, so its DLLs (ffmpeg, swiftshader, ...) aren't scanned
           $electronZip = Join-Path $env:RUNNER_TEMP 'electron.zip'
@@ -340,9 +354,11 @@ jobs:
             foreach ($p in 'node\node.exe', 'renamed\jsd.exe') {
               if ($lines -cnotcontains "$F\$p`tnode`t$env:NODE_EXPECT") { throw "$p with node $env:NODE_EXPECT not reported" }
             }
-            # the addon decoy: exactly one line, with no version
-            $addon = @($lines | Where-Object { $_.StartsWith("$F\addon\addon.node`t") })
-            if ($addon.Count -ne 1 -or $addon[0] -cne "$F\addon\addon.node`tnode`tunknown") { throw "addon.node not reported as just node unknown: $($addon -join '; ')" }
+            # the addon decoys: exactly one line each, with no version
+            foreach ($a in 'addon.node', 'legacy.node') {
+              $addon = @($lines | Where-Object { $_.StartsWith("$F\addon\$a`t") })
+              if ($addon.Count -ne 1 -or $addon[0] -cne "$F\addon\$a`tnode`tunknown") { throw "$a not reported as just node unknown: $($addon -join '; ')" }
+            }
             # Electron: exactly two lines, its embedded node and its electron version
             $electron = @($lines | Where-Object { $_.StartsWith("$F\electron\electron.exe`t") })
             if ($electron.Count -ne 2 -or
