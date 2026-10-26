@@ -142,7 +142,7 @@ once (~8 min, both cores busy).
 | `fixlet/Scan for PHP and Node.js Installs with YARA-X - macOS.bes` | Prefetches the `yr` archive for the CPU, copies it, the embedded script and a small wrapper to `__BESData/__Global/yara_runtime_scan`, and starts the wrapper with `run`. The wrapper scans in the background and copies the [summary](#summary-format) to `__BESData/__Global/Logs/yara_results_runtimes.text` (console output: `yara_scan_runtimes.log`). |
 | `fixlet/Scan for PHP and Node.js Installs with YARA-X - Linux.bes` | Same, Linux x86_64 / aarch64. |
 | `fixlet/Scan for PHP and Node.js Installs with YARA-X - Windows.bes` | Same, Windows 10 / Server 2016+ x64, 64-bit PowerShell 5.1+. |
-| `analyses/PHP and Node.js Installs from YARA-X Scan - Universal.bes` | Reports a summary once a day: the distinct PHP, Node.js and Electron versions, the number of PHP and Node.js files (Node.js files include native addons), and the scan time. |
+| `analyses/PHP and Node.js Installs from YARA-X Scan - Universal.bes` | Reports a summary every hour: the distinct PHP, Node.js and Electron versions, the number of PHP and Node.js files (Node.js files include native addons), and the scan time. |
 
 `run` (not `wait`) keeps the BigFix agent free for other actions during the scan,
 and the work folder isn't `__Download` (the client clears it when the action ends).

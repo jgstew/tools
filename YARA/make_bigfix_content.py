@@ -369,14 +369,14 @@ def analysis_xml(mtime):
         (6, "Electron Versions Found", versions("electron")),
     ]
     props = "\n".join(
-        f'\t\t<Property Name="{name}" ID="{i}" EvaluationPeriod="P1D"><![CDATA[{rel}]]></Property>'
+        f'\t\t<Property Name="{name}" ID="{i}" EvaluationPeriod="PT1H"><![CDATA[{rel}]]></Property>'
         for i, name, rel in properties
     )
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
 	<Analysis>
 		<Title>{ANALYSIS_TITLE}</Title>
-		<Description><![CDATA[<P>Reports the results of the &quot;Scan for PHP and Node.js Installs with YARA-X&quot; tasks (macOS, Linux, Windows), once a day: the distinct PHP, Node.js and Electron versions found, how many PHP and Node.js files were found (Node.js files include native addons, which have no version), and when the scan ran. Each computer's full list (&quot;path&lt;TAB&gt;product&lt;TAB&gt;version&quot; per product found in a file) is in __BESData/__Global/Logs/{RESULTS_FILE}. A computer that was scanned and has neither reports 0 files.</P>]]></Description>
+		<Description><![CDATA[<P>Reports the results of the &quot;Scan for PHP and Node.js Installs with YARA-X&quot; tasks (macOS, Linux, Windows), every hour: the distinct PHP, Node.js and Electron versions found, how many PHP and Node.js files were found (Node.js files include native addons, which have no version), and when the scan ran. Each computer's full list (&quot;path&lt;TAB&gt;product&lt;TAB&gt;version&quot; per product found in a file) is in __BESData/__Global/Logs/{RESULTS_FILE}. A computer that was scanned and has neither reports 0 files.</P>]]></Description>
 		<Relevance><![CDATA[exists {files}]]></Relevance>
 		<Source>Internal</Source>
 		<SourceID>jgstew</SourceID>
