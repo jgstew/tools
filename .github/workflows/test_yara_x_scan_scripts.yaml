@@ -92,8 +92,11 @@ jobs:
 
       - name: Install distro PHP (a real, unpacked ELF runtime)
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends php8.3-cli
+          # Install from the runner's package list first, and update it only if
+          # that fails: the list can be stale, and a superseded .deb then 404s.
+          # (An unconditional update once took 433 s on a slow mirror.)
+          sudo apt-get install -y -qq --no-install-recommends php8.3-cli \
+            || { sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends php8.3-cli; }
           echo "PHP_EXPECT=$(php -r 'echo PHP_VERSION;')" >> "$GITHUB_ENV"
 
       - name: Plant fixtures
@@ -290,12 +293,30 @@ jobs:
       - name: Plant fixtures
         run: |
           $ErrorActionPreference = 'Stop'
+          # PowerShell 5.1's Invoke-WebRequest is very slow while it draws a progress bar
+          $ProgressPreference = 'SilentlyContinue'
+          function Write-Stage([string]$Message) { Write-Host "[$(Get-Date -Format 'HH:mm:ss')] $Message" }
+          # Extract the one archive entry named $Name (it must be unique) to
+          # $Destination, instead of unpacking the whole archive
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          function Expand-ZipEntry([string]$Zip, [string]$Name, [string]$Destination) {
+            $archive = [System.IO.Compression.ZipFile]::OpenRead($Zip)
+            try {
+              $entries = @($archive.Entries | Where-Object { $_.Name -eq $Name })
+              if ($entries.Count -ne 1) { throw "expected one $Name in $Zip, found $($entries.Count)" }
+              [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entries[0], $Destination, $true)
+            } finally {
+              $archive.Dispose()
+            }
+          }
           $F = Join-Path $env:RUNNER_TEMP 'fixtures'
           New-Item -ItemType Directory -Force -Path "$F\renamed", "$F\excluded", "$F\decoys" | Out-Null
+          Write-Stage 'PHP: download'
           $zip = Join-Path $env:RUNNER_TEMP 'php.zip'
           Invoke-WebRequest -UseBasicParsing -Uri $env:PHP_URL -OutFile $zip
           $hash = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLowerInvariant()
           if ($hash -ne $env:PHP_SHA256) { throw "PHP zip SHA256 mismatch: $hash" }
+          Write-Stage 'PHP: unpack'
           Expand-Archive -LiteralPath $zip -DestinationPath "$F\php"
           Copy-Item "$F\php\php8.dll" "$F\renamed\webd.dll"
           Copy-Item "$F\php\php8.dll" "$F\excluded\php8.dll"
@@ -306,13 +327,14 @@ jobs:
           # decoys (PE DLLs whose only Node marker is the N-API export name, or the
           # legacy NODE_MODULE function node_module_register): each must be
           # "node unknown", never a version
+          Write-Stage 'Node.js: download'
           $nodeZip = Join-Path $env:RUNNER_TEMP 'node.zip'
           Invoke-WebRequest -UseBasicParsing -Uri $env:NODE_URL -OutFile $nodeZip
           $hash = (Get-FileHash -Algorithm SHA256 $nodeZip).Hash.ToLowerInvariant()
           if ($hash -ne $env:NODE_SHA256) { throw "Node zip SHA256 mismatch: $hash" }
-          Expand-Archive -LiteralPath $nodeZip -DestinationPath "$env:RUNNER_TEMP\nodezip"
+          Write-Stage 'Node.js: extract node.exe'
           New-Item -ItemType Directory -Force -Path "$F\node", "$F\addon" | Out-Null
-          Copy-Item (Get-ChildItem "$env:RUNNER_TEMP\nodezip\*\node.exe").FullName "$F\node\node.exe"
+          Expand-ZipEntry $nodeZip 'node.exe' "$F\node\node.exe"
           Copy-Item "$F\node\node.exe" "$F\renamed\jsd.exe"
           Add-Type -TypeDefinition 'public static class Addon { public static int napi_register_module_v1() { return 0; } }' `
             -OutputAssembly "$F\addon\addon.node" -OutputType Library
@@ -320,13 +342,15 @@ jobs:
             -OutputAssembly "$F\addon\legacy.node" -OutputType Library
           # Electron: the official electron.exe (embeds Node.js); only that file
           # is kept, so its DLLs (ffmpeg, swiftshader, ...) aren't scanned
+          Write-Stage 'Electron: download'
           $electronZip = Join-Path $env:RUNNER_TEMP 'electron.zip'
           Invoke-WebRequest -UseBasicParsing -Uri $env:ELECTRON_URL -OutFile $electronZip
           $hash = (Get-FileHash -Algorithm SHA256 $electronZip).Hash.ToLowerInvariant()
           if ($hash -ne $env:ELECTRON_SHA256) { throw "Electron zip SHA256 mismatch: $hash" }
-          Expand-Archive -LiteralPath $electronZip -DestinationPath "$env:RUNNER_TEMP\electronzip"
+          Write-Stage 'Electron: extract electron.exe'
           New-Item -ItemType Directory -Force -Path "$F\electron" | Out-Null
-          Copy-Item "$env:RUNNER_TEMP\electronzip\electron.exe" "$F\electron\electron.exe"
+          Expand-ZipEntry $electronZip 'electron.exe' "$F\electron\electron.exe"
+          Write-Stage 'done'
 
       - name: Scan and check (1 thread default, then -Threads 2)
         run: |
