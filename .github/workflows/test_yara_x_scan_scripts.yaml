@@ -9,6 +9,8 @@ name: test_yara_x_scan_scripts
 #              (detection is by content), with their exact versions
 #   found:     a native addon decoy (an executable with only the N-API export),
 #              reported as "node unknown" and never with a version
+#   found:     (Linux, Windows) an official Electron build, reported as exactly
+#              two lines: its embedded node version and its electron version
 #   found:     (Linux, macOS) copies with a newline / tab in the file or folder
 #              name, reported as bash $'...' quoted paths
 #   not found: a copy in an excluded folder (-x / -ExcludePath), a copy with a
@@ -75,6 +77,13 @@ jobs:
       NODE_URL: https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz
       NODE_SHA256: 1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
       NODE_EXPECT: 22.23.4
+      # Official build; SHA256 from
+      # https://github.com/electron/electron/releases/download/v44.7.0/SHASUMS256.txt
+      ELECTRON_URL: https://github.com/electron/electron/releases/download/v44.7.0/electron-v44.7.0-linux-x64.zip
+      ELECTRON_SHA256: 3ae7d5bdad61c664486c6ab61361dd084d064c8c08af8d13a687096e18ce555a
+      ELECTRON_EXPECT: 44.7.0
+      # the Node.js embedded in Electron 44.7.0 (node.js/v... in the binary)
+      ELECTRON_NODE_EXPECT: 24.21.0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -110,6 +119,11 @@ jobs:
           tar -xJf "$RUNNER_TEMP/dl/node.tar.xz" -C "$F/node" --strip-components=2 --wildcards '*/bin/node'
           cp "$F/node/node" "$F/renamed/jsd"
           printf 'int napi_register_module_v1(void) { return 0; }\n' | gcc -shared -fPIC -x c - -o "$F/addon/addon.node"
+          # Electron: the official electron binary (embeds Node.js)
+          mkdir -p "$F/electron"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/electron.zip" "$ELECTRON_URL"
+          echo "$ELECTRON_SHA256  $RUNNER_TEMP/dl/electron.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/dl/electron.zip" electron -d "$F/electron"
 
       - name: Scan and check (1 thread default, then -T 2)
         run: |
@@ -140,6 +154,10 @@ jobs:
             # the addon decoy: exactly one line, with no version
             [ "$(grep -c "^$RF/addon/addon.node	" "$results")" -eq 1 ] &&
               grep -qx "$RF/addon/addon.node	node	unknown" "$results" || { echo "::error::addon.node not reported as just node unknown"; exit 1; }
+            # Electron: exactly two lines, its embedded node and its electron version
+            [ "$(grep -c "^$RF/electron/electron	" "$results")" -eq 2 ] &&
+              grep -qx "$RF/electron/electron	node	$ELECTRON_NODE_EXPECT" "$results" &&
+              grep -qx "$RF/electron/electron	electron	$ELECTRON_EXPECT" "$results" || { echo "::error::electron not reported as just node $ELECTRON_NODE_EXPECT and electron $ELECTRON_EXPECT"; exit 1; }
             # reported as the bash $'...' quoted path ($SH: the bash that ran the script)
             for p in "odd/new"$'\n'"line" "odd/tab"$'\t'"php" "odd/dir"$'\n'"nl/php"; do
               q=$("$SH" -c 'printf %q "$1"' _ "$RF/$p")
@@ -243,6 +261,13 @@ jobs:
       NODE_URL: https://nodejs.org/dist/v22.23.4/node-v22.23.4-win-x64.zip
       NODE_SHA256: cbc74b5e0982c9dbb41525fd8fb5dcd32fbee237863f7829072f4639a1ce5f20
       NODE_EXPECT: 22.23.4
+      # Official build; SHA256 from
+      # https://github.com/electron/electron/releases/download/v44.7.0/SHASUMS256.txt
+      ELECTRON_URL: https://github.com/electron/electron/releases/download/v44.7.0/electron-v44.7.0-win32-x64.zip
+      ELECTRON_SHA256: eee30dc8fa1f5ea95490e59f44e46ea68dd24c6e93d22facf70fe5c2d4c2665c
+      ELECTRON_EXPECT: 44.7.0
+      # the Node.js embedded in Electron 44.7.0 (node.js/v... in the binary)
+      ELECTRON_NODE_EXPECT: 24.21.0
     defaults:
       run:
         shell: powershell
@@ -279,6 +304,15 @@ jobs:
           Copy-Item "$F\node\node.exe" "$F\renamed\jsd.exe"
           Add-Type -TypeDefinition 'public static class Addon { public static int napi_register_module_v1() { return 0; } }' `
             -OutputAssembly "$F\addon\addon.node" -OutputType Library
+          # Electron: the official electron.exe (embeds Node.js); only that file
+          # is kept, so its DLLs (ffmpeg, swiftshader, ...) aren't scanned
+          $electronZip = Join-Path $env:RUNNER_TEMP 'electron.zip'
+          Invoke-WebRequest -UseBasicParsing -Uri $env:ELECTRON_URL -OutFile $electronZip
+          $hash = (Get-FileHash -Algorithm SHA256 $electronZip).Hash.ToLowerInvariant()
+          if ($hash -ne $env:ELECTRON_SHA256) { throw "Electron zip SHA256 mismatch: $hash" }
+          Expand-Archive -LiteralPath $electronZip -DestinationPath "$env:RUNNER_TEMP\electronzip"
+          New-Item -ItemType Directory -Force -Path "$F\electron" | Out-Null
+          Copy-Item "$env:RUNNER_TEMP\electronzip\electron.exe" "$F\electron\electron.exe"
 
       - name: Scan and check (1 thread default, then -Threads 2)
         run: |
@@ -309,6 +343,13 @@ jobs:
             # the addon decoy: exactly one line, with no version
             $addon = @($lines | Where-Object { $_.StartsWith("$F\addon\addon.node`t") })
             if ($addon.Count -ne 1 -or $addon[0] -cne "$F\addon\addon.node`tnode`tunknown") { throw "addon.node not reported as just node unknown: $($addon -join '; ')" }
+            # Electron: exactly two lines, its embedded node and its electron version
+            $electron = @($lines | Where-Object { $_.StartsWith("$F\electron\electron.exe`t") })
+            if ($electron.Count -ne 2 -or
+                $electron -cnotcontains "$F\electron\electron.exe`tnode`t$env:ELECTRON_NODE_EXPECT" -or
+                $electron -cnotcontains "$F\electron\electron.exe`telectron`t$env:ELECTRON_EXPECT") {
+              throw "electron.exe not reported as just node $env:ELECTRON_NODE_EXPECT and electron $env:ELECTRON_EXPECT: $($electron -join '; ')"
+            }
             $bad = @($lines | Where-Object { $_ -like "$F\excluded\*" -or $_ -like "$F\decoys\*" })
             if ($bad.Count) { throw "excluded or decoy file reported: $($bad -join '; ')" }
           }

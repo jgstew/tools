@@ -155,4 +155,3 @@ first for a rule), regenerate:
 ```bash
 python3 make_bigfix_content.py
 ```
-
