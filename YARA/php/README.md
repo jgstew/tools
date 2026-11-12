@@ -20,11 +20,12 @@ real results.
 
 The header check (`../is_executable.yar`), `../sync_rules.py`, the summary
 filter (`../versions.awk`), the scan scripts and the BigFix content are shared
-with the Node.js rules: see [../README.md](../README.md).
+with the Node.js and Apache rules: see [../README.md](../README.md).
 
 Both `.yar` files use no YARA modules (`pe`, `elf`, `macho`), so they work in
 embedded engines built without them, and their rule names don't collide - load
-them together or separately (or with `../node/node_detect.yar`).
+them together or separately (or with `../node/node_detect.yar` and
+`../apache/apache_detect.yar`).
 
 ## Rules in `php_detect.yar`
 

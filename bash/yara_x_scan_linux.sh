@@ -15,8 +15,9 @@
 #        yara_results_<host>_<time>.text      "path<TAB>product<TAB>version",
 #                                             one line per product in a file
 #
-#        product is php, node or electron; an Electron framework gets a node
-#        and an electron line. Files matched with no version string, e.g.
+#        product is php, node, electron, apache or mod_http2; an Electron
+#        framework gets a node and an electron line. Files matched with no
+#        version string, e.g.
 #        Linux PHP extensions or Node addons, are listed with version
 #        "unknown". Files whose names aren't valid
 #        UTF-8, or whose paths contain control characters (newline, tab, ...),
@@ -48,9 +49,9 @@
 #                   by default (except empty files); -x still applies
 #   -h              show this help
 #
-# Skipped by default (none of these can hold a likely host PHP or Node.js
-# install; each skip is reported while running, files over the size cap and
-# skipped mounts are listed in the log). To scan just one of these folders,
+# Skipped by default (none of these can hold a likely host PHP, Node.js or
+# Apache install; each skip is reported while running, files over the size cap
+# and skipped mounts are listed in the log). To scan just one of these folders,
 # target it (e.g. -t /var/lib/docker) instead of using -A:
 #   - files of 512 MB or more: PHP builds are ~20 MB, the largest known
 #     (FrankenPHP, static PHP in Go) ~180 MB, node 8.x-25.x 33-127 MB,
@@ -61,10 +62,10 @@
 #   - empty files
 #   - container storage: /var/lib/docker, /var/lib/containers,
 #     /var/lib/containerd, /var/lib/rancher, /var/lib/lxc, /var/lib/lxd,
-#     /var/snap/lxd, ~/.local/share/containers - PHP or Node inside images
-#     isn't a host install and repeats once per image layer
+#     /var/snap/lxd, ~/.local/share/containers - PHP, Node or Apache inside
+#     images isn't a host install and repeats once per image layer
 #   - snapshots: /.snapshots (snapper), /timeshift - full copies of the system
-#     that would repeat every distro PHP and Node
+#     that would repeat every distro PHP, Node and Apache
 # A skip whose folder contains TARGET_PATH is turned off automatically, and
 # none apply when TARGET_PATH is a single file.
 #
@@ -287,10 +288,11 @@ fi
 log "Unpacked $YR_VERSION"
 
 # ---- embedded YARA rule ---------------------------------------------------
-# PHP and Node.js install detection + version, in one rule file so both are
-# found in one scan. Copied from YARA/php/php_detect.yar and
-# YARA/node/node_detect.yar by YARA/sync_rules.py - edit there, not here. The
-# version is in the printed strings ($ver, $pv, $rel, $electron).
+# PHP, Node.js and Apache install detection + version, in one rule file so all
+# are found in one scan. Copied from YARA/php/php_detect.yar,
+# YARA/node/node_detect.yar and YARA/apache/apache_detect.yar by
+# YARA/sync_rules.py - edit there, not here. The version is in the printed
+# strings ($ver, $pv, $rel, $electron, $_module_ver).
 RULE_FILE="${WORK_DIR}/embedded_rule.yar"
 cat > "$RULE_FILE" <<'YARA_RULE'
 /*
@@ -535,31 +537,131 @@ rule Node_Binary_Broad
     // false positive, reported as "node unknown"
     Node_Detect_IsExecutable and any of them
 }
+
+/*
+  Apache HTTP Server (httpd) + mod_http2 detection + version, all OSes (Linux
+  ELF, Windows PE, macOS Mach-O).
+
+  Signatures based on jeffschafer's Apache mod_http2 scanner. Run with
+  `yara -s` (or `yr scan -s`) to print the matched version text.
+
+  Rules:
+    Apache_HTTPD_Version - the file holding the httpd core: httpd on Linux and
+                           macOS, libhttpd.dll on Windows (httpd.exe is a small
+                           launcher); $ver holds the exact version (Apache/2.4.67)
+    Apache_HTTP2_Module  - mod_http2 (mod_http2.so, or httpd with it built in);
+                           $_module_ver is a candidate module version only
+
+  No modules are imported so the rules also work in embedded YARA engines
+  (osquery, EDRs) that are built without the pe/elf/macho modules.
+*/
+
+// Condition copied from is_executable.yar by sync_rules.py - edit it there
+private rule Apache_Detect_IsExecutable
+{
+  condition:
+    // ELF executable (2) or shared object (3, also PIE executables); e_type is
+    // in the byte order given by EI_DATA (1 = little, 2 = big endian)
+    (uint32(0) == 0x464C457F and
+      ((uint8(5) == 1 and (uint16(16) == 2 or uint16(16) == 3)) or
+       (uint8(5) == 2 and (uint16be(16) == 2 or uint16be(16) == 3))))
+    // PE: MZ header whose e_lfanew (0x3C) points at "PE\0\0"
+    or (uint16(0) == 0x5A4D and uint32(uint32(0x3C)) == 0x00004550)
+    // Mach-O 32/64 execute (2), dylib (6) or bundle (8, e.g. PHP extensions)
+    or ((uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF) and
+        (uint32(12) == 2 or uint32(12) == 6 or uint32(12) == 8))
+    // same, byte-swapped (big-endian) Mach-O
+    or ((uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE) and
+        (uint32be(12) == 2 or uint32be(12) == 6 or uint32be(12) == 8))
+    // Mach-O universal (CAFEBABE) with 1-19 architectures whose first slice
+    // passes the thin Mach-O check above, so universal static libraries (.a),
+    // object files and dSYMs are rejected. Java .class files also start with
+    // CAFEBABE, but bytes 4-7 hold their class version (major >= 45), not an
+    // architecture count. The header is big-endian; the first slice's offset
+    // is at 16 (fat_arch.offset).
+    or (uint32(0) == 0xBEBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(16)) == 0xFEEDFACE or uint32(uint32be(16)) == 0xFEEDFACF) and
+          (uint32(uint32be(16) + 12) == 2 or uint32(uint32be(16) + 12) == 6 or
+           uint32(uint32be(16) + 12) == 8)) or
+         ((uint32(uint32be(16)) == 0xCEFAEDFE or uint32(uint32be(16)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(16) + 12) == 2 or uint32be(uint32be(16) + 12) == 6 or
+           uint32be(uint32be(16) + 12) == 8))))
+    // same for the rare 64-bit universal header (CAFEBABF): fat_arch_64.offset
+    // is 8 bytes at 16; slices sit well below 4 GB, so its low half (20) is used
+    or (uint32(0) == 0xBFBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(20)) == 0xFEEDFACE or uint32(uint32be(20)) == 0xFEEDFACF) and
+          (uint32(uint32be(20) + 12) == 2 or uint32(uint32be(20) + 12) == 6 or
+           uint32(uint32be(20) + 12) == 8)) or
+         ((uint32(uint32be(20)) == 0xCEFAEDFE or uint32(uint32be(20)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(20) + 12) == 2 or uint32be(uint32be(20) + 12) == 6 or
+           uint32be(uint32be(20) + 12) == 8))))
+}
+
+rule Apache_HTTPD_Version
+{
+  meta:
+    description = "Apache httpd core (httpd, libhttpd.dll); $ver = server version"
+    confidence = "high"
+  strings:
+    // AP_SERVER_BASEVERSION ("Apache" "/" AP_SERVER_BASEREVISION), one literal
+    // in the core. Also in other software (user agent lists, proxies), so it
+    // only counts together with a $core marker. Modules built against httpd
+    // (mod_ssl, mod_proxy) have it too.
+    $ver = /Apache\/2\.[0-9]{1,2}\.[0-9]{1,3}/
+    // Only in the core: the directive name from its command table, and its
+    // error message when the host name can't be resolved (AH00558 in 2.4)
+    $core1 = "ServerTokens"
+    $core2 = "Could not reliably determine the server's fully qualified domain name"
+  condition:
+    Apache_Detect_IsExecutable and $ver and any of ($core*)
+}
+
+rule Apache_HTTP2_Module
+{
+  meta:
+    description = "Apache mod_http2; $_module_ver = candidate module version"
+    confidence = "high"
+  strings:
+    // Not "http2_module": it is also inside mod_proxy_http2's proxy_http2_module
+    $module_identity = "mod_http2_init_counter"
+    $module_log = "mod_http2 (v%s, feats="
+    // MOD_HTTP2_VERSION as a bare C string, reported as the mod_http2 version.
+    // Candidate evidence only: any bare "2.x.y" string matches, and the same
+    // mod_http2 version ships with several httpd releases. Optional - the
+    // leading "_" lets it go unused in the condition while `-s` still prints it.
+    // A suffix only after "-": RHEL's separate mod_http2 package has "2.0.26-git"
+    $_module_ver = /\x002\.[0-9]\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?\x00/
+  condition:
+    Apache_Detect_IsExecutable and
+    ($module_identity or $module_log)
+}
 YARA_RULE
 
 # ---- embedded version extractor (text format) -----------------------------
 # Copied from YARA/versions.awk by YARA/sync_rules.py - edit there.
 VERSIONS_AWK="${WORK_DIR}/versions.awk"
 cat > "$VERSIONS_AWK" <<'AWK_SCRIPT'
-# Turn `yara -s` / `yr scan -s` output of php/php_detect.yar and
-# node/node_detect.yar into "path<TAB>product<TAB>version", one line per
-# product found in a file (product: php, node or electron):
-#   yr scan -s -r php/php_detect.yar node/node_detect.yar /opt 2>/dev/null | awk -f versions.awk | sort -u
+# Turn `yara -s` / `yr scan -s` output of php/php_detect.yar,
+# node/node_detect.yar and apache/apache_detect.yar into
+# "path<TAB>product<TAB>version", one line per product found in a file
+# (product: php, node, electron, apache or mod_http2):
+#   yr scan -s -r php/php_detect.yar node/node_detect.yar apache/apache_detect.yar /opt 2>/dev/null | awk -f versions.awk | sort -u
 # Handles paths with spaces and the UTF-16 ProductVersion match ($pv), which
 # yara prints with escaped NULs (8\x00.\x002\x00...). Matched files with no
 # version string (e.g. Linux PHP extensions, Node addons) get "unknown".
 # Versions: php from $ver / $pv; node from $ver (node.js/v...), or from $rel
 # (the release URL) when no $ver matched; electron from $electron, so an
-# Electron framework gets a node and an electron line.
+# Electron framework gets a node and an electron line; apache from $ver
+# (Apache/...); mod_http2 from $_module_ver (a candidate, see apache_detect.yar).
 
 # rule line: "<RULE> <path>", or with yr --print-meta "<RULE> [meta...] <path>"
-/^(PHP|Node)_/ {
-  prod = /^PHP_/ ? "php" : "node"
+/^(PHP|Node|Apache)_/ {
+  prod = /^PHP_/ ? "php" : /^Node_/ ? "node" : /^Apache_HTTP2_/ ? "mod_http2" : "apache"
   file = $0; sub(/^[^ ]+ /, "", file); sub(/^\[[^]]*\] /, "", file); seen[file SUBSEP prod] = 1; next
 }
 
 # string line: "0xOFFSET:$id: <matched text>"
-/:\$(ver|pv|rel|electron): / {
+/:\$(ver|pv|rel|electron|_module_ver): / {
   v = $0; gsub(/\\x00/, "", v)
   id = v; sub(/: .*/, "", id); sub(/.*\$/, "", id)
   sub(/^[^ ]+ /, "", v)

@@ -3,10 +3,12 @@
 
     is_executable.yar   -> PHP_Detect_IsExecutable in php/php_detect.yar
                         -> Node_Detect_IsExecutable in node/node_detect.yar
+                        -> Apache_Detect_IsExecutable in apache/apache_detect.yar
                         -> PHP_Branch_IsExecutable in php/php_version_branches.yar
                            (regenerated with php/gen_php_branches.py)
-    php/php_detect.yar  -> the embedded rules in the three scan scripts, followed
-    node/node_detect.yar   by the Node rules (one rule file, one scan pass)
+    php/php_detect.yar  -> the embedded rules in the three scan scripts: the
+    node/node_detect.yar   three files in this order as one rule file (one
+    apache/apache_detect.yar   scan pass)
     versions.awk        -> the embedded version extractor in the bash scan scripts
 
 Edit only the sources on the left, then run this. The scan scripts stay
@@ -30,6 +32,7 @@ import gen_php_branches  # noqa: E402 (lives in php/)
 TOOLS_DIR = HERE.parent
 PHP_DETECT = HERE / "php" / "php_detect.yar"
 NODE_DETECT = HERE / "node" / "node_detect.yar"
+APACHE_DETECT = HERE / "apache" / "apache_detect.yar"
 BRANCHES = HERE / "php" / "php_version_branches.yar"
 VERSIONS_AWK = HERE / "versions.awk"
 
@@ -51,11 +54,15 @@ IS_EXECUTABLE_COPIES = [
         NODE_DETECT,
         r"(private rule Node_Detect_IsExecutable\n\{\n  condition:\n)(.*?)(\n\})",
     ),
+    (
+        APACHE_DETECT,
+        r"(private rule Apache_Detect_IsExecutable\n\{\n  condition:\n)(.*?)(\n\})",
+    ),
 ]
 
-# Every scan script embeds both rule files as one rule file, so PHP and Node
-# are found in a single scan
-RULES = [PHP_DETECT, NODE_DETECT]
+# Every scan script embeds the rule files as one rule file, so PHP, Node and
+# Apache are found in a single scan
+RULES = [PHP_DETECT, NODE_DETECT, APACHE_DETECT]
 
 # (file, pattern around the embedded copy, sources of the copy)
 EMBEDS = [

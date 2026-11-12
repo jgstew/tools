@@ -10,9 +10,9 @@ Embedded runtimes are the point: end-of-life Node (8.x, 15.x, 16.x, 18.x) turns
 up inside third-party apps, where a check for a `node` on `PATH` finds nothing.
 
 The header check, `sync_rules.py`, the summary filter (`versions.awk`), the scan
-scripts and the BigFix content are shared with the PHP rules: see
-[../README.md](../README.md). The scan scripts look for PHP and Node.js in one
-pass.
+scripts and the BigFix content are shared with the PHP and Apache rules: see
+[../README.md](../README.md). The scan scripts look for PHP, Node.js and Apache
+in one pass.
 
 ## Files
 
@@ -93,11 +93,11 @@ Node_Electron_Version /Applications/Visual Studio Code.app/Contents/Frameworks/E
 0xa9c2d40:16:$ver: node.js/v24.21.0
 ```
 
-To scan for PHP and Node.js in one pass, give `yr` both rule files (or use the
-[scan scripts](../README.md#scan-scripts), which do this):
+To scan for PHP, Node.js and Apache in one pass, give `yr` all three rule files
+(or use the [scan scripts](../README.md#scan-scripts), which do this):
 
 ```bash
-yr scan --recursive --print-strings ../php/php_detect.yar node_detect.yar /opt | awk -f ../versions.awk | sort -u
+yr scan --recursive --print-strings ../php/php_detect.yar node_detect.yar ../apache/apache_detect.yar /opt | awk -f ../versions.awk | sort -u
 ```
 
 ## `NODE_MODULE_VERSION` (ABI) → Node major
