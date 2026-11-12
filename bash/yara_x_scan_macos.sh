@@ -15,11 +15,19 @@
 #
 #        product is php, node, electron, apache or mod_http2; an Electron
 #        framework gets a node and an electron line. Files matched with no
-#        version string, e.g.
-#        Linux PHP extensions or Node addons, are listed with version
-#        "unknown". Files whose paths contain control
+#        version string, e.g. Linux PHP extensions or Node addons, are
+#        listed with version "unknown". Files whose paths contain control
 #        characters (newline, tab, ...) are scanned as copies and shown as
 #        bash $'...' quoted paths (e.g. $'/opt/new\nline/php').
+#
+# This script is not the source of truth for its embedded YARA rules or its
+# versions.awk filter: YARA/sync_rules.py copies them in from the rule files
+# under YARA/ (php/, node/, apache/, each with the header check from
+# YARA/is_executable.yar) and YARA/versions.awk. Edit those, then run
+#   python3 YARA/sync_rules.py
+# (CI fails if a copy here is out of date). The rest of the script is edited
+# here. YARA/make_bigfix_content.py embeds the whole script in its BigFix
+# task, so regenerate it after any change.
 #
 # Run with sudo (and give the terminal / agent Full Disk Access) for a full
 # scan; otherwise protected files are logged as unreadable and skipped.

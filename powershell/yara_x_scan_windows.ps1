@@ -18,10 +18,18 @@
          product is php, node, electron, apache or mod_http2; an Electron
          framework gets a node and an electron line. Apache is reported on
          libhttpd.dll, which holds the server core (httpd.exe is a launcher).
-         Files matched with no version string (PHP
-         extensions without a version resource, Node addons) are listed with
-         version "unknown".
+         Files matched with no version string (PHP extensions without a
+         version resource, Node addons) are listed with version "unknown".
          json / ndjson write a single yara_results_<host>_<time>.json / .ndjson.
+
+    This script is not the source of truth for its embedded YARA rules:
+    YARA/sync_rules.py copies them in from the rule files under YARA/ (php/,
+    node/, apache/, each with the header check from YARA/is_executable.yar).
+    Edit those, then run `python3 YARA/sync_rules.py` (CI fails if the copy
+    here is out of date). ConvertTo-VersionSummary is a hand-kept port of
+    YARA/versions.awk: change both together. The rest of the script is edited
+    here. YARA/make_bigfix_content.py embeds the whole script in the BigFix
+    task, so regenerate it after any change.
 
     With no -Path, every local fixed drive (DriveType 3) is scanned. Network,
     removable and optical drives are skipped. Note that some USB disks and
