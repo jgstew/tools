@@ -1,23 +1,26 @@
-# YARA: PHP and Node.js install detection + version
+# YARA: PHP, Node.js and Apache install detection + version
 
-Find every PHP and Node.js install on a machine and report its version, on
-Linux, Windows and macOS - **without running anything**. Node.js includes Node
-embedded in other software: Electron apps, single-executable applications,
-vercel/pkg builds and apps that bundle `libnode`.
+Find every PHP, Node.js and Apache HTTP Server install on a machine and report
+its version, on Linux, Windows and macOS - **without running anything**.
+Node.js includes Node embedded in other software: Electron apps,
+single-executable applications, vercel/pkg builds and apps that bundle
+`libnode`. Apache includes its `mod_http2` module.
 
 - [`php/`](php/README.md): PHP rules, branch rules, running-PHP detection
 - [`node/`](node/README.md): Node.js and Electron rules
+- [`apache/`](apache/README.md): Apache httpd and mod_http2 rules
 
 ## Files
 
 | File | What it's for |
 |---|---|
-| `is_executable.yar` | The executable header check every PHP and Node.js rule is gated on - the one place to edit it. On its own it reports the files that pass. |
-| `sync_rules.py` | Copies `is_executable.yar` into `php/php_detect.yar`, `node/node_detect.yar` and the PHP branch rules, and embeds both rule files and `versions.awk` in the three scan scripts. `--check` reports copies that are out of date. |
-| `versions.awk` | Turns `yara -s` / `yr scan -s` output of both rule files into the [summary](#summary-format). |
+| `is_executable.yar` | The executable header check every PHP, Node.js and Apache rule is gated on - the one place to edit it. On its own it reports the files that pass. |
+| `sync_rules.py` | Copies `is_executable.yar` into `php/php_detect.yar`, `node/node_detect.yar`, `apache/apache_detect.yar` and the PHP branch rules, and embeds the three rule files and `versions.awk` in the three scan scripts. `--check` reports copies that are out of date. |
+| `versions.awk` | Turns `yara -s` / `yr scan -s` output of the rule files into the [summary](#summary-format). |
 | `make_bigfix_content.py` | Generates the BigFix tasks and analysis (see [BigFix](#bigfix)) from the three scan scripts. |
 | `php/` | PHP rules: [php/README.md](php/README.md) |
 | `node/` | Node.js / Electron rules: [node/README.md](node/README.md) |
+| `apache/` | Apache httpd / mod_http2 rules: [apache/README.md](apache/README.md) |
 
 The rule files use no YARA modules (`pe`, `elf`, `macho`), so they work in
 embedded engines built without them, and their rule names don't collide - load
@@ -25,7 +28,7 @@ them together or separately.
 
 ## Executable header check
 
-Every PHP and Node.js rule requires a real executable, shared library or
+Every PHP, Node.js and Apache rule requires a real executable, shared library or
 loadable module, checked from fixed header fields only (`is_executable.yar`, no
 modules):
 
@@ -40,9 +43,9 @@ YARA-X skips the pattern search of a file whose header fails the check, so
 non-executables of any size cost about one header read.
 
 To change the check, edit `is_executable.yar` and run `python3 sync_rules.py`.
-It copies the condition into `php/php_detect.yar`, `node/node_detect.yar` and the
-PHP branch rules, then embeds both rule files and `versions.awk` in the scan
-scripts. CI fails if a copy is out of date (`sync_rules.py --check`) or a rule
+It copies the condition into `php/php_detect.yar`, `node/node_detect.yar`,
+`apache/apache_detect.yar` and the PHP branch rules, then embeds the three rule
+files and `versions.awk` in the scan scripts. CI fails if a copy is out of date (`sync_rules.py --check`) or a rule
 file doesn't compile. All files involved must use LF line endings.
 
 ## Summary format
@@ -59,6 +62,8 @@ path<TAB>product<TAB>version
 /usr/local/bin/node	node	22.23.4
 /Applications/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework	node	24.21.0
 /Applications/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework	electron	43.7.7
+/usr/sbin/httpd	apache	2.4.67
+/usr/libexec/apache2/mod_http2.so	mod_http2	2.0.39
 ```
 
 | Product | From rules | Version from |
@@ -66,6 +71,8 @@ path<TAB>product<TAB>version
 | `php` | `PHP_*` | `$ver` (`X-Powered-By: PHP/...`) or `$pv` (Windows `ProductVersion`) |
 | `node` | `Node_*` | `$ver` (`node.js/v...`); when no `$ver` matched, `$rel` (the `nodejs.org/download/release/v...` URL, vercel/pkg builds) |
 | `electron` | `Node_Electron_Version` | `$electron` (`Electron/...`) |
+| `apache` | `Apache_HTTPD_Version` | `$ver` (`Apache/...`) |
+| `mod_http2` | `Apache_HTTP2_Module` | `$_module_ver` (a bare `2.x.y` string: a candidate, see [apache/README.md](apache/README.md)) |
 
 - An Electron framework gets **two lines**: its embedded Node and Electron.
 - A file that matched only a broad rule gets version `unknown`: PHP extensions
@@ -77,7 +84,7 @@ path<TAB>product<TAB>version
   never appears inside a path.
 
 ```bash
-yr scan --recursive --print-strings php/php_detect.yar node/node_detect.yar /opt | awk -f versions.awk | sort -u
+yr scan --recursive --print-strings php/php_detect.yar node/node_detect.yar apache/apache_detect.yar /opt | awk -f versions.awk | sort -u
 ```
 
 ## Scan scripts
@@ -86,10 +93,10 @@ yr scan --recursive --print-strings php/php_detect.yar node/node_detect.yar /opt
 [`bash/yara_x_scan_linux.sh`](../bash/yara_x_scan_linux.sh) (Linux, all local disk
 filesystems) and [`powershell/yara_x_scan_windows.ps1`](../powershell/yara_x_scan_windows.ps1)
 (Windows, all local fixed drives; Windows PowerShell 5.1 and PowerShell 7) are
-self-contained: each downloads `yr`, checks its SHA256, and scans with the PHP
-and Node.js rules embedded as one rule file, so both are found in **one pass**.
-A combined scan costs about the same as either rule set alone: both share the
-header check, so the same files are opened, and `yr` searches every pattern in
+self-contained: each downloads `yr`, checks its SHA256, and scans with the PHP,
+Node.js and Apache rules embedded as one rule file, so all are found in **one
+pass**. A combined scan costs about the same as one rule set alone: they share
+the header check, so the same files are opened, and `yr` searches every pattern in
 a single pass over each file. They write the full `yr` output and the
 [summary](#summary-format). Defaults aim at an unattended background scan:
 
@@ -100,7 +107,8 @@ a single pass over each file. They write the full `yr` output and the
   (images, media, archives, documents, source/text, C headers, logs, databases,
   Xcode/SDK data, packages, debug symbols, ...), empty files, files of 512 MB or
   more (`-m` / `-MaxMB`), and folders that can't hold an install: containers and
-  snapshots (Linux), the sealed system volume on macOS 12+, online-only iCloud /
+  snapshots (Linux), the sealed system volume on macOS 12+ (except Apple's
+  bundled Apache, `/usr/sbin/httpd` and `/usr/libexec/apache2`), online-only iCloud /
   cloud files, and on Windows `WinSxS`, `servicing`, the .NET assembly caches,
   Defender definitions and the BigFix Console cache. `Program Files\WindowsApps`
   is scanned (MSIX / Store packages are installed software).
@@ -139,10 +147,10 @@ once (~8 min, both cores busy).
 
 | File | What it does |
 |---|---|
-| `fixlet/Scan for PHP and Node.js Installs with YARA-X - macOS.bes` | Prefetches the `yr` archive for the CPU, copies it, the embedded script and a small wrapper to `__BESData/__Global/yara_runtime_scan`, and starts the wrapper with `run`. The wrapper scans in the background and copies the [summary](#summary-format) to `__BESData/__Global/Logs/yara_results_runtimes.text` (console output: `yara_scan_runtimes.log`). |
-| `fixlet/Scan for PHP and Node.js Installs with YARA-X - Linux.bes` | Same, Linux x86_64 / aarch64. |
-| `fixlet/Scan for PHP and Node.js Installs with YARA-X - Windows.bes` | Same, Windows 10 / Server 2016+ x64, 64-bit PowerShell 5.1+. |
-| `analyses/PHP and Node.js Installs from YARA-X Scan - Universal.bes` | Reports a summary every hour: the distinct PHP, Node.js and Electron versions, the number of PHP and Node.js files (Node.js files include native addons), and the scan time. |
+| `fixlet/Scan for PHP, Node.js and Apache Installs with YARA-X - macOS.bes` | Prefetches the `yr` archive for the CPU, copies it, the embedded script and a small wrapper to `__BESData/__Global/yara_runtime_scan`, and starts the wrapper with `run`. The wrapper scans in the background and copies the [summary](#summary-format) to `__BESData/__Global/Logs/yara_results_runtimes.text` (console output: `yara_scan_runtimes.log`). |
+| `fixlet/Scan for PHP, Node.js and Apache Installs with YARA-X - Linux.bes` | Same, Linux x86_64 / aarch64. |
+| `fixlet/Scan for PHP, Node.js and Apache Installs with YARA-X - Windows.bes` | Same, Windows 10 / Server 2016+ x64, 64-bit PowerShell 5.1+. |
+| `analyses/PHP, Node.js and Apache Installs from YARA-X Scan - Universal.bes` | Reports a summary every hour: the distinct PHP, Node.js, Electron, Apache and mod_http2 versions, the number of PHP, Node.js and Apache files (Node.js files include native addons), and the scan time. |
 
 `run` (not `wait`) keeps the BigFix agent free for other actions during the scan,
 and the work folder isn't `__Download` (the client clears it when the action ends).

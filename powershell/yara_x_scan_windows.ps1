@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Self-contained YARA-X scan for Windows that finds PHP and Node.js installs and their versions.
+    Self-contained YARA-X scan for Windows that finds PHP, Node.js and Apache installs and their versions.
 
 .DESCRIPTION
     Windows counterpart of bash/yara_x_scan_macos.sh:
@@ -8,17 +8,28 @@
       2. verifies the SHA256 of the download against a pinned value
       3. unpacks it into a temporary folder (removed on exit)
       4. scans the target (recursively) with the YARA rules embedded below
-         (copies of YARA/php/php_detect.yar and YARA/node/node_detect.yar,
-         one rule file so PHP and Node.js are found in one scan)
+         (copies of YARA/php/php_detect.yar, YARA/node/node_detect.yar and
+         YARA/apache/apache_detect.yar, one rule file so PHP, Node.js and
+         Apache are found in one scan)
       5. writes results + a log to OutputDir; for text format:
            yara_results_<host>_<time>.raw.text  full yr output (rules, meta, strings)
            yara_results_<host>_<time>.text      "path<TAB>product<TAB>version",
                                                 one line per product in a file
-         product is php, node or electron; an Electron framework gets a node
-         and an electron line. Files matched with no version string (PHP
-         extensions without a version resource, Node addons) are listed with
-         version "unknown".
+         product is php, node, electron, apache or mod_http2; an Electron
+         framework gets a node and an electron line. Apache is reported on
+         libhttpd.dll, which holds the server core (httpd.exe is a launcher).
+         Files matched with no version string (PHP extensions without a
+         version resource, Node addons) are listed with version "unknown".
          json / ndjson write a single yara_results_<host>_<time>.json / .ndjson.
+
+    This script is not the source of truth for its embedded YARA rules:
+    YARA/sync_rules.py copies them in from the rule files under YARA/ (php/,
+    node/, apache/, each with the header check from YARA/is_executable.yar).
+    Edit those, then run `python3 YARA/sync_rules.py` (CI fails if the copy
+    here is out of date). ConvertTo-VersionSummary is a hand-kept port of
+    YARA/versions.awk: change both together. The rest of the script is edited
+    here. YARA/make_bigfix_content.py embeds the whole script in the BigFix
+    task, so regenerate it after any change.
 
     With no -Path, every local fixed drive (DriveType 3) is scanned. Network,
     removable and optical drives are skipped. Note that some USB disks and
@@ -56,7 +67,7 @@
       - Cloud placeholders (OneDrive Files On-Demand, Dropbox, iCloud, etc.):
         files and folders with the Offline, RecallOnOpen or RecallOnDataAccess
         attribute are only online, and reading them would download them.
-      - System folders that can't hold a PHP or Node.js install, on every
+      - System folders that can't hold a PHP, Node.js or Apache install, on every
         scanned drive:
           \Windows\WinSxS               component store: Microsoft side-by-side
                                         components only, mostly hard links to
@@ -77,10 +88,10 @@
         people to copy php5ts.dll / php.ini into C:\Windows\System32.
       - This script's own output and temp folders (old results contain matched
         strings).
-    Nothing where PHP or Node.js is plausible is skipped: C:\xampp, C:\wamp*,
-    C:\laragon, C:\php*, C:\tools (Chocolatey), Program Files, Program Files
-    (x86) (IIS PHP Manager / Web PI), ProgramData, user profiles (nvm, Electron
-    apps in AppData\Local\Programs).
+    Nothing where PHP, Node.js or Apache is plausible is skipped: C:\xampp,
+    C:\wamp*, C:\laragon, C:\php*, C:\Apache24, C:\tools (Chocolatey),
+    Program Files, Program Files (x86) (IIS PHP Manager / Web PI),
+    ProgramData, user profiles (nvm, Electron apps in AppData\Local\Programs).
 
     The scan runs at BelowNormal priority (this PowerShell process and yr.exe)
     and yr uses 1 thread (-Threads 2 for faster scans), so a full scan doesn't take over the
@@ -228,10 +239,11 @@ $SystemSkipFiles = @('pagefile.sys', 'hiberfil.sys', 'swapfile.sys')
 $CloudAttributeMask = 0x1000 -bor 0x40000 -bor 0x400000
 
 # ---- embedded YARA rule -----------------------------------------------------
-# PHP and Node.js install detection + version, in one rule file so both are
-# found in one scan. Copied from YARA/php/php_detect.yar and
-# YARA/node/node_detect.yar by YARA/sync_rules.py - edit there, not here. The
-# version is in the printed strings ($ver, $pv, $rel, $electron).
+# PHP, Node.js and Apache install detection + version, in one rule file so all
+# are found in one scan. Copied from YARA/php/php_detect.yar,
+# YARA/node/node_detect.yar and YARA/apache/apache_detect.yar by
+# YARA/sync_rules.py - edit there, not here. The version is in the printed
+# strings ($ver, $pv, $rel, $electron, $_module_ver).
 $EmbeddedRule = @'
 /*
   PHP install detection + version, all OSes (Linux ELF, Windows PE, macOS Mach-O).
@@ -474,6 +486,106 @@ rule Node_Binary_Broad
     // Also matches Bun-compiled executables (release URL, N-API): an accepted
     // false positive, reported as "node unknown"
     Node_Detect_IsExecutable and any of them
+}
+
+/*
+  Apache HTTP Server (httpd) + mod_http2 detection + version, all OSes (Linux
+  ELF, Windows PE, macOS Mach-O).
+
+  Signatures based on jeffschafer's Apache mod_http2 scanner. Run with
+  `yara -s` (or `yr scan -s`) to print the matched version text.
+
+  Rules:
+    Apache_HTTPD_Version - the file holding the httpd core: httpd on Linux and
+                           macOS, libhttpd.dll on Windows (httpd.exe is a small
+                           launcher); $ver holds the exact version (Apache/2.4.67)
+    Apache_HTTP2_Module  - mod_http2 (mod_http2.so, or httpd with it built in);
+                           $_module_ver is a candidate module version only
+
+  No modules are imported so the rules also work in embedded YARA engines
+  (osquery, EDRs) that are built without the pe/elf/macho modules.
+*/
+
+// Condition copied from is_executable.yar by sync_rules.py - edit it there
+private rule Apache_Detect_IsExecutable
+{
+  condition:
+    // ELF executable (2) or shared object (3, also PIE executables); e_type is
+    // in the byte order given by EI_DATA (1 = little, 2 = big endian)
+    (uint32(0) == 0x464C457F and
+      ((uint8(5) == 1 and (uint16(16) == 2 or uint16(16) == 3)) or
+       (uint8(5) == 2 and (uint16be(16) == 2 or uint16be(16) == 3))))
+    // PE: MZ header whose e_lfanew (0x3C) points at "PE\0\0"
+    or (uint16(0) == 0x5A4D and uint32(uint32(0x3C)) == 0x00004550)
+    // Mach-O 32/64 execute (2), dylib (6) or bundle (8, e.g. PHP extensions)
+    or ((uint32(0) == 0xFEEDFACE or uint32(0) == 0xFEEDFACF) and
+        (uint32(12) == 2 or uint32(12) == 6 or uint32(12) == 8))
+    // same, byte-swapped (big-endian) Mach-O
+    or ((uint32(0) == 0xCEFAEDFE or uint32(0) == 0xCFFAEDFE) and
+        (uint32be(12) == 2 or uint32be(12) == 6 or uint32be(12) == 8))
+    // Mach-O universal (CAFEBABE) with 1-19 architectures whose first slice
+    // passes the thin Mach-O check above, so universal static libraries (.a),
+    // object files and dSYMs are rejected. Java .class files also start with
+    // CAFEBABE, but bytes 4-7 hold their class version (major >= 45), not an
+    // architecture count. The header is big-endian; the first slice's offset
+    // is at 16 (fat_arch.offset).
+    or (uint32(0) == 0xBEBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(16)) == 0xFEEDFACE or uint32(uint32be(16)) == 0xFEEDFACF) and
+          (uint32(uint32be(16) + 12) == 2 or uint32(uint32be(16) + 12) == 6 or
+           uint32(uint32be(16) + 12) == 8)) or
+         ((uint32(uint32be(16)) == 0xCEFAEDFE or uint32(uint32be(16)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(16) + 12) == 2 or uint32be(uint32be(16) + 12) == 6 or
+           uint32be(uint32be(16) + 12) == 8))))
+    // same for the rare 64-bit universal header (CAFEBABF): fat_arch_64.offset
+    // is 8 bytes at 16; slices sit well below 4 GB, so its low half (20) is used
+    or (uint32(0) == 0xBFBAFECA and uint32be(4) > 0 and uint32be(4) < 20 and
+        (((uint32(uint32be(20)) == 0xFEEDFACE or uint32(uint32be(20)) == 0xFEEDFACF) and
+          (uint32(uint32be(20) + 12) == 2 or uint32(uint32be(20) + 12) == 6 or
+           uint32(uint32be(20) + 12) == 8)) or
+         ((uint32(uint32be(20)) == 0xCEFAEDFE or uint32(uint32be(20)) == 0xCFFAEDFE) and
+          (uint32be(uint32be(20) + 12) == 2 or uint32be(uint32be(20) + 12) == 6 or
+           uint32be(uint32be(20) + 12) == 8))))
+}
+
+rule Apache_HTTPD_Version
+{
+  meta:
+    description = "Apache httpd core (httpd, libhttpd.dll); $ver = server version"
+    confidence = "high"
+  strings:
+    // AP_SERVER_BASEVERSION ("Apache" "/" AP_SERVER_BASEREVISION), one literal
+    // in the core. Also in other software (user agent lists, proxies), so it
+    // only counts together with a $core marker. Modules built against httpd
+    // (mod_ssl, mod_proxy) have it too.
+    $ver = /Apache\/2\.[0-9]{1,2}\.[0-9]{1,3}/
+    // Only in the core: the directive name from its command table, and its
+    // error message when the host name can't be resolved (AH00558 in 2.4).
+    // The directive name as a whole C string: mod_security2 has "ServerTokens"
+    // in a message, and "ModSecurity for Apache/2.9.7" matches $ver
+    $core1 = "\x00ServerTokens\x00"
+    $core2 = "Could not reliably determine the server's fully qualified domain name"
+  condition:
+    Apache_Detect_IsExecutable and $ver and any of ($core*)
+}
+
+rule Apache_HTTP2_Module
+{
+  meta:
+    description = "Apache mod_http2; $_module_ver = candidate module version"
+    confidence = "high"
+  strings:
+    // Not "http2_module": it is also inside mod_proxy_http2's proxy_http2_module
+    $module_identity = "mod_http2_init_counter"
+    $module_log = "mod_http2 (v%s, feats="
+    // MOD_HTTP2_VERSION as a bare C string, reported as the mod_http2 version.
+    // Candidate evidence only: any bare "2.x.y" string matches, and the same
+    // mod_http2 version ships with several httpd releases. Optional - the
+    // leading "_" lets it go unused in the condition while `-s` still prints it.
+    // A suffix only after "-": RHEL's separate mod_http2 package has "2.0.26-git"
+    $_module_ver = /\x002\.[0-9]\.[0-9]{1,3}(-[0-9A-Za-z.]{1,20})?\x00/
+  condition:
+    Apache_Detect_IsExecutable and
+    ($module_identity or $module_log)
 }
 '@
 
@@ -808,18 +920,21 @@ function ConvertTo-VersionSummary
     PowerShell port of YARA/versions.awk - keep in sync.
     Reads `yr scan --print-meta --print-strings` text output and returns sorted,
     unique "path<TAB>product<TAB>version" lines, one per product found in a
-    file (php, node, electron). Versions: php from $ver / $pv; node from $ver,
-    or from $rel (the release URL) when no $ver matched; electron from
-    $electron. Matched files with no version string get "unknown".
+    file (php, node, electron, apache, mod_http2). Versions: php from $ver /
+    $pv; node from $ver, or from $rel (the release URL) when no $ver matched;
+    electron from $electron; apache from $ver; mod_http2 from $_module_ver.
+    Matched files with no version string get "unknown".
     #>
     param([Parameter(Mandatory = $true)][string]$RawPath)
 
     # rule line: "<RULE> <path>", or with --print-meta "<RULE> [k="v",...] <path>".
     # The meta pattern skips quoted values, so a ']' inside a description is fine.
-    $ruleLine = [regex]'^(?<rule>PHP|Node)_\S* (?:\[(?:"(?:[^"\\]|\\.)*"|[^\]"])*\] )?(?<path>.*)$'
+    $ruleLine = [regex]'^(?<rule>PHP|Node|Apache_HTTP2|Apache)_\S* (?:\[(?:"(?:[^"\\]|\\.)*"|[^\]"])*\] )?(?<path>.*)$'
     # string line: "0xOFFSET:LENGTH:$id: <matched text>"
-    $stringLine = [regex]':\$(?<id>ver|pv|rel|electron): '
+    $stringLine = [regex]':\$(?<id>ver|pv|rel|electron|_module_ver): '
     $version = [regex]'[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.+~_-]*'
+    # product per rule-name prefix (the ruleLine "rule" group)
+    $products = @{ PHP = 'php'; Node = 'node'; Apache = 'apache'; Apache_HTTP2 = 'mod_http2' }
 
     $results = New-Object -TypeName 'System.Collections.Generic.HashSet[string]' -ArgumentList ([System.StringComparer]::Ordinal)
     # "path<TAB>product" keys: matched, versioned, and $rel versions per key
@@ -838,7 +953,7 @@ function ConvertTo-VersionSummary
             if ($m.Success)
             {
                 $file = $m.Groups['path'].Value
-                $product = $m.Groups['rule'].Value.ToLowerInvariant()
+                $product = $products[$m.Groups['rule'].Value]
                 $seen.Add("$file`t$product")
                 continue
             }
