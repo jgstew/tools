@@ -16,7 +16,8 @@ name: test_yara_x_scan_scripts
 #              name, reported as bash $'...' quoted paths
 #   found:     (Linux, macOS) the distro / bundled Apache httpd and a renamed
 #              copy with their exact version, and mod_http2.so as mod_http2;
-#              mod_ssl.so and (Linux) mod_proxy_http2.so are not reported
+#              mod_ssl.so and (Linux) mod_proxy_http2.so and mod_security2.so
+#              are not reported
 #   not found: a copy in an excluded folder (-x / -ExcludePath), a copy with a
 #              skipped extension (.zip, and .png with a newline in the name), an
 #              empty file, and a php_version.h text file
@@ -98,8 +99,8 @@ jobs:
           # Install from the runner's package list first, and update it only if
           # that fails: the list can be stale, and a superseded .deb then 404s.
           # (An unconditional update once took 433 s on a slow mirror.)
-          sudo apt-get install -y -qq --no-install-recommends php8.3-cli apache2-bin \
-            || { sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends php8.3-cli apache2-bin; }
+          sudo apt-get install -y -qq --no-install-recommends php8.3-cli apache2-bin libapache2-mod-security2 \
+            || { sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends php8.3-cli apache2-bin libapache2-mod-security2; }
           echo "PHP_EXPECT=$(php -r 'echo PHP_VERSION;')" >> "$GITHUB_ENV"
           # "Server version: Apache/2.4.58 (Ubuntu)" -> 2.4.58
           echo "APACHE_EXPECT=$(/usr/sbin/apache2 -v | sed -n 's|^Server version: Apache/\([0-9.]*\).*|\1|p')" >> "$GITHUB_ENV"
@@ -136,14 +137,15 @@ jobs:
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/dl/electron.zip" "$ELECTRON_URL"
           echo "$ELECTRON_SHA256  $RUNNER_TEMP/dl/electron.zip" | sha256sum -c -
           unzip -q "$RUNNER_TEMP/dl/electron.zip" electron -d "$F/electron"
-          # Apache: the distro httpd, a renamed copy, mod_http2, and two modules
+          # Apache: the distro httpd, a renamed copy, mod_http2, and three modules
           # that must not be reported (mod_ssl has the server version string,
-          # mod_proxy_http2 has "http2_module" inside proxy_http2_module)
+          # mod_proxy_http2 has "http2_module" inside proxy_http2_module,
+          # mod_security2 has "Apache/2.9.x" and "ServerTokens" in a message)
           mkdir -p "$F/apache"
           cp /usr/sbin/apache2 "$F/apache/apache2"
           cp /usr/sbin/apache2 "$F/renamed/httpd-alt"
           cp /usr/lib/apache2/modules/mod_http2.so /usr/lib/apache2/modules/mod_ssl.so \
-            /usr/lib/apache2/modules/mod_proxy_http2.so "$F/apache/"
+            /usr/lib/apache2/modules/mod_proxy_http2.so /usr/lib/apache2/modules/mod_security2.so "$F/apache/"
 
       - name: Scan and check (1 thread default, then -T 2)
         run: |
@@ -177,7 +179,7 @@ jobs:
             done
             [ "$(grep -c "^$RF/apache/mod_http2.so	" "$results")" -eq 1 ] &&
               grep -qE "^$RF/apache/mod_http2.so	mod_http2	2\.[0-9]+\.[0-9]+$" "$results" || { echo "::error::mod_http2.so not reported as just mod_http2 <version>"; exit 1; }
-            if grep -E "^$RF/apache/mod_(ssl|proxy_http2)\.so	" "$results"; then echo "::error::mod_ssl / mod_proxy_http2 reported"; exit 1; fi
+            if grep -E "^$RF/apache/mod_(ssl|proxy_http2|security2)\.so	" "$results"; then echo "::error::mod_ssl / mod_proxy_http2 / mod_security2 reported"; exit 1; fi
             # the addon decoys: exactly one line each, with no version
             for a in addon.node legacy.node; do
               [ "$(grep -c "^$RF/addon/$a	" "$results")" -eq 1 ] &&

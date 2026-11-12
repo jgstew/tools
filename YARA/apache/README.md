@@ -27,7 +27,7 @@ and the BigFix content are shared with the PHP and Node.js rules: see
 | Marker | Where | Used for |
 |---|---|---|
 | `Apache/<version>` | `AP_SERVER_BASEVERSION`, the server banner | httpd version. Also in modules built against httpd (`mod_ssl`, `mod_proxy`), so it only counts together with the core marker. |
-| `ServerTokens`, `Could not reliably determine the server's fully qualified domain name` | the core's directive table and its `AH00558` error message | marks the core: in httpd / apache2, in none of the modules (Ubuntu 24.04, macOS 14). `AH00109: ap_get_server_name: Invalid UCN Option` was tried first, but Ubuntu's `apache2` doesn't have it. |
+| `\0ServerTokens\0`, `Could not reliably determine the server's fully qualified domain name` | the core's directive table and its `AH00558` error message | marks the core: in httpd / apache2, in none of the modules (Ubuntu 24.04, macOS 14). `ServerTokens` is matched only as a whole C string: `mod_security2` has it inside a message, and its `ModSecurity for Apache/2.9.7` banner matches the version string. `AH00109: ap_get_server_name: Invalid UCN Option` was tried first, but Ubuntu's `apache2` doesn't have it. |
 | `mod_http2_init_counter`, `mod_http2 (v%s, feats=` | `modules/http2/mod_http2.c` | marks mod_http2. Not `http2_module`: it is also inside `proxy_http2_module` (`mod_proxy_http2.so`). |
 | `\0` `2.x.y` `\0`, or with a `-` suffix (`2.0.26-git`, RHEL 9) | `MOD_HTTP2_VERSION` | candidate mod_http2 version. The same mod_http2 version ships with more than one httpd release, so don't treat it as proof of a version without package or hash evidence. |
 

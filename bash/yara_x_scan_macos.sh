@@ -583,8 +583,10 @@ rule Apache_HTTPD_Version
     // (mod_ssl, mod_proxy) have it too.
     $ver = /Apache\/2\.[0-9]{1,2}\.[0-9]{1,3}/
     // Only in the core: the directive name from its command table, and its
-    // error message when the host name can't be resolved (AH00558 in 2.4)
-    $core1 = "ServerTokens"
+    // error message when the host name can't be resolved (AH00558 in 2.4).
+    // The directive name as a whole C string: mod_security2 has "ServerTokens"
+    // in a message, and "ModSecurity for Apache/2.9.7" matches $ver
+    $core1 = "\x00ServerTokens\x00"
     $core2 = "Could not reliably determine the server's fully qualified domain name"
   condition:
     Apache_Detect_IsExecutable and $ver and any of ($core*)
