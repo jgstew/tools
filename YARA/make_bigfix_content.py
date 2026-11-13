@@ -26,12 +26,12 @@ The PREFETCH lines below were generated with the bigfix-prefetch package:
 Their sha256 values match the ones pinned in the scripts.
 """
 
+import datetime
 import email.utils
 import pathlib
 import sys
 
 TOOLS_DIR = pathlib.Path(__file__).resolve().parents[1]
-RELEASE_DATE = "2026-10-25"
 RESULTS_FILE = "yara_results_runtimes.text"
 # Folder under __BESData/__Global the scan runs in, and its console log in Logs
 SCAN_FOLDER = "yara_runtime_scan"
@@ -282,7 +282,7 @@ copy __createfile "{{parameter "temp_folder"}}{sep}scan.running"
 """
 
 
-def task_xml(os_name, cfg, script_text, mtime):
+def task_xml(os_name, cfg, script_text, release_date, mtime):
     title = f"{TASK_TITLE} - {os_name}"
     relevance = "\n".join(
         f"\t\t<Relevance><![CDATA[{r}]]></Relevance>"
@@ -322,7 +322,7 @@ def task_xml(os_name, cfg, script_text, mtime):
 		<DownloadSize>{cfg["download_size"]}</DownloadSize>
 		<Source>Internal</Source>
 		<SourceID>jgstew</SourceID>
-		<SourceReleaseDate>{RELEASE_DATE}</SourceReleaseDate>
+		<SourceReleaseDate>{release_date}</SourceReleaseDate>
 		<SourceSeverity></SourceSeverity>
 		<CVENames></CVENames>
 		<SANSID></SANSID>
@@ -348,7 +348,7 @@ def task_xml(os_name, cfg, script_text, mtime):
     )
 
 
-def analysis_xml(mtime):
+def analysis_xml(release_date, mtime):
     files = f'files whose(name of it as lowercase starts with "{RESULTS_FILE}") of folders "Logs" of folders "__Global" of data folders of client'
 
     # Lines are "path<TAB>product<TAB>version"; a path never holds a raw tab
@@ -387,7 +387,7 @@ def analysis_xml(mtime):
 		<Relevance><![CDATA[exists {files}]]></Relevance>
 		<Source>Internal</Source>
 		<SourceID>jgstew</SourceID>
-		<SourceReleaseDate>{RELEASE_DATE}</SourceReleaseDate>
+		<SourceReleaseDate>{release_date}</SourceReleaseDate>
 		<MIMEField>
 			<Name>x-fixlet-modification-time</Name>
 			<Value>{mtime}</Value>
@@ -419,18 +419,22 @@ def main():
     )
     if not (out_dir / "fixlet").is_dir() or not (out_dir / "analyses").is_dir():
         sys.exit(f"ERROR: {out_dir} has no fixlet/ and analyses/ folders")
-    mtime = email.utils.formatdate(usegmt=True).replace("GMT", "+0000")
+    # One UTC timestamp for both, so the release date and modification time agree
+    now = datetime.datetime.now(datetime.timezone.utc)
+    release_date = now.strftime("%Y-%m-%d")
+    mtime = email.utils.format_datetime(now.replace(microsecond=0), usegmt=True)
+    mtime = mtime.replace("GMT", "+0000")
 
     for os_name, cfg in PLATFORMS.items():
         script_text = (TOOLS_DIR / cfg["script"]).read_text(encoding="utf-8")
         check_embeddable(cfg["script"], script_text)
-        xml, title = task_xml(os_name, cfg, script_text, mtime)
+        xml, title = task_xml(os_name, cfg, script_text, release_date, mtime)
         path = out_dir / "fixlet" / f"{title}.bes"
         write_file(path, xml)
         print(f"wrote {path}")
 
     path = out_dir / "analyses" / f"{ANALYSIS_TITLE}.bes"
-    write_file(path, analysis_xml(mtime))
+    write_file(path, analysis_xml(release_date, mtime))
     print(f"wrote {path}")
 
 
