@@ -13,9 +13,14 @@ SELECT
       + [Masthead]
       + ']]></Masthead></ExternalSite></BES>' AS [BESContent]
   FROM [BFEnterprise].[dbo].[SITENAMEMAP]
-  WHERE [UndecoratedSitename] LIKE '%Enterprise%'
-     OR [UndecoratedSitename] LIKE '%Patch%'
-     OR [UndecoratedSitename] LIKE '%Update%'
+  WHERE
+   (
+   [UndecoratedSitename] LIKE '%Enterprise Security%'
+   OR [UndecoratedSitename] LIKE '%Patch%'
+   OR [UndecoratedSitename] LIKE '%Update%'
+   OR [UndecoratedSitename] LIKE '%Installer Library%'
+   )
+   AND [UndecoratedSitename] NOT LIKE '%Patches for Windows (%'
 "@
 
 New-Item -ItemType Directory -Path $outDir -Force | Out-Null
