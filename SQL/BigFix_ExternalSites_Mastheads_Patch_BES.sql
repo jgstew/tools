@@ -6,7 +6,7 @@ SELECT
 	  + [Masthead]
 	  + ']]></Masthead></ExternalSite></BES>'
   FROM [BFEnterprise].[dbo].[SITENAMEMAP]
-  WHERE [UndecoratedSitename] LIKE '%Enterprise%'
+  WHERE [UndecoratedSitename] LIKE '%Enterprise Security%'
    OR [UndecoratedSitename] LIKE '%Patch%'
    OR [UndecoratedSitename] LIKE '%Update%'
    OR [UndecoratedSitename] LIKE '%Installer Library%'
