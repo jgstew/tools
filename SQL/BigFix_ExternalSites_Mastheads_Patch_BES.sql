@@ -9,3 +9,4 @@ SELECT
   WHERE [UndecoratedSitename] LIKE '%Enterprise%'
    OR [UndecoratedSitename] LIKE '%Patch%'
    OR [UndecoratedSitename] LIKE '%Update%'
+   OR [UndecoratedSitename] LIKE '%Installer Library%'
